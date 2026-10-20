@@ -1,0 +1,56 @@
+{
+  "build_sha256": "51510e2a520565dbe81fb0d569e95cd4393077acaaa859371489b80b8128829f",
+  "read_only": true,
+  "capture": "session-20261020-094212/plane-flight-r2-quarantine-capture.json",
+  "class_names": "not proven; runtime class addresses are session-local, never whitelist across runs by those addresses",
+  "pairs": [
+    {
+      "setter_rva": "42dfa90",
+      "getter_rva": "41df3e0",
+      "captured_indices": [
+        2,
+        3,
+        17
+      ],
+      "setter_abi": "void(component*,bool) RCX=this,DL=enabled",
+      "effects": [
+        "if component+3a bit1 and UObject/outer chain does not carry0x30 flags: calls4b9f9f0(this+30,enabled)",
+        "4b9f9f0 updates tick-function state atthis+3b and removes/reinserts tick registration in manager structures",
+        "whenfalse andcomponent+bd0 nonnull and[bd0]&1: manager setup4b9e8d0; remove registration4b9e610(manager=[bd0+28],tick=this+bb0); clear[bd0]bit0@42dfb05"
+      ],
+      "readback": [
+        "component+3b==0 (getter41df3e0)",
+        "ifcomponent+bd0 nonnull require readable registration flags and bit0==0"
+      ],
+      "caution": "native registration mutation and possible manager initialization/allocation, not a pure boolwrite; retain native override"
+    },
+    {
+      "setter_rva": "7d2c180",
+      "getter_rva": "7d2c120",
+      "captured_indices": [
+        14,
+        19,
+        20
+      ],
+      "setter_abi": "void(component*,bool) RCX=this,DL=enabled",
+      "effects": [
+        "7d2c180 storesDLto[this+d3] thenRET@7d2c186; no calls"
+      ],
+      "getter": "returnsfalse ifC0null/A0null/ownerflagsbit30set/D3zero; onlyotherwise callsownerA0 vslot488",
+      "readback": [
+        "component+d3==0",
+        "component+3b==0 independently: ordinary Unreal tick must also remain disabled"
+      ],
+      "caution": "getter is not a plain3b query; do not infer custom disable from3b alone. No need to invoke getter; D3zero provesfalse after owner metadata checks without callingowner virtual."
+    }
+  ],
+  "correction": "For independently owned validated ActorComponent objects in target actor component set, allow ONLY exact setter/getter RVA pairs41df200/41df3e0,42dfa90/41df3e0,7d2c180/7d2c120 for this exact image. Dispatch false on game thread through selected per-instance vtable entry. Verify applicable state(s) and owner/identity after call. Reject unknown pair; no hooks or global vtable edits. Preserve best-effort quarantine iteration and stopped actor barrier.",
+  "limitation": "Static function ABI/effects and captured pair identities verified. No added setter was invoked in this audit; visual/runtime cleanup remains untested.",
+  "custom_domain_correction": "7d2c180(false) closesD3 first. If3B remainsnonzero, revalidateownership and call knownbase41df200(this,false). Base checks3A&2 and nontemplateouterchain then tailcalls4b9f9f0(this+30,false). Require bothD3=0 and3B=0; fail/quarantine ifbase cannotdisable. Do not callcustomgetter merelyforreadback: evenD3zero itdereferencesA0beforeD3check, althoughneverdispatchesowner488.",
+  "fingerprints16": {
+    "0x42dfa90": "48895c2408574883ec20f6413a020fb6",
+    "0x7d2c180": "8891d3000000c3cccccccccccccccccc",
+    "0x7d2c120": "4883ec284883b9c000000000743c488b",
+    "0x41df3e0": "80793b000f95c0c3cccccccccccccccc"
+  }
+}

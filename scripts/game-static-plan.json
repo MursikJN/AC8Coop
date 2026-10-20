@@ -1,0 +1,7 @@
+[
+  {"name":"open_binary","arguments":{"path":"D:\\SteamLibrary\\steamapps\\common\\ACE COMBAT 8\\Game\\Binaries\\Win64\\AceCombat8.exe","provider_id":"ghidra"},"output":"rea-game-open"},
+  {"name":"binary_overview","arguments":{},"output":"rea-game-overview"},
+  {"name":"search_strings","arguments":{"pattern":"wingman|wingmen|squadron|companion","mode":"regex"},"output":"rea-game-wingman-strings"},
+  {"name":"search_strings","arguments":{"pattern":"Possess","mode":"literal"},"output":"rea-game-possession-strings"},
+  {"name":"search_procedures","arguments":{"pattern":"Wingman|Squadron|Possess|Aircraft","mode":"regex"},"output":"rea-game-candidate-procedures"}
+]

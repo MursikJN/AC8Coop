@@ -1,0 +1,117 @@
+{
+  "schema": "ac8-flight-r4-observation-contract-v1",
+  "scope": "Only bounded reads and diagnostic file output; no visibility setters, activation changes, tick release, lazy getters, extra native game calls or lifetime extension",
+  "files": [
+    "plane-flight-observations-r4.jsonl",
+    "plane-flight-components-r4.jsonl"
+  ],
+  "sampling": {
+    "stages": [
+      "seed",
+      "t1",
+      "t5",
+      "t10",
+      "before_destroy"
+    ],
+    "max_samples": 5,
+    "seed": "source and owned snapshots before native Move and after existing post-pose guards",
+    "deadlines_ms": [
+      1000,
+      5000,
+      10000
+    ],
+    "cleanup": "once immediately before first actual ActorDestroy call; not after retired identity",
+    "requested_origin": [
+      "pose_argument: exact worldXYZ passed to existing Move call",
+      "model_at_cleanup: fresh reconstruction of primary model worldXYZ, not a new Move call"
+    ]
+  },
+  "confirmed_fields": [
+    {
+      "target": "Actor",
+      "offset": "0x1a0",
+      "format": "USceneComponent pointer",
+      "proof": "native Move implementation RVA3fdebc0",
+      "note": "Root UObject identity, Scene class and owner rechecked"
+    },
+    {
+      "target": "Actor",
+      "offset": "0x58",
+      "format": "uint8",
+      "proof": "render predicate RVA7d4f4e5..7d4f4e9",
+      "decoded_mask": "0x80 bHidden",
+      "invalid": "JSON null; never assumes visible"
+    },
+    {
+      "target": "Actor",
+      "offset": "0x3f4",
+      "format": "uint8 activation",
+      "note": "Read only"
+    },
+    {
+      "target": "SceneComponent",
+      "offset": "0x220",
+      "format": "double[3] worldXYZ",
+      "proof": "native Move reads RVA3fdebd3..3fdec20",
+      "units": "UE centimeters"
+    },
+    {
+      "target": "SceneComponent",
+      "offset": "0x200",
+      "size_bytes": 96,
+      "format": "raw hex",
+      "end_exclusive": "0x260",
+      "note": "Only bytes0x220..0x237 decoded as XYZ; rotation/scale not interpreted"
+    },
+    {
+      "target": "SceneComponent",
+      "offset": "0x188",
+      "size_bytes": 9,
+      "format": "raw hex",
+      "end_exclusive": "0x191",
+      "note": "Covers every byte188..190 inclusive; not a three-byte shorthand"
+    },
+    {
+      "target": "Actor",
+      "offsets": [
+        "0x15a0",
+        "0x1af8"
+      ],
+      "format": "UObject identity only",
+      "note": "No guessed mesh asset offsets read"
+    }
+  ],
+  "scene_type_gate": {
+    "cached_class_global_rva": "0xe4a8958",
+    "proof_getter_rva": "0x37c57a0",
+    "method": "Read cached class, class hierarchy index at+38 and chain at+30; no getter invocation"
+  },
+  "components": {
+    "owned_set_offset": "0x218",
+    "maximum_slots": 512,
+    "maximum_capacity": 4096,
+    "required": "Scene class proof, UObject index/pointer/header stability, owner90 matches owned actor, bounded allocation bitmap, stable set header",
+    "registration_status": "not_decoded",
+    "additional_raw_fields": [
+      "0x3a",
+      "0x3b"
+    ],
+    "asset_fields": "not read: skinned-specific class contract not included"
+  },
+  "metrics": {
+    "units": "UE centimeters",
+    "actual_step": "owned_after rootXYZ minus owned_before rootXYZ; same root identity required",
+    "request_error": "owned_after rootXYZ minus requested_world",
+    "source_delta": "owned_after rootXYZ minus source_after rootXYZ",
+    "distance": "Euclidean length",
+    "invalid": "valid:false, xyz:null, distance:null; no NaN or Infinity in JSON"
+  },
+  "failure_policy": "Optional best-effort diagnostic operations return no permission to the flight ledger. Missing reads/files or C++ exceptions increment observation_failures and do not skip existing cleanup or change15s cap. observation_failures counts failed diagnostic operations, not distinct samples.",
+  "identity_note": "Root and component serial0 is retained as an identity snapshot, not a newly allocated weak identity; no AllocateSerialNumber occurs in telemetry",
+  "sources": [
+    "models-visibility-instrumentation-contract-v2.json",
+    "models-scenecomponent-class.json",
+    "live-activation-visual-setter.json"
+  ],
+  "review": "live-activation-r4-review.json"
+}

@@ -1,0 +1,74 @@
+{
+  "scope": "read-only R4 independent review; no code/game changes",
+  "observations": [
+    {
+      "stage": "seed",
+      "root_request_error_cm": 0.0,
+      "source_distance_m": 316.86601999046036,
+      "main_raw_flags": "410008020000000000",
+      "main_visible_bit20": false
+    },
+    {
+      "stage": "t1",
+      "root_request_error_cm": 0.0,
+      "source_distance_m": 319.24194384809357,
+      "main_raw_flags": "410008020000000000",
+      "main_visible_bit20": false
+    },
+    {
+      "stage": "t5",
+      "root_request_error_cm": 0.0,
+      "source_distance_m": 335.027138812316,
+      "main_raw_flags": "410008020000000000",
+      "main_visible_bit20": false
+    },
+    {
+      "stage": "t10",
+      "root_request_error_cm": 0.0,
+      "source_distance_m": 334.2970576334577,
+      "main_raw_flags": "410008020000000000",
+      "main_visible_bit20": false
+    },
+    {
+      "stage": "before_destroy",
+      "root_request_error_cm": 0.0,
+      "source_distance_m": 329.17568431692604,
+      "main_raw_flags": "410008020000000000",
+      "main_visible_bit20": false
+    }
+  ],
+  "source_comparison_file": "session-20261020-105000/plane-flight-r4-source-visibility-comparison.json",
+  "finding": "Ownedmain15A0 visibilitybit20 isfalse inall5snapshots whileactualrootmatchesrequestedexactly andgeometryfollowsroot. Source15A0bit20true (61), owned41; secondary1AF8false43 inboth, so doNOTenableboth. This is a confirmed native visibilitygate, notproofasset/render readiness.",
+  "getter": {
+    "vtable": "image+bc9b428",
+    "slot": "510",
+    "rva": "42ce5e0",
+    "predicate": "false whencomponent189&8 or!(188&20), ornonnullcomponentA0 hasbyte1zero; otherwise true. Read-onlyrawfields sufficient; do not call oninvalididentity."
+  },
+  "minimal_patch_candidate": {
+    "entry_rva": "42ce610",
+    "ABI": "void(component*RCX,boolDL,uint8propagationModeR8B)",
+    "arguments": "onlyownedplane15A0,true,0",
+    "stage": "afterFinish/modelseed/ownedgraphchecks andbeforefirstvisibleobservation; actor/controller/componentticks remainclosed",
+    "native_effects": "writes188bit20 thenv518=28d95b0→41e01e0(renderstate dirty/update scheduling). R8B0 makesDILfalse bothinitialandchangedpaths, skipschildpropagation@42ce69c. If190&4 andnewvisible,28d9670(this,false,1) also executes; currentowned190=08 so this branch isnotrequired. Nativecallbacks remainpossible.",
+    "guards": [
+      "exactbuildSHA andfunctionfingerprint",
+      "ownedGUidentity,SceneClass,owner/Outer,main15A0samecapturedptr,class/vtableexpectedfromsource; disjointsource/secondary",
+      "beforeflags18841/18900/19008 orspecificvalidatedcontract; retainrawsnapshot",
+      "aftercall188bit20true and189bit8false; recordA0byte1gateifnonnull",
+      "sourceflagsunchanged,secondary1AF8unchanged,activation3F4=0,root/componenttickbarriersstillclosed",
+      "continueboundedposition/flags telemetry andnormalownedrollback"
+    ],
+    "not_done": [
+      "no native setterinvoked",
+      "no geometryassetreadiness proof",
+      "no automaticbroadactivation7d1c440",
+      "no enablingsecondary/cockpit/weapons orcomponentticks"
+    ]
+  },
+  "evidence": [
+    "models-r4-visible-native.json",
+    "models-r4-visible-render-dirty.json",
+    "models-visibility-switch.json"
+  ]
+}

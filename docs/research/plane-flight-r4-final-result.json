@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-10-20T10:57:34.7961586+07:00",
+  "revision": "r4",
+  "pid": 35464,
+  "native_motion_steps": 272,
+  "observation_samples": 5,
+  "observation_failures": 0,
+  "all_owned_identities_retired_before_exit": true,
+  "exit_code": 0,
+  "proxy_removed": true,
+  "process_absent": true,
+  "proxy_file_absent": true,
+  "visible_flight_verified": false,
+  "user_observation": "No visible plane",
+  "finding": "Main geometry visibility bit cleared; source bit set",
+  "next_scope": "Single narrow main-geometry visibility fix; no repeated probe-only launches or routine three-agent review"
+}

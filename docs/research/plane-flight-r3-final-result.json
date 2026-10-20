@@ -1,0 +1,19 @@
+{
+  "checked_at": "2026-10-20T10:36:39.0613569+07:00",
+  "pid": 13460,
+  "revision": "r3",
+  "native_motion_steps": 268,
+  "models_seeded": true,
+  "model_scalars_verified": 102,
+  "components_verified": 68,
+  "native_destroy_requests": 1,
+  "all_owned_identities_retired_before_exit": true,
+  "exit_code": 0,
+  "proxy_removed": true,
+  "process_absent": true,
+  "proxy_file_absent": true,
+  "user_observation": "No visible plane",
+  "visible_flight_verified": false,
+  "missing_evidence": "No actor/root/mesh visibility or position time series during active window",
+  "next_scope": "Observe actual transforms and render state during next bounded trial"
+}

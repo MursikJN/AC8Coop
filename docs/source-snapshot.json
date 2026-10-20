@@ -1,0 +1,714 @@
+{
+  "date": "2026-10-20",
+  "scope": "All authored source/test/instruction files in lab, excluding tools, raw evidence, caches and binaries. Selected research contracts and final results included separately.",
+  "transformations": [
+    "Personal SteamIDs replaced by synthetic IDs only in mock tests; launcher default removed and package peers empty.",
+    "Local Windows user name replaced by USER.",
+    "Old README retained as historical research log.",
+    "Normalized text line endings; removed trailing blank lines in two C++ test files."
+  ],
+  "files": [
+    {
+      "source": ".gitignore",
+      "published": ".gitignore",
+      "source_sha256": "01e9a4d7d09d0787c7bde6cf460a2e742ec05030de78572dcb232fb37689a870",
+      "published_sha256": "8fca303df5721083528692e43a2f27c73470ded9a27e1a15fcb943b66b4617a4"
+    },
+    {
+      "source": "connection-test/Launch-ConnectionTest.ps1",
+      "published": "connection-test/Launch-ConnectionTest.ps1",
+      "source_sha256": "0f53cea21d62a7574ebff1ed1a4264c100f0ca31ef22fdb4ab986a5904793f07",
+      "published_sha256": "3bf2b59007449ba2c4251b270f8be36e196c25e3a9101009fd17ec8731379744"
+    },
+    {
+      "source": "connection-test/main.lua",
+      "published": "connection-test/main.lua",
+      "source_sha256": "77f003f8bdd06325a74cc31e8404d7f058144bf2353a2f10730464a412e21967",
+      "published_sha256": "77f003f8bdd06325a74cc31e8404d7f058144bf2353a2f10730464a412e21967"
+    },
+    {
+      "source": "connection-test/README-RU.md",
+      "published": "connection-test/README-RU.md",
+      "source_sha256": "492738399590e976e1ec2f14135eda6b1457a3e5ef9100097c145228f2f7a83f",
+      "published_sha256": "5437995db517ca182c03d4081fa1b765192023c392b26c70cd275ded2b7b5f8c"
+    },
+    {
+      "source": "connection-test/Remove-ConnectionLoader.ps1",
+      "published": "connection-test/Remove-ConnectionLoader.ps1",
+      "source_sha256": "abbbe0001272b5ff435f11c1bc114d80361f2c6ecd56d770684ee25eb3e9e649",
+      "published_sha256": "00057fa86ba0013157e255024f74c1d691158b96c5b455a4aa944b653cef8ec7"
+    },
+    {
+      "source": "native/connection_protocol.h",
+      "published": "native/connection_protocol.h",
+      "source_sha256": "8de9ab11f37bbafb3db51a30e8a46f4cbeb5cde40fcb7b3122d45723b7c6407e",
+      "published_sha256": "8de9ab11f37bbafb3db51a30e8a46f4cbeb5cde40fcb7b3122d45723b7c6407e"
+    },
+    {
+      "source": "native/connection_protocol_tests.cpp",
+      "published": "native/connection_protocol_tests.cpp",
+      "source_sha256": "ac811a80724f5b43b3d3a777f9a6b67b949ef8eaa4e0ca347a2b74d4f4c548dd",
+      "published_sha256": "ac811a80724f5b43b3d3a777f9a6b67b949ef8eaa4e0ca347a2b74d4f4c548dd"
+    },
+    {
+      "source": "native/connection_runtime_tests.cpp",
+      "published": "native/connection_runtime_tests.cpp",
+      "source_sha256": "8a0ca87996ec810da4aa15b539ff91d5df017d4e18891dfcf184714a3898d9c1",
+      "published_sha256": "9e5e459e67c9b583237d464d2d3c5b1309dd0e51c5ff3dafeae6aa1848f1f174"
+    },
+    {
+      "source": "native/connection_test.cpp",
+      "published": "native/connection_test.cpp",
+      "source_sha256": "ee8ae561f2d4a78f91e2f2cad8b5a3241c207e546ce9f697c2f1ff0f2c084782",
+      "published_sha256": "ee8ae561f2d4a78f91e2f2cad8b5a3241c207e546ce9f697c2f1ff0f2c084782"
+    },
+    {
+      "source": "native/dummy_lifecycle_core.h",
+      "published": "native/dummy_lifecycle_core.h",
+      "source_sha256": "4722622190723229b96b243ea23de8fe79cbab1df140d0e1e905c0a46776ba79",
+      "published_sha256": "4722622190723229b96b243ea23de8fe79cbab1df140d0e1e905c0a46776ba79"
+    },
+    {
+      "source": "native/dummy_lifecycle_probe.cpp",
+      "published": "native/dummy_lifecycle_probe.cpp",
+      "source_sha256": "c3113672dc8639722eb8b5393d32a1ece6734de15fb56a892bd6e7437c008379",
+      "published_sha256": "c3113672dc8639722eb8b5393d32a1ece6734de15fb56a892bd6e7437c008379"
+    },
+    {
+      "source": "native/dummy_lifecycle_tests.cpp",
+      "published": "native/dummy_lifecycle_tests.cpp",
+      "source_sha256": "c24e7e99d249adbddf303cb62f9da86448cc383738bd4401761b2dcd5d0360d9",
+      "published_sha256": "c24e7e99d249adbddf303cb62f9da86448cc383738bd4401761b2dcd5d0360d9"
+    },
+    {
+      "source": "native/plane_component_ticks.h",
+      "published": "native/plane_component_ticks.h",
+      "source_sha256": "c38bf1e8e3633040ecfa7697c021000c740adc0c56a477d64c0ca7c275ea7859",
+      "published_sha256": "c38bf1e8e3633040ecfa7697c021000c740adc0c56a477d64c0ca7c275ea7859"
+    },
+    {
+      "source": "native/plane_component_ticks_tests.cpp",
+      "published": "native/plane_component_ticks_tests.cpp",
+      "source_sha256": "f24e863b958b4eba8e2403ab37e94bd844dc86e7ef9ede6a31bbe06fad7d2ec8",
+      "published_sha256": "94663beffccb925545f7c49ebc388e85e4e6681c9afc87ffd75a97c894595157"
+    },
+    {
+      "source": "native/plane_flight_core.h",
+      "published": "native/plane_flight_core.h",
+      "source_sha256": "168b2a92def57567400667cf1e3052b1394fe70020f8c6ce683ef0b3f66ab082",
+      "published_sha256": "fa7da4c5b0e3b4f981ea91e5c314c4f67989012854be39587af9f8fa9557e5f1"
+    },
+    {
+      "source": "native/plane_flight_observations.h",
+      "published": "native/plane_flight_observations.h",
+      "source_sha256": "b7b50c703f7047965c096a548f44c0ae0a172e4839b33b4e76b5be381cdfbd50",
+      "published_sha256": "b7b50c703f7047965c096a548f44c0ae0a172e4839b33b4e76b5be381cdfbd50"
+    },
+    {
+      "source": "native/plane_flight_observations_tests.cpp",
+      "published": "native/plane_flight_observations_tests.cpp",
+      "source_sha256": "85fcf1b7898b7a9b0a5c9c4041f971198dc50356d7ed6f0f6bd5c77374d1e63e",
+      "published_sha256": "85fcf1b7898b7a9b0a5c9c4041f971198dc50356d7ed6f0f6bd5c77374d1e63e"
+    },
+    {
+      "source": "native/plane_flight_probe.cpp",
+      "published": "native/plane_flight_probe.cpp",
+      "source_sha256": "30b80cd2b9f8e68d1063dbb79f0b8ca542af8d55071501ddcdd3db351f930405",
+      "published_sha256": "d61611d6d0432bef5d17a75ec77c2ee6bdc80252c612837fd92c501599b59cd5"
+    },
+    {
+      "source": "native/plane_flight_slots.h",
+      "published": "native/plane_flight_slots.h",
+      "source_sha256": "d227fe557f230acc96c6c81251acb0e03a170456561eb70e6148992b9633a143",
+      "published_sha256": "d227fe557f230acc96c6c81251acb0e03a170456561eb70e6148992b9633a143"
+    },
+    {
+      "source": "native/plane_flight_slots_tests.cpp",
+      "published": "native/plane_flight_slots_tests.cpp",
+      "source_sha256": "1aed3fc6499cdca4fed34442df7db3093e9db8720779efd450cc25b67edfe083",
+      "published_sha256": "1aed3fc6499cdca4fed34442df7db3093e9db8720779efd450cc25b67edfe083"
+    },
+    {
+      "source": "native/plane_flight_state.h",
+      "published": "native/plane_flight_state.h",
+      "source_sha256": "510713b3f432c9526d0fd9942e4a595228b835fbef69b7671283f506f38bb2db",
+      "published_sha256": "17d7188a0e073833d0c69bf0215767592ac52512cc22162092797b32f5b14145"
+    },
+    {
+      "source": "native/plane_flight_state_tests.cpp",
+      "published": "native/plane_flight_state_tests.cpp",
+      "source_sha256": "2ebe2b222f76f110719b81803932c1be32fd18c7396e56bb789c64bc557d8776",
+      "published_sha256": "663304189dd86679aabf691aca2b23d858d6a881873a8ab4402c83cb48c45755"
+    },
+    {
+      "source": "native/plane_flight_tests.cpp",
+      "published": "native/plane_flight_tests.cpp",
+      "source_sha256": "12fe5f649b7cfbeaaab124c7e133f3dc536bcad826ec2b61577825d604018db8",
+      "published_sha256": "12fe5f649b7cfbeaaab124c7e133f3dc536bcad826ec2b61577825d604018db8"
+    },
+    {
+      "source": "native/plane_initial_state.h",
+      "published": "native/plane_initial_state.h",
+      "source_sha256": "332d0cfca15fde90ae8513c0a89bc6264bd6da321982850dbf99cf89487cd2f0",
+      "published_sha256": "332d0cfca15fde90ae8513c0a89bc6264bd6da321982850dbf99cf89487cd2f0"
+    },
+    {
+      "source": "native/plane_initial_state_tests.cpp",
+      "published": "native/plane_initial_state_tests.cpp",
+      "source_sha256": "25fcb01d4c903d99f2668bc45fb2f9ad0189dbaab57f6f33676a9e815926078a",
+      "published_sha256": "25fcb01d4c903d99f2668bc45fb2f9ad0189dbaab57f6f33676a9e815926078a"
+    },
+    {
+      "source": "native/plane_motion_layout.json",
+      "published": "native/plane_motion_layout.json",
+      "source_sha256": "1a9485fb31c4f65167f90a3244f59c96d726d60f3c4521f7ffcf137fcdc62994",
+      "published_sha256": "ec093c70e1a9a0eabcff6a29331f8a108239bf450e3a88d192b6f075b30dd543"
+    },
+    {
+      "source": "native/plane_staging_core.h",
+      "published": "native/plane_staging_core.h",
+      "source_sha256": "397e6f2712361deedd3e214fe63284db9ddb5180989b11e264adf5a9ee610728",
+      "published_sha256": "d0c3468caf95075edc782c956303c2865fa5a760a0ff77ddc7e2b36dd63adaba"
+    },
+    {
+      "source": "native/plane_staging_probe.cpp",
+      "published": "native/plane_staging_probe.cpp",
+      "source_sha256": "a30f8d3fefe550c8415ab76cec4945c3c8cb725c440cb72c71f0c07644c8f760",
+      "published_sha256": "3eba1303810d95c440f87cf653911655d1f6ad3f8aaef9e010680329cb18e417"
+    },
+    {
+      "source": "native/plane_staging_tests.cpp",
+      "published": "native/plane_staging_tests.cpp",
+      "source_sha256": "9096e16c434b5fb679e28d05231d75bfa58e03c9e0a187a6ccabccafc17a0c1d",
+      "published_sha256": "100cec4d3f6b9ecdf6a30a2d0855c14d5a4fcb0e93e58167fd141b95ac5a6204"
+    },
+    {
+      "source": "native/steam_probe.cpp",
+      "published": "native/steam_probe.cpp",
+      "source_sha256": "c40811a7257a24013c3ae1ffcfb00c24a7eef92dfba8b735652c2703a9bc5206",
+      "published_sha256": "c40811a7257a24013c3ae1ffcfb00c24a7eef92dfba8b735652c2703a9bc5206"
+    },
+    {
+      "source": "native/steam_probe_tests.cpp",
+      "published": "native/steam_probe_tests.cpp",
+      "source_sha256": "b1872697a67dbc8fe169e54316ec178d7c66ae9d98e335d4eb18805f2eeb8536",
+      "published_sha256": "b1872697a67dbc8fe169e54316ec178d7c66ae9d98e335d4eb18805f2eeb8536"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/camera_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/camera_probe.lua",
+      "source_sha256": "c0c169d6ddf5aed20a16b29427de27f8cb7e08ecac562297da07ec9cb5790777",
+      "published_sha256": "c0c169d6ddf5aed20a16b29427de27f8cb7e08ecac562297da07ec9cb5790777"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/control_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/control_probe.lua",
+      "source_sha256": "b2d29f7866dcf099df39e1a760efb53fb5bf86aaa29d9cdff431fffc31aba02f",
+      "published_sha256": "b2d29f7866dcf099df39e1a760efb53fb5bf86aaa29d9cdff431fffc31aba02f"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/dummy_lifecycle_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/dummy_lifecycle_probe.lua",
+      "source_sha256": "74ea6b6b8b26f2f65c797868ea3f8343432d79917ff9e18ce4e4251239e58714",
+      "published_sha256": "74ea6b6b8b26f2f65c797868ea3f8343432d79917ff9e18ce4e4251239e58714"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/key_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/key_probe.lua",
+      "source_sha256": "3058273ef50495da6a146d128d71330d1669eec57bf9288aeef8378f4ac43d37",
+      "published_sha256": "3058273ef50495da6a146d128d71330d1669eec57bf9288aeef8378f4ac43d37"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/main.lua",
+      "published": "probe/AC8CoopRecon/Scripts/main.lua",
+      "source_sha256": "8af78f1ecd7ca70c654fb2df888201547deb98531498e9bbb78cc3521c3e9447",
+      "published_sha256": "8af78f1ecd7ca70c654fb2df888201547deb98531498e9bbb78cc3521c3e9447"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/manual_control.lua",
+      "published": "probe/AC8CoopRecon/Scripts/manual_control.lua",
+      "source_sha256": "7a212f3c877fc2509fce3d0a7eb4e33bb300a5897e5bc4956f03797ae6313f4d",
+      "published_sha256": "7a212f3c877fc2509fce3d0a7eb4e33bb300a5897e5bc4956f03797ae6313f4d"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/menu_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/menu_probe.lua",
+      "source_sha256": "e07e761de5e6a5a16bfec452cc6cee5c9049ff6a0a734dfd480984507ff9b990",
+      "published_sha256": "e07e761de5e6a5a16bfec452cc6cee5c9049ff6a0a734dfd480984507ff9b990"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/network_lifecycle_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/network_lifecycle_probe.lua",
+      "source_sha256": "d4a6d181b5ec0223ecb86f8a76258189b98573457c13f27e6f7f34b74bf0c0bf",
+      "published_sha256": "d4a6d181b5ec0223ecb86f8a76258189b98573457c13f27e6f7f34b74bf0c0bf"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/pause_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/pause_probe.lua",
+      "source_sha256": "427ab66cc15e2a892d912fe5a97d9c511afe25c418fe2865d244b13a98ad2783",
+      "published_sha256": "427ab66cc15e2a892d912fe5a97d9c511afe25c418fe2865d244b13a98ad2783"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/plane_configuration_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/plane_configuration_probe.lua",
+      "source_sha256": "9ad9e9640b96d6db70298ef4d8bb6c92e445af510dd2f1b24c07666bc81f4ae4",
+      "published_sha256": "9ad9e9640b96d6db70298ef4d8bb6c92e445af510dd2f1b24c07666bc81f4ae4"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/plane_flight_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/plane_flight_probe.lua",
+      "source_sha256": "c833c3eb38ad90829ac45da9f2790f241da3d4b059010d3f8dad0f15ae163cfa",
+      "published_sha256": "101db36bfa34ccb86d0c06ea2eb218793a08e9b951ebc8cb74047b2677f0274a"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/plane_initialization_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/plane_initialization_probe.lua",
+      "source_sha256": "7b21ad0f5bd957cbe6b35f078cca34414b5cf1883b5c3767a9b33e944384bdc5",
+      "published_sha256": "7b21ad0f5bd957cbe6b35f078cca34414b5cf1883b5c3767a9b33e944384bdc5"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/plane_motion_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/plane_motion_probe.lua",
+      "source_sha256": "af56d8978e92c89bf56623465c858e797f849cbdd1aac9710b9673086b9acf33",
+      "published_sha256": "af56d8978e92c89bf56623465c858e797f849cbdd1aac9710b9673086b9acf33"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/plane_staging_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/plane_staging_probe.lua",
+      "source_sha256": "e3c7882a1a3c88b3ccc302718f9e01ba95e1bc63e46d01068440c083e46bedfd",
+      "published_sha256": "bb87c3570d0c5fa1e198a5ad2f90beb8c2418d2744f885ddcd68dd9899a5ec20"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/player_flight_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/player_flight_probe.lua",
+      "source_sha256": "ec99c3698e022d961daa3016c778acf2563f968a17cb133d83e3e6b4d7aea9cd",
+      "published_sha256": "ec99c3698e022d961daa3016c778acf2563f968a17cb133d83e3e6b4d7aea9cd"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/player_spawn_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/player_spawn_probe.lua",
+      "source_sha256": "307748f7f3cc4cb2bb846c30ef0331e2e1153899aab216e0e49011b32ea2a8b3",
+      "published_sha256": "307748f7f3cc4cb2bb846c30ef0331e2e1153899aab216e0e49011b32ea2a8b3"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/profile_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/profile_probe.lua",
+      "source_sha256": "4a4cbbeb5662a32204b4de2dafaac63e3983655564abdee98113d816beb6e819",
+      "published_sha256": "4a4cbbeb5662a32204b4de2dafaac63e3983655564abdee98113d816beb6e819"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/single_input_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/single_input_probe.lua",
+      "source_sha256": "3bed08a097e51ce50058d42b5cc7a3705c51454e756af9af80deb8e2f699d160",
+      "published_sha256": "8e3e779d85f162ce63ee3943acfb17b00b2fbf106b062502895d2dd84cb56dfc"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/state_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/state_probe.lua",
+      "source_sha256": "8e32c82060855c3a5a27ad30671f95834b0ec231cc09381e636125cb029065a7",
+      "published_sha256": "8e32c82060855c3a5a27ad30671f95834b0ec231cc09381e636125cb029065a7"
+    },
+    {
+      "source": "probe/AC8CoopRecon/Scripts/steam_interface_probe.lua",
+      "published": "probe/AC8CoopRecon/Scripts/steam_interface_probe.lua",
+      "source_sha256": "2b70dee84d459438c50ccdbc4975f845c359173910b4467750a6d651fac0b639",
+      "published_sha256": "2b70dee84d459438c50ccdbc4975f845c359173910b4467750a6d651fac0b639"
+    },
+    {
+      "source": "probe/DUMMY-LIFECYCLE-EXPERIMENT.md",
+      "published": "probe/DUMMY-LIFECYCLE-EXPERIMENT.md",
+      "source_sha256": "c11becb7e751beee9230018c4334c5477c347f5572aed9a76b0e0fdb0da5b06f",
+      "published_sha256": "c11becb7e751beee9230018c4334c5477c347f5572aed9a76b0e0fdb0da5b06f"
+    },
+    {
+      "source": "probe/INITIALIZATION-EXPERIMENT.md",
+      "published": "probe/INITIALIZATION-EXPERIMENT.md",
+      "source_sha256": "4b8408f1f12349ce2d66d0a1f5dff0d1cd87362aebb2161bbc1363959e386910",
+      "published_sha256": "dbabd058248387c5837e1b3cc52dde5035f9d3f47506cf1029fbb1963df5b90f"
+    },
+    {
+      "source": "probe/PLANE-CONFIGURATION-EXPERIMENT.md",
+      "published": "probe/PLANE-CONFIGURATION-EXPERIMENT.md",
+      "source_sha256": "36664a380a4e0166c59ccd6d537a4eca0caa2cecc55f1c802002247004b04fb4",
+      "published_sha256": "36664a380a4e0166c59ccd6d537a4eca0caa2cecc55f1c802002247004b04fb4"
+    },
+    {
+      "source": "probe/PLANE-FLIGHT-EXPERIMENT.md",
+      "published": "probe/PLANE-FLIGHT-EXPERIMENT.md",
+      "source_sha256": "523e9e60278d59ba46cd58be272dd5703a18d557d75ea46fc79838e0851ac16c",
+      "published_sha256": "523e9e60278d59ba46cd58be272dd5703a18d557d75ea46fc79838e0851ac16c"
+    },
+    {
+      "source": "probe/PLANE-STAGING-EXPERIMENT.md",
+      "published": "probe/PLANE-STAGING-EXPERIMENT.md",
+      "source_sha256": "4a87e7090d7f13c20f00e85af0ec1c5a6817c6350d3a144fc22123a03b71e222",
+      "published_sha256": "4a87e7090d7f13c20f00e85af0ec1c5a6817c6350d3a144fc22123a03b71e222"
+    },
+    {
+      "source": "README.md",
+      "published": "docs/research-log.md",
+      "source_sha256": "d7b2d6b9a92692d975e9a6e34025af213e2e473b844b33e30ab2c1d1299d81f1",
+      "published_sha256": "452451420bc9bd305c296715ac3b573e5fd0b9c155224d1a163efcd789e2115d"
+    },
+    {
+      "source": "scripts/analyze_plane_flight_observations.py",
+      "published": "scripts/analyze_plane_flight_observations.py",
+      "source_sha256": "769606e8b15c5c220ee6d5d84e768b7d9d7fa57793b8086bd6dadcedab90e1cd",
+      "published_sha256": "769606e8b15c5c220ee6d5d84e768b7d9d7fa57793b8086bd6dadcedab90e1cd"
+    },
+    {
+      "source": "scripts/Build-ConnectionTest.ps1",
+      "published": "scripts/Build-ConnectionTest.ps1",
+      "source_sha256": "2742cc1ebb1269368833695d54ea2b9c8f6dea9abb8b5ebf8b86b8158da38c21",
+      "published_sha256": "2742cc1ebb1269368833695d54ea2b9c8f6dea9abb8b5ebf8b86b8158da38c21"
+    },
+    {
+      "source": "scripts/Build-DummyLifecycleProbe.ps1",
+      "published": "scripts/Build-DummyLifecycleProbe.ps1",
+      "source_sha256": "c2109f01a603df5be7a0e3d84e66cf1728df1e3b6a407779dcdf2f9582f87ebe",
+      "published_sha256": "c2109f01a603df5be7a0e3d84e66cf1728df1e3b6a407779dcdf2f9582f87ebe"
+    },
+    {
+      "source": "scripts/Build-PlaneFlightProbe.ps1",
+      "published": "scripts/Build-PlaneFlightProbe.ps1",
+      "source_sha256": "1b32bad1b328b8982e591df13f151306ed61c4fdd29b069b52a29c8ef6a5d775",
+      "published_sha256": "084769c6534f8eca9ac8cbc56f21c8e4aa4397d697bdb17f6db8232d4781ca9e"
+    },
+    {
+      "source": "scripts/Build-PlaneStagingProbe.ps1",
+      "published": "scripts/Build-PlaneStagingProbe.ps1",
+      "source_sha256": "fe29d8fd506983bd490f044c4d027160517ce4f0dc83b15ac072aa628e2f2f41",
+      "published_sha256": "56b0ee98318c5bcb03b23a6c8e812e98bde0099b77974cd187c67ad1c8dd0880"
+    },
+    {
+      "source": "scripts/Build-SteamProbe.ps1",
+      "published": "scripts/Build-SteamProbe.ps1",
+      "source_sha256": "e1101375ad39bbd9c9bb6e85e19633c96ef71c1ce42ac92a79dc199972d59d8e",
+      "published_sha256": "e1101375ad39bbd9c9bb6e85e19633c96ef71c1ce42ac92a79dc199972d59d8e"
+    },
+    {
+      "source": "scripts/capture_plane_flight_quarantine.py",
+      "published": "scripts/capture_plane_flight_quarantine.py",
+      "source_sha256": "64820adeff7062c79ef4a782e0f9bc6163bedf1c72488efb7eb4183d9f8141c7",
+      "published_sha256": "64820adeff7062c79ef4a782e0f9bc6163bedf1c72488efb7eb4183d9f8141c7"
+    },
+    {
+      "source": "scripts/diagnose_plane_flight_preflight.py",
+      "published": "scripts/diagnose_plane_flight_preflight.py",
+      "source_sha256": "4ffbb071224847ca201b17cbb42022542b59cc1514e8ea87d1608498dc21b72e",
+      "published_sha256": "4ffbb071224847ca201b17cbb42022542b59cc1514e8ea87d1608498dc21b72e"
+    },
+    {
+      "source": "scripts/game-static-plan.json",
+      "published": "scripts/game-static-plan.json",
+      "source_sha256": "2bec9b01b8506cb8c98d96ca40d53311e17c976b269d97d5274cfd4afcfae628",
+      "published_sha256": "2bec9b01b8506cb8c98d96ca40d53311e17c976b269d97d5274cfd4afcfae628"
+    },
+    {
+      "source": "scripts/inspect_minidump_context.py",
+      "published": "scripts/inspect_minidump_context.py",
+      "source_sha256": "29ca8bc192605f85b62d00aff8ab355a85a0e539f87c440ef147ad1ccb7363bb",
+      "published_sha256": "29ca8bc192605f85b62d00aff8ab355a85a0e539f87c440ef147ad1ccb7363bb"
+    },
+    {
+      "source": "scripts/inspect_native_offline.py",
+      "published": "scripts/inspect_native_offline.py",
+      "source_sha256": "34cd4263db74fac584857fbea13c788f98428e0e5480820783045fca081681e5",
+      "published_sha256": "34cd4263db74fac584857fbea13c788f98428e0e5480820783045fca081681e5"
+    },
+    {
+      "source": "scripts/inspect_network_lifecycle.py",
+      "published": "scripts/inspect_network_lifecycle.py",
+      "source_sha256": "b7c57cb4b9765f18b3b39cd4d3a22f246b64ede0191d30063ba2ef0a1abcf097",
+      "published_sha256": "b7c57cb4b9765f18b3b39cd4d3a22f246b64ede0191d30063ba2ef0a1abcf097"
+    },
+    {
+      "source": "scripts/inspect_pe.py",
+      "published": "scripts/inspect_pe.py",
+      "source_sha256": "3a02aadea16e262b5fbb219aca52498144c27175bc0ab65fc4b5a6ded8a9ce8e",
+      "published_sha256": "3a02aadea16e262b5fbb219aca52498144c27175bc0ab65fc4b5a6ded8a9ce8e"
+    },
+    {
+      "source": "scripts/Launch-Recon.ps1",
+      "published": "scripts/Launch-Recon.ps1",
+      "source_sha256": "db7cd1f0c9bdacdd8000d07dc286754fad92c4466d6c54c244f1b1ae1f543cc7",
+      "published_sha256": "1e7b3da22f75330b29dadabe86dd6acdf21f0dc7a5dc51ad3feeda89198f382c"
+    },
+    {
+      "source": "scripts/make_fixture.py",
+      "published": "scripts/make_fixture.py",
+      "source_sha256": "e5e3b4480f311e1fc59fdc170e8335bd73d998236c483c10a2c9b65429ebcff1",
+      "published_sha256": "e5e3b4480f311e1fc59fdc170e8335bd73d998236c483c10a2c9b65429ebcff1"
+    },
+    {
+      "source": "scripts/package_connection_test.py",
+      "published": "scripts/package_connection_test.py",
+      "source_sha256": "2b32c99106929066f60e03893849d7a809c862322a30b2e4fc487136f51ecbef",
+      "published_sha256": "7ee0ab575e66f4e0d267e1343ebed525762417074d48ea882053051ebe215b94"
+    },
+    {
+      "source": "scripts/plane_first_state.py",
+      "published": "scripts/plane_first_state.py",
+      "source_sha256": "67828f782de2dc456b2722eefdcd60368f7b02778d82a98693b66011294640d8",
+      "published_sha256": "67828f782de2dc456b2722eefdcd60368f7b02778d82a98693b66011294640d8"
+    },
+    {
+      "source": "scripts/plane_full_state.py",
+      "published": "scripts/plane_full_state.py",
+      "source_sha256": "7c2fc2622dc782f94d0cc37e5320114070a454cd9e52da083e69a681144188b6",
+      "published_sha256": "7c2fc2622dc782f94d0cc37e5320114070a454cd9e52da083e69a681144188b6"
+    },
+    {
+      "source": "scripts/plane_motion_wire.py",
+      "published": "scripts/plane_motion_wire.py",
+      "source_sha256": "cd79d32f7c0fa102fc4e72a320caa60f97695127a2cf85969a60f6972db36236",
+      "published_sha256": "cd79d32f7c0fa102fc4e72a320caa60f97695127a2cf85969a60f6972db36236"
+    },
+    {
+      "source": "scripts/plane_spawn_rollback.py",
+      "published": "scripts/plane_spawn_rollback.py",
+      "source_sha256": "53ae69ecdc5af7580340cb72a4aa73345df974dfd854ff95706b67da503b1ea2",
+      "published_sha256": "53ae69ecdc5af7580340cb72a4aa73345df974dfd854ff95706b67da503b1ea2"
+    },
+    {
+      "source": "scripts/rea-env.ps1",
+      "published": "scripts/rea-env.ps1",
+      "source_sha256": "aacec3922ac421e77a258a0c6d3b65c222e9eec0e6b831234d493d0fba1cde33",
+      "published_sha256": "8e3004b4ce1a61f3f4281f40ac4659920d8c4a0800f563188186683d4b54f9db"
+    },
+    {
+      "source": "scripts/rea.ps1",
+      "published": "scripts/rea.ps1",
+      "source_sha256": "eb83e3e5dd162e5492a04c106db21a29942a5113895654911500439a1c9cb412",
+      "published_sha256": "eb83e3e5dd162e5492a04c106db21a29942a5113895654911500439a1c9cb412"
+    },
+    {
+      "source": "scripts/read_native_targets.py",
+      "published": "scripts/read_native_targets.py",
+      "source_sha256": "616eac99fc9e8f6b1513095a9ce1746fda0d7df7b39809a570dadac5cdbe2262",
+      "published_sha256": "616eac99fc9e8f6b1513095a9ce1746fda0d7df7b39809a570dadac5cdbe2262"
+    },
+    {
+      "source": "scripts/read_steam_launch.py",
+      "published": "scripts/read_steam_launch.py",
+      "source_sha256": "a05cabac0362e658612059d118a22bd559842c9165d5b8cac87e7c1811d7de5d",
+      "published_sha256": "a05cabac0362e658612059d118a22bd559842c9165d5b8cac87e7c1811d7de5d"
+    },
+    {
+      "source": "scripts/replay_plane_motion_wire.py",
+      "published": "scripts/replay_plane_motion_wire.py",
+      "source_sha256": "1224973d36817bcd2924de1fe9a353f913f8f310349a80307762d20293b48072",
+      "published_sha256": "1224973d36817bcd2924de1fe9a353f913f8f310349a80307762d20293b48072"
+    },
+    {
+      "source": "scripts/sample_plane_configuration.py",
+      "published": "scripts/sample_plane_configuration.py",
+      "source_sha256": "835c22744b26012ffbce70a5a48f1ad7d52ab1a6df5fb8f4841bf341e141b0b0",
+      "published_sha256": "835c22744b26012ffbce70a5a48f1ad7d52ab1a6df5fb8f4841bf341e141b0b0"
+    },
+    {
+      "source": "scripts/sample_plane_initialization.py",
+      "published": "scripts/sample_plane_initialization.py",
+      "source_sha256": "c66224855b070945cf17b7925f5f25f873aa0a10ee4a4cc6d22323be7d56f007",
+      "published_sha256": "c66224855b070945cf17b7925f5f25f873aa0a10ee4a4cc6d22323be7d56f007"
+    },
+    {
+      "source": "scripts/sample_plane_motion.py",
+      "published": "scripts/sample_plane_motion.py",
+      "source_sha256": "12c6fb41212ee1463a957f48d44c2c411aff464cc5aed9e942d76e0f92b17278",
+      "published_sha256": "12c6fb41212ee1463a957f48d44c2c411aff464cc5aed9e942d76e0f92b17278"
+    },
+    {
+      "source": "scripts/Start-ConfigurationProbe.cmd",
+      "published": "scripts/Start-ConfigurationProbe.cmd",
+      "source_sha256": "ea5d7e071d0e58bcaedfde8b052dc4e82eac627ebc6a142c52c8a845473e1144",
+      "published_sha256": "ea5d7e071d0e58bcaedfde8b052dc4e82eac627ebc6a142c52c8a845473e1144"
+    },
+    {
+      "source": "scripts/Start-DummyLifecycleProbe.cmd",
+      "published": "scripts/Start-DummyLifecycleProbe.cmd",
+      "source_sha256": "e2c9a4cdcf5c3a61e35ff9a9e4c07c4af4a2498055a13ccd490784d563134554",
+      "published_sha256": "e2c9a4cdcf5c3a61e35ff9a9e4c07c4af4a2498055a13ccd490784d563134554"
+    },
+    {
+      "source": "scripts/Start-InitializationProbe.cmd",
+      "published": "scripts/Start-InitializationProbe.cmd",
+      "source_sha256": "42368ce28e7db7e4cb57fbe4565de594130b8f1ea45bef6904b4318731c80ba3",
+      "published_sha256": "42368ce28e7db7e4cb57fbe4565de594130b8f1ea45bef6904b4318731c80ba3"
+    },
+    {
+      "source": "scripts/Start-PlaneFlightProbe.cmd",
+      "published": "scripts/Start-PlaneFlightProbe.cmd",
+      "source_sha256": "ac12b89a31bac8e4739755f42a4dc152ef54ca806f7ee299175833cba3be10ab",
+      "published_sha256": "ac12b89a31bac8e4739755f42a4dc152ef54ca806f7ee299175833cba3be10ab"
+    },
+    {
+      "source": "scripts/Start-PlaneStagingProbe.cmd",
+      "published": "scripts/Start-PlaneStagingProbe.cmd",
+      "source_sha256": "cb5d88e92a1f9e31c9020e6fd1e220f8bc68bb3588b0340eea6f495003255584",
+      "published_sha256": "cb5d88e92a1f9e31c9020e6fd1e220f8bc68bb3588b0340eea6f495003255584"
+    },
+    {
+      "source": "scripts/summarize_menu_route.py",
+      "published": "scripts/summarize_menu_route.py",
+      "source_sha256": "824c5da986909439539bef1c7c976af1c967f6d8b5707f0760306aa5cfbd2ba0",
+      "published_sha256": "824c5da986909439539bef1c7c976af1c967f6d8b5707f0760306aa5cfbd2ba0"
+    },
+    {
+      "source": "scripts/summarize_player_profile.py",
+      "published": "scripts/summarize_player_profile.py",
+      "source_sha256": "7820d9838a769fed673c96813a731c0dfc3202fe4d0cb727040fdd54e5596ef4",
+      "published_sha256": "7820d9838a769fed673c96813a731c0dfc3202fe4d0cb727040fdd54e5596ef4"
+    },
+    {
+      "source": "scripts/summarize_schema.py",
+      "published": "scripts/summarize_schema.py",
+      "source_sha256": "0776acb6a36d54895b306bdca4fdc6c29e410f345731c33e3fe6b653bacee636",
+      "published_sha256": "0776acb6a36d54895b306bdca4fdc6c29e410f345731c33e3fe6b653bacee636"
+    },
+    {
+      "source": "scripts/summarize_snapshot.py",
+      "published": "scripts/summarize_snapshot.py",
+      "source_sha256": "8d27d7afa73a2cecd2dbcd83c8c22c8995892585bf1305c9acd4d753d12ce621",
+      "published_sha256": "8d27d7afa73a2cecd2dbcd83c8c22c8995892585bf1305c9acd4d753d12ce621"
+    },
+    {
+      "source": "scripts/symbolize_crash.py",
+      "published": "scripts/symbolize_crash.py",
+      "source_sha256": "237ee26236e338185b12316f3eb661e85b3d49fba5c794d537ee222403951e44",
+      "published_sha256": "237ee26236e338185b12316f3eb661e85b3d49fba5c794d537ee222403951e44"
+    },
+    {
+      "source": "scripts/validate_manual_layout.py",
+      "published": "scripts/validate_manual_layout.py",
+      "source_sha256": "ed92e4991127eff305befe8aaf917a35660271da6fec5f811606226ca477cd3d",
+      "published_sha256": "ed92e4991127eff305befe8aaf917a35660271da6fec5f811606226ca477cd3d"
+    },
+    {
+      "source": "tests/manual_control_fixture.lua",
+      "published": "tests/manual_control_fixture.lua",
+      "source_sha256": "376021de318510663dd8188b2c92a1fac922846cd73f24b25a76fe65364a580a",
+      "published_sha256": "376021de318510663dd8188b2c92a1fac922846cd73f24b25a76fe65364a580a"
+    },
+    {
+      "source": "tests/player_spawn_fixture.lua",
+      "published": "tests/player_spawn_fixture.lua",
+      "source_sha256": "a28c97fcb3bfed8063f32e3497e3e6634a3591a0472c54d2b36b55181d043d8f",
+      "published_sha256": "a28c97fcb3bfed8063f32e3497e3e6634a3591a0472c54d2b36b55181d043d8f"
+    },
+    {
+      "source": "tests/test_connection_lua.py",
+      "published": "tests/test_connection_lua.py",
+      "source_sha256": "4a6dfed25360b91d6fd0c41e5f7c61f3510861d02fb1a0f147e46746bffd55fc",
+      "published_sha256": "4a6dfed25360b91d6fd0c41e5f7c61f3510861d02fb1a0f147e46746bffd55fc"
+    },
+    {
+      "source": "tests/test_dummy_lifecycle_lua.py",
+      "published": "tests/test_dummy_lifecycle_lua.py",
+      "source_sha256": "c6afefa2341b2cb4ac20992e2b6a2adeb8d534c4e5600e4b98dc5853a2851d1c",
+      "published_sha256": "c6afefa2341b2cb4ac20992e2b6a2adeb8d534c4e5600e4b98dc5853a2851d1c"
+    },
+    {
+      "source": "tests/test_manual_control.py",
+      "published": "tests/test_manual_control.py",
+      "source_sha256": "8c9e6c5f84f5641f7391f8ab5be7ed37e82af58c859f74e5eb974bb17ae9bcbf",
+      "published_sha256": "8c9e6c5f84f5641f7391f8ab5be7ed37e82af58c859f74e5eb974bb17ae9bcbf"
+    },
+    {
+      "source": "tests/test_menu_probe.py",
+      "published": "tests/test_menu_probe.py",
+      "source_sha256": "30b04bc97eed8a6eb1ca7dddececa2e61657495f144c0709fa9fa7bc78942962",
+      "published_sha256": "30b04bc97eed8a6eb1ca7dddececa2e61657495f144c0709fa9fa7bc78942962"
+    },
+    {
+      "source": "tests/test_network_lifecycle.py",
+      "published": "tests/test_network_lifecycle.py",
+      "source_sha256": "e214c4a0dc3fd7eef638658411dac27126ffef90fd1b481a4acc6b1e566aca3f",
+      "published_sha256": "e214c4a0dc3fd7eef638658411dac27126ffef90fd1b481a4acc6b1e566aca3f"
+    },
+    {
+      "source": "tests/test_plane_configuration.py",
+      "published": "tests/test_plane_configuration.py",
+      "source_sha256": "f031f086ee9b88c090ad9a8eb47e6f4920cb5ef1834541c3a180733f4999d0a7",
+      "published_sha256": "f031f086ee9b88c090ad9a8eb47e6f4920cb5ef1834541c3a180733f4999d0a7"
+    },
+    {
+      "source": "tests/test_plane_first_state.py",
+      "published": "tests/test_plane_first_state.py",
+      "source_sha256": "a9e2b0823735b89085f802a80871ef933f6b5033e05d2d636bf5eb1c34a9fe9b",
+      "published_sha256": "a9e2b0823735b89085f802a80871ef933f6b5033e05d2d636bf5eb1c34a9fe9b"
+    },
+    {
+      "source": "tests/test_plane_flight_lua.py",
+      "published": "tests/test_plane_flight_lua.py",
+      "source_sha256": "3bfb936083c71394170c73ed86c3a25c9c12433a89e24b3127090b9c5fc8e8ab",
+      "published_sha256": "3bfb936083c71394170c73ed86c3a25c9c12433a89e24b3127090b9c5fc8e8ab"
+    },
+    {
+      "source": "tests/test_plane_flight_observation_analysis.py",
+      "published": "tests/test_plane_flight_observation_analysis.py",
+      "source_sha256": "39008f2d906a7de7198f92bbba21fc91a49af1c773fbe48da88f88332efa416f",
+      "published_sha256": "39008f2d906a7de7198f92bbba21fc91a49af1c773fbe48da88f88332efa416f"
+    },
+    {
+      "source": "tests/test_plane_full_state.py",
+      "published": "tests/test_plane_full_state.py",
+      "source_sha256": "f32308234a7eefa7a00fcb7d2912d62a7c44e29322b406e88a2cec6f9364601a",
+      "published_sha256": "f32308234a7eefa7a00fcb7d2912d62a7c44e29322b406e88a2cec6f9364601a"
+    },
+    {
+      "source": "tests/test_plane_initialization.py",
+      "published": "tests/test_plane_initialization.py",
+      "source_sha256": "ca048e81de63dbeeac5b953871e7b88373dd54da617d2aa802426a447996154c",
+      "published_sha256": "ca048e81de63dbeeac5b953871e7b88373dd54da617d2aa802426a447996154c"
+    },
+    {
+      "source": "tests/test_plane_motion.py",
+      "published": "tests/test_plane_motion.py",
+      "source_sha256": "9643af132c9a27b74c41e304e34c4852fda4c4c491f6150f66a427a2fac4f333",
+      "published_sha256": "9643af132c9a27b74c41e304e34c4852fda4c4c491f6150f66a427a2fac4f333"
+    },
+    {
+      "source": "tests/test_plane_motion_wire.py",
+      "published": "tests/test_plane_motion_wire.py",
+      "source_sha256": "e2b2e661dafccfa869f0d78ab6fb84a8873da03d70e3495db1ff7272257fcc71",
+      "published_sha256": "e2b2e661dafccfa869f0d78ab6fb84a8873da03d70e3495db1ff7272257fcc71"
+    },
+    {
+      "source": "tests/test_plane_spawn_rollback.py",
+      "published": "tests/test_plane_spawn_rollback.py",
+      "source_sha256": "eb5e0ff484db5501f2eb5c7ae1b799a3319548e53f5d17c6c55c759ececfe310",
+      "published_sha256": "eb5e0ff484db5501f2eb5c7ae1b799a3319548e53f5d17c6c55c759ececfe310"
+    },
+    {
+      "source": "tests/test_plane_staging_lua.py",
+      "published": "tests/test_plane_staging_lua.py",
+      "source_sha256": "11e85cbe8b2f991c483437f7f4c97410264f19d72b61eb4f8c966911e94271ca",
+      "published_sha256": "e3c0f2155596f76bb59d44845ce1d19eb8b122103c5a82feeb32301fa9be1043"
+    },
+    {
+      "source": "tests/test_player_spawn.py",
+      "published": "tests/test_player_spawn.py",
+      "source_sha256": "27ed13e4563491675db17d70b5643d0422130bf36651c6fa60933d1f273b1964",
+      "published_sha256": "27ed13e4563491675db17d70b5643d0422130bf36651c6fa60933d1f273b1964"
+    },
+    {
+      "source": "toolchain.json",
+      "published": "toolchain.json",
+      "source_sha256": "7b673c56ab7c4ae148e06ab36fbdd82938a0c75c2d53efc707adeab869609127",
+      "published_sha256": "cb96e9c0b80192a1281b46d4186735c0b01d658c8d2f0fd27985de2011adc399"
+    },
+    {
+      "source": "scripts/rea-batch.mjs",
+      "published": "scripts/rea-batch.mjs",
+      "source_sha256": "3586ed917fd5bbdc719ed56b6e57b5ab95d87e4dfa31bf4f7f18c6e5f9cba0d3",
+      "published_sha256": "3586ed917fd5bbdc719ed56b6e57b5ab95d87e4dfa31bf4f7f18c6e5f9cba0d3"
+    }
+  ],
+  "additional_authored_profile_files": [
+    {
+      "published": "scripts/Remove-ReconLoader.ps1",
+      "published_sha256": "1bb1c0266f63f4dd901ac8699600f0ed17a695daee6954229d9ec0e66fee1512"
+    }
+  ]
+}

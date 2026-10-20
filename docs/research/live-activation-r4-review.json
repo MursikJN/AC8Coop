@@ -1,0 +1,59 @@
+{
+  "schema": "ac8-flight-r4-independent-review-v1",
+  "reviewed_utc": "2026-10-20T03:48:17.2012708Z",
+  "verdict": "No blocking findings in focused diagnostic-only R4 diff",
+  "hashes": [
+    {
+      "sha256": "30B80CD2B9F8E68D1063DBB79F0B8CA542AF8D55071501DDCDD3DB351F930405",
+      "path": "C:\\Users\\USER\\Projects\\Random\\ac8-coop-lab\\native\\plane_flight_probe.cpp"
+    },
+    {
+      "sha256": "B7B50C703F7047965C096A548F44C0AE0A172E4839B33B4E76B5BE381CDFBD50",
+      "path": "C:\\Users\\USER\\Projects\\Random\\ac8-coop-lab\\native\\plane_flight_observations.h"
+    },
+    {
+      "sha256": "85FCF1B7898B7A9B0A5C9C4041F971198DC50356D7ED6F0F6BD5C77374D1E63E",
+      "path": "C:\\Users\\USER\\Projects\\Random\\ac8-coop-lab\\native\\plane_flight_observations_tests.cpp"
+    },
+    {
+      "sha256": "168B2A92DEF57567400667CF1E3052B1394FE70020F8C6CE683EF0B3F66AB082",
+      "path": "C:\\Users\\USER\\Projects\\Random\\ac8-coop-lab\\native\\plane_flight_core.h"
+    },
+    {
+      "sha256": "769606E8B15C5C220EE6D5D84E768B7D9D7FA57793B8086BD6DADCEDAB90E1CD",
+      "path": "C:\\Users\\USER\\Projects\\Random\\ac8-coop-lab\\scripts\\analyze_plane_flight_observations.py"
+    },
+    {
+      "sha256": "C833C3EB38AD90829AC45DA9F2790F241DA3D4B059010D3F8DAD0F15AE163CFA",
+      "path": "C:\\Users\\USER\\Projects\\Random\\ac8-coop-lab\\probe\\AC8CoopRecon\\Scripts\\plane_flight_probe.lua"
+    },
+    {
+      "sha256": "261B7330D8DF536956CD877DF92A2701C93F5D5BEA11BB95B25287DD2BC21727",
+      "path": "D:\\projects\\unreal-mod-tools\\build\\plane-flight-probe\\ac8_plane_flight_probe_r4.dll"
+    }
+  ],
+  "checked": [
+    "Lifecycle core hash unchanged from R3; existing native Move/Update arguments, configuration, tick barriers and retirement contract preserved.",
+    "Telemetry is void best_effort with caught C++ exceptions and independent failure counter; unavailable reads/output failures do not select motion or cleanup outcomes.",
+    "Sampling is at most five stages: seed, t1, t5, t10, before_destroy; no further stage after cleanup. Each JSON line limited to 2 MiB.",
+    "Source and owned identities checked against existing tracked headers/ledger before captures. Scene data requires cached SceneComponent class gate, owner equality, bounded reads and unchanged identity afterward.",
+    "Owned component collection bounded to 512 slots with capacity/bitmap bounds4096, stable header/count validation and per-entry class/owner checks.",
+    "Transform window96 bytes at200, translation double3 at220, flags nine bytes188..190; no unproven quaternion decode or skinned-specific offsets. Geometry references are identity metadata only.",
+    "Nonfinite decoded vectors become null; raw transform readability is separate from decoded validity. Missing actor flags become null.",
+    "before_destroy reference marked model_at_cleanup; analyzer separates model/root difference from actual Move argument error.",
+    "Analyzer requires actor/root identity, Scene gate, owner and field validity; cannot claim rendered plane.",
+    "R4 basename and journal align with Lua; fresh process planned."
+  ],
+  "verification": {
+    "core_sha256": "168B2A92DEF57567400667CF1E3052B1394FE70020F8C6CE683EF0B3F66AB082",
+    "native_tests_reported": 80,
+    "native_tests_independently_rerun": false,
+    "independent_check": "Ran analyzer against two actual native serializer fixtures: valid seed produced zero request error and expected300/100/20m delta; invalid cleanup remained null; rendered_plane_verified=false"
+  },
+  "limitations": [
+    "No game launch, memory mutation or native game calls during this review.",
+    "Bounded synchronous telemetry introduces ordinary I/O overhead; this is not a hard wall-clock deadline guarantee. Existing 15-second lifecycle gate remains unchanged.",
+    "Coordinates and visibility bits cannot prove rendered mesh, camera visibility, bone/proxy readiness or the cause of R3 invisible plane.",
+    "Geometry references do not prove selected assets loaded; unproven asset-layout reads were intentionally omitted."
+  ]
+}

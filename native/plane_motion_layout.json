@@ -1,0 +1,268 @@
+{
+  "status": "read_only_sampler_layout_observed_native_apply_not_authorized",
+  "image_sha256": "51510e2a520565dbe81fb0d569e95cd4393077acaaa859371489b80b8128829f",
+  "origin": {
+    "actor_inline_offset": "0x2268",
+    "proof_file": "../network-lifecycle-20261020/offline-network-link-stage.json",
+    "proof_rva": "0x7d6ee56",
+    "proof": "LEA RDX,[RBX+0x2268]; tail JMP 0x74d8380"
+  },
+  "read_extent": {
+    "bytes": "0x948",
+    "exclusive_end_from_actor": "0x2bb0",
+    "meaning": "covers observed direct reads, NOT proven total C++ struct size"
+  },
+  "fields": [
+    {
+      "offset": "0x38",
+      "count": 3,
+      "type": "float64",
+      "meaning": "unnamed source vector",
+      "basis": [
+        "0x74d85de",
+        "0x74d85eb",
+        "0x74d8612"
+      ]
+    },
+    {
+      "offset": "0x60",
+      "count": 2,
+      "type": "float32",
+      "meaning": "unnamed source values",
+      "basis": [
+        "0x74d85fd",
+        "0x74d8608"
+      ]
+    },
+    {
+      "offset": "0x108",
+      "count": 1,
+      "type": "float32",
+      "meaning": "unnamed source scalar",
+      "basis": [
+        "0x74d859d"
+      ]
+    },
+    {
+      "offset": "0x124",
+      "count": 3,
+      "type": "uint8",
+      "meaning": "packed into auxiliary sample byte: ((byte124<<4)|byte126)<<3 |byte125, truncated uint8",
+      "basis": [
+        "0x74d84df",
+        "0x74d8521",
+        "0x74d8525",
+        "0x74d85a9",
+        "0x74d85ad"
+      ]
+    },
+    {
+      "offset": "0x128",
+      "count": 3,
+      "type": "float64",
+      "meaning": "unnamed source values, first sign flipped in packet",
+      "basis": [
+        "0x74d84f9",
+        "0x74d852c",
+        "0x74d853d"
+      ]
+    },
+    {
+      "offset": "0x140",
+      "count": 7,
+      "type": "float32",
+      "meaning": "unnamed source values",
+      "basis": [
+        "0x74d850a",
+        "0x74d8513",
+        "0x74d854b",
+        "0x74d8559",
+        "0x74d8567",
+        "0x74d8575",
+        "0x74d8586"
+      ]
+    },
+    {
+      "offset": "0x160",
+      "count": 6,
+      "type": "float64",
+      "meaning": "auxiliary movement vector and angle-like triple; no game-unit names assigned",
+      "basis": [
+        "0x74d8a6a",
+        "0x74d8a79",
+        "0x74d8aad",
+        "0x74d8abf",
+        "0x74d8ac7",
+        "0x74d8acf"
+      ]
+    },
+    {
+      "offset": "0x1e0",
+      "count": 3,
+      "type": "float64",
+      "meaning": "unnamed source vector, final component becomes main sample float+48",
+      "basis": [
+        "0x74d84cd",
+        "0x74d84d8",
+        "0x74d85a5",
+        "0x74d86fc"
+      ]
+    },
+    {
+      "offset": "0x1f8",
+      "count": 3,
+      "type": "float64",
+      "meaning": "vector helper reorders (third,-first,second), normalizes when squared length above threshold; output main sample floats+20/+24/+28",
+      "basis": [
+        "0x74d6df4",
+        "0x74d6e03",
+        "0x74d6e2e",
+        "0x74d6e36",
+        "0x74d6e3b"
+      ]
+    },
+    {
+      "offset": "0x210",
+      "count": 3,
+      "type": "float64",
+      "meaning": "unnamed source vector",
+      "basis": [
+        "0x74d85b4",
+        "0x74d85c4"
+      ]
+    },
+    {
+      "offset": "0x868",
+      "count": 1,
+      "type": "uint8",
+      "meaning": "active transform block selector: zero uses+920, nonzero uses+8f8",
+      "basis": [
+        "0x74d83fd",
+        "0x74d8404"
+      ]
+    },
+    {
+      "offset": "0x8b0",
+      "count": 1,
+      "type": "uint32_bits",
+      "meaning": "copied to main sample+44; semantic/signedness unknown",
+      "basis": [
+        "0x74d849a",
+        "0x74d86b2"
+      ]
+    },
+    {
+      "offset": "0x8f8",
+      "count": 4,
+      "type": "float32",
+      "meaning": "nonzero-selector quaternion-like components",
+      "basis": [
+        "0x74d8423",
+        "0x4d318be",
+        "0x4d318cc",
+        "0x4d318db",
+        "0x4d318fe"
+      ]
+    },
+    {
+      "offset": "0x908",
+      "count": 3,
+      "type": "float64",
+      "meaning": "nonzero-selector position-like triple",
+      "basis": [
+        "0x74d842a",
+        "0x74d8436"
+      ]
+    },
+    {
+      "offset": "0x920",
+      "count": 4,
+      "type": "float32",
+      "meaning": "zero-selector quaternion-like components",
+      "basis": [
+        "0x74d8406",
+        "0x4d318be",
+        "0x4d318cc",
+        "0x4d318db",
+        "0x4d318fe"
+      ]
+    },
+    {
+      "offset": "0x930",
+      "count": 3,
+      "type": "float64",
+      "meaning": "zero-selector position-like triple",
+      "basis": [
+        "0x74d840d",
+        "0x74d8419"
+      ]
+    }
+  ],
+  "conversion": {
+    "position": "trunc_to_int32(runtime_scale * (selected_position[2], -selected_position[0], selected_position[1])); runtime_scale is float32 at image+0xdc4c03c, PE default10 is NOT a runtime constant",
+    "rotation": "4 float32 components passed to0x4d318a0; returned3 doubles multiplied(-180/pi,-180/pi,+180/pi) and stored float32",
+    "units": "numeric conversion observed; labels of game axes and meters/UEunits require live comparison",
+    "runtime_scale_evidence": "session-20261020-080947/placement-scale-live-scalar.json:100.0; scale-correction-static.json:writer78dbd38 sets100; older captures lack per-sample scale"
+  },
+  "receiver": {
+    "register_init": "0x74bb4c0 (base called by player init0x74d74f0)",
+    "register_call": "0x74bb67f ->0x74b5770",
+    "sender_factory": "0x74bc5e0",
+    "receive_callback": "0x74bda10",
+    "type_getter": "0x52c6a00",
+    "native_current_sample": "network+0x98 pointer; control block+0xa0",
+    "owner_link": "network+0x20 pointer; checked against LivePlayerPlane class by callback",
+    "warning": "callback receives shared-pointer-shaped SDK message, may invoke validation0x74b7770 before copying cache; not raw bytes and not a direct flight-model leaf",
+    "post_copy_arrays": [
+      "message+0x50",
+      "message+0x60",
+      "message+0x70"
+    ],
+    "model_apply_leaf": "not established in this pass"
+  },
+  "payload_observed": {
+    "header": {
+      "0x8": "64bit clock value",
+      "0x10": "byte object category",
+      "0x14": "uint32 member id",
+      "0x18": "dirty byte"
+    },
+    "main": {
+      "0x20": "float32[3] normalized/reordered source vector",
+      "0x2c": "int32[3] converted position",
+      "0x38": "float32[3] converted Euler-like angles",
+      "0x44": "uint32 bits from source+8b0",
+      "0x48": "float32 from source+1f0"
+    },
+    "size": "packet object includes dynamic arrays; do not memcpy or transmit C++ memory representation"
+  },
+  "limitations": [
+    "All reads/analysis offline on hash-checked PE. No live game calls.",
+    "Keep fresh ticket process/world/actor identity and UObject serial checks, refuse swaps.",
+    "External read may span several game ticks; records are observational and not atomic snapshots.",
+    "Do not change local role1, Strix gate or transport.",
+    "Do not call outgoing serializer0x74d8380: it mutates native caches/dynamic arrays and accesses clock."
+  ],
+  "evidence": [
+    {
+      "file": "motion-apply.json",
+      "sha256": "fe46eccbd698f5ffeebe5766f72bc6fb9d9bf4c03873b5f0c8511a757018ecfe"
+    },
+    {
+      "file": "motion-base-leaves.json",
+      "sha256": "9feaed95932385d12625a136f160180572be9abb2b0b927c3947b20bbc7c87ed"
+    },
+    {
+      "file": "motion-conversion-constants.json",
+      "sha256": "fe3d2b6d855bf9c9c474ff3e1ac0c456a946f85f640a2bb02a62b5812d4d75e2"
+    },
+    {
+      "file": "motion-first.json",
+      "sha256": "c16681e52582f70a99a626e7859cb699ba60c01784a23b0646da3a115f847d17"
+    },
+    {
+      "file": "motion-handlers.json",
+      "sha256": "103f34450621a6d23ad5e2b24413c2b59ff248a9c6ac873cbf2255202455e5b9"
+    }
+  ]
+}

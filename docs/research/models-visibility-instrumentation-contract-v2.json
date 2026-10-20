@@ -1,0 +1,77 @@
+{
+  "scope": "read-only exact-build R3 visibility investigation; no hidden toggles, animation updates or live calls",
+  "observed_limit": "268 manual steps and pose APItrue do not prove actual root motion or rendered mesh. No position/visibility readback in R3 provided. Static cause remains undetermined.",
+  "next_instrumentation": [
+    {
+      "target": "source and owned actor",
+      "fields": [
+        "identity/class/Outer",
+        "+1a0 rootcomponent pointer and identity",
+        "+58 rawbyte; reflectedbHidden isoffset58, highbit80 used byrender predicate7d4f4e5..4e9",
+        "+3f4 activation",
+        "+15a0 and+1af8 candidate geometry components, identity/class/Outer",
+        "requested worldXYZ/rotator and primarymodel8d0quat/8e0double3",
+        "posecall bool and actualrootXYZ before/after"
+      ]
+    },
+    {
+      "target": "validated root and geometry SceneComponents",
+      "fields": [
+        "+220 double3 worldposition: directly readby3fdebc0@3fdebd3..3fdec20",
+        "+200..25f raw96bytes transformcandidate; onlytranslationdecodedunlessadditionalorientationlayoutproof",
+        "+188..190 raw3bytes",
+        "+188 bit20 changedby42ce610 visible-state setter@42ce666..66e",
+        "+3a/+3b schedulerflags; actualtickpair; customD3whenapplicable",
+        "+90 owner and+20Outer"
+      ],
+      "bound": "read eachowned/source root and2geometrycomponents; rejectalias andinvalidclass; logmissingfieldratherthanguess"
+    },
+    {
+      "target": "componentatplane+1af8 onlywithvalidclassidentity",
+      "fields": [
+        "+590 preferred assetpointer; fallback+598 ifzero (42eece0)",
+        "sameassetclasspass39a1850 checkedby42df5f0; do notinvoke lazyclassgetter",
+        "capture schemafirst for hiddenInGame, ownerNoSee, onlyOwnerSee, renderInMainPass, bounds, skinnedasset and bonebuffers; offsetsnotrecoveredinthisslice"
+      ]
+    }
+  ],
+  "discriminators": [
+    "requestedXYZchanges but actualrootdoesnot =>transform/applicationproblem",
+    "actualrootmatches butdistance/out-of-view =>placement/camerageometry issue, notproofhidden",
+    "rootplacednearby butactorhidden/meshvisiblebitfalse =>actualvisibilitypredicate issue",
+    "flagspermitview butassetnull =>geometryconfiguration/assetreadiness issue",
+    "flagsassetsrootvalid yetnorender =>needsrenderproxy/bounds/skinnedpose evidence; disabledtick remainshypothesis"
+  ],
+  "native_activation_excluded": {
+    "7d1c440": "sets3f4,collisionstate, invokesv8f8=7d4ed80, childactivation andProcessEvent; not purevisibilitysetter",
+    "7d4ed80": "calls7d1c840, controller tickenable, component/weapon handlers, specialflags, sound-likeobject57e0",
+    "7d1c840": "primaryandcontroller tickstate; v910=7d4eeb0 enumeratescomponentsandchanges theirtick domains",
+    "7d4f3e0": "render/weapon predicatechecksactivation3f4andactor58highbit; sourcegeometryvisibility7d5eeb0 used forchildcomponentvisibility",
+    "42ce610": "RCXcomponent,DLnewbit,R8Bpropagationmode; modifies188bit20 andcallsvirtual518 pluspropagation; observeonlytoday"
+  },
+  "unknown": [
+    "Exactnamedclassofcapturedgeometrycomponents",
+    "Independent masksofhiddenInGame/ownerNoSee/renderMainPass",
+    "Initial bonepalette/renderproxy readiness",
+    "Whether modelworldplacement putsownedplaneinuserscamera view",
+    "No proofthat3f4false alone hidesmainmesh"
+  ],
+  "evidence": [
+    "models-visibility-entries.json",
+    "models-visibility-actor-entry.json",
+    "models-visibility-player-activate.json",
+    "models-visibility-base-activation.json",
+    "models-visibility-switch.json",
+    "models-visibility-readiness-leaves.json",
+    "live-activation-visual-setter.json"
+  ],
+  "SceneComponent_type_gate": {
+    "getter_rva": "37c57a0",
+    "cached_class_global_rva": "e4a8958",
+    "load_instruction": "37c57a7 movRAX,[RIP+ace31aa];nextRIP37c57ae",
+    "class_name": "SceneComponent",
+    "utf16_name_rva": "bbb5292",
+    "name_argument_instruction": "37c57e6 leaRDX,[RIP+83efaa5]",
+    "method": "Read cachedclass pointer only; class+38 hierarchyindex; objectclass+38>=index; objectclass+30 array[index]==SceneClass+30. Nullcachedclass =>unavailable, no lazygettercall."
+  }
+}

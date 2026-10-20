@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-20",
+  "scope": "Public sanitized source snapshot; no game launch or installation",
+  "python_lua_tests": {"passed": 178, "command": "python -m unittest discover -s tests -q"},
+  "native_flight_tests": {"passed": 80, "compiler": "MSVC x64 /W4 /WX /fp:strict", "revision": "r4"},
+  "native_connection_tests": {"protocol": "passed", "runtime": "passed", "version": "0.1.2"},
+  "public_build_sha256": {
+    "ac8_plane_flight_probe_r4.dll": "1B33FC9A523C5567E8C03D98472239E6A4D032E4A0A9C4A06BEC7CA9F8643C1C",
+    "ac8_connection_test.dll": "F0D5483DA94089A7448949E23CB19D7B4DD4785AB9C2193364E9963DD3785C0B"
+  },
+  "public_build_installed": false,
+  "binaries_in_repository": false,
+  "game_files_in_repository": false,
+  "live_visible_flight_verified": false,
+  "note": "Build hashes differ from historical installed artifacts. Launch scripts retain historical pins; this is not a ready-to-run package."
+}

@@ -1,0 +1,47 @@
+{
+  "field": "plane+0xfb8 native array of 8 signed32 selection IDs; user-facing semantic name unverified",
+  "descriptor": {
+    "data": "plane+fb8",
+    "count": "plane+fc0",
+    "capacity": "plane+fc4"
+  },
+  "ctor_values": [
+    -1,
+    -1,
+    -1,
+    -1,
+    -1,
+    -1,
+    -1,
+    -1
+  ],
+  "ctor_stores": [
+    "7d4a02c",
+    "7d4a04f",
+    "7d4a072",
+    "7d4a095",
+    "7d4a0b8",
+    "7d4a0db",
+    "7d4a0fe",
+    "7d4a128"
+  ],
+  "source_capture_values": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "consumer": {
+    "caller": "7d4ba52 R8=&planeFB8; call7de2c60@7d4ba93",
+    "deep_copy": "7de2cab calls16d9250 into owned helper+48",
+    "iteration": "8 slots; ID loaded7de2df3; test7de2df7; jle7de2dfa",
+    "nonpositive": "default/reset branch7de2e5e..7de2e82 calls7de3250",
+    "positive": "GI+8e0 lookup79a3c00@7de2e48, apply7de3080"
+  },
+  "minimal_fix": "beforeFinish copy captured8 scalarint32 into independentlyowned ctor allocation after strict actoridentity, count8/cap8, pointerbounds and noalias/rangeoverlap checks; readback32bytes. Do not copy descriptors or sourcepointer. Exact sourcezero values are supported by consumer; do not broaden to arbitrary positiveIDs.",
+  "backend_modified": false
+}
