@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-20",
+  "revision": "r12-local-guest-simulator",
+  "launcher": "Start-GuestSimulator.cmd",
+  "native_dll_sha256": "A1821613B1B2ED63D96F7E97964B90CB5F294CAF19321FDB3EB00E034A8A83F2",
+  "native_checks": {"authority_wire":357,"authenticated_steam_transport_fake_sdk":17,"loopback":31,"connection_regression":"passed"},
+  "lua_checks": {"stock_menu":15,"local_services_and_menu":5},
+  "actual_controller_native_host_test": {
+    "evidence":"build/guest-simulator-20261020-223602/result.json",
+    "connect":"passed",
+    "plane_selection_and_host_confirmation":"passed",
+    "plane_change_clears_guest_ready":"passed",
+    "host_selection_clears_both_ready":"passed",
+    "stale_command_explicit_rejection":"passed",
+    "same_host_disconnect_and_rejoin":"passed",
+    "thread_shutdown_wait":"passed"
+  },
+  "idle_transport_test": {"evidence":"build/local-bridge-20261020-223836/result.json","idle_seconds":16,"result":"passed"},
+  "live": {
+    "evidence":"profiles/ac8-local-r12/evidence/pair-20261020-223315-954",
+    "game_processes":1,
+    "host_pid":20716,
+    "guest_kind":"Python Tk panel loading native guest DLL; no second game",
+    "game_main_menu_button_opened":"passed",
+    "panel_connect_clicked":"passed",
+    "panel_f14d_choice_clicked_and_confirmed_in_host":"passed",
+    "panel_ready_clicked_and_confirmed_in_host":"passed",
+    "host_ready_clicked_in_game":"passed",
+    "both_snapshots_ready_mask":3,
+    "guest_aircraft":23,
+    "rejoin_after_panel_restart":"passed",
+    "game_menu_visually_displays_guest_f14d_and_both_ready":true,
+    "updated_panel_footer_and_confirmation_visually_checked":true
+  },
+  "limitations":["F-14D is the only verified model-name mapping; other keys are protocol tests", "loadout is a lobby preview, not an in-game hangar change", "no mission launch, shared world, flight, weapons or NPC replacement", "Steam two-PC gameplay not tested by this panel"],
+  "game_adapter_ready":false
+}

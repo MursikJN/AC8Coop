@@ -1,0 +1,110 @@
+{
+  "revision": "r6",
+  "session": "session-20261020-155919",
+  "native_sha256": "bef6ba27b5c08a8daf58b7ea2b6d4fff508d56ddd7d97c179350d5806d928cb0",
+  "user_observation": {
+    "plane_visible": true,
+    "moves_like_local_player": true,
+    "no_shaking_observed_in_this_trial": true,
+    "f9_pressed": true,
+    "source": "user report in this chat"
+  },
+  "state_source": "local player, fixed world displacement; no remote peer state",
+  "native_visibility_verified": true,
+  "motion_ticks": 782,
+  "observations": {
+    "attempts": 5,
+    "failures": 0
+  },
+  "cadence_analysis": {
+    "schema": "ac8-flight-cadence-analysis-r6",
+    "count": 782,
+    "dropped": 0,
+    "cadence_ms": {
+      "min": 3.66,
+      "mean": 18.997088348271447,
+      "p50": 12.801,
+      "p95": 22.433,
+      "max": 831.742
+    },
+    "observed_hz": 52.63964570081027,
+    "native_cost_ms": {
+      "state_us": {
+        "min": 0.085,
+        "mean": 0.11908695652173913,
+        "p50": 0.116,
+        "p95": 0.157,
+        "max": 0.399
+      },
+      "model_us": {
+        "min": 0.017,
+        "mean": 0.023598465473145782,
+        "p50": 0.022,
+        "p95": 0.035,
+        "max": 0.075
+      },
+      "pose_us": {
+        "min": 0.225,
+        "mean": 0.32243350383631714,
+        "p50": 0.318,
+        "p95": 0.399,
+        "max": 2.823
+      },
+      "total_us": {
+        "min": 0.334,
+        "mean": 0.46511892583120207,
+        "p50": 0.449,
+        "p95": 0.581,
+        "max": 3.089
+      }
+    },
+    "failed_samples": 0,
+    "dt_clamped_samples": 16,
+    "distinct_source_timestamps": 782,
+    "request_error_m": {
+      "min": 0.0,
+      "mean": 0.0,
+      "p50": 0.0,
+      "p95": 0.0,
+      "max": 0.0
+    },
+    "actual_step_m": {
+      "min": 0.08387666155115754,
+      "mean": 4.350196631508689,
+      "p50": 3.6373637604469575,
+      "p95": 6.351925457558995,
+      "max": 41.54301205045467
+    },
+    "wrapped_rotation_step_degrees": {
+      "min": 0,
+      "mean": 0.06565082235033977,
+      "p50": 0.02422497343874852,
+      "p95": 0.19649600468480344,
+      "max": 2.627721049657879
+    },
+    "constant_velocity_prediction_residual_m": {
+      "min": 0.0002518293666050709,
+      "mean": 0.8273585517031918,
+      "p50": 0.026514814012389337,
+      "p95": 0.6514508495317871,
+      "max": 113.78297474998692
+    },
+    "visual_smoothness_verified": false,
+    "limits": "Large pose residuals may reflect maneuvers or corrections. Visual shaking requires user observation; sparse samples and missing readbacks are not proof of smoothness."
+  },
+  "source_distance_range_m": [
+    316.8675085366024,
+    353.358902442729
+  ],
+  "owned_identities_retired": true,
+  "game_exit_verified": true,
+  "proxy_removal_verified": true,
+  "limits": [
+    "One short local self-state trial; no independent friend control or transport integration.",
+    "User observed smooth movement; measured callback stalls up to 831.742 ms and 16 capped-dt samples remain.",
+    "No claim of stable performance across missions, models or camera conditions."
+  ],
+  "next_stage": "Preserve r6 as visible local-flight baseline; connect remote participant state through the separately tested Steam transport, with participant/mission-generation ownership and cleanup.",
+  "game_exit_code": 0,
+  "session_finished": "2026-10-20T16:22:43.1328848+07:00"
+}

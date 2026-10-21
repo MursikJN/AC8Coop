@@ -250,6 +250,13 @@ local function capture()
     return stamp
 end
 
+if os.getenv('AC8_COOP_MENU')=='25201480' then
+    local entry=assert(os.getenv('AC8_COOP_MENU_ENTRY'),'Menu entry path is absent')
+    local menu=assert(loadfile(entry))()
+    menu.boot(output_dir,capture)
+    return
+end
+
 RegisterKeyBind(Key.F8, function()
     if busy then return end
     busy = true

@@ -1,0 +1,41 @@
+{
+  "revision": "r13-manual-host-aircraft",
+  "status": "host_hangar_and_sortie_verified_with_guest_simulator",
+  "guest_aircraft": "F-14D",
+  "guest_wingman_slot": 1,
+  "host_aircraft": "manual_stock_hangar_choice",
+  "checks": {
+    "lua_adapter_tests": 8,
+    "native_authority_checks": 382,
+    "menu_contract_checks": 56,
+    "local_phase_gate_trial": "build/hangar-session-20261021-005916/result.json"
+  },
+  "live_session": "profiles/ac8-local-r13/evidence/pair-20261021-005931-638",
+  "gameplay_verified": true,
+  "limitations": [
+    "Guest simulator does not pilot a plane; Baxter remains AI-controlled",
+    "Adapter currently supports mission 6, Easy, guest F-14D only",
+    "Cutscene skip voting, second pilot and combat replication are separate work",
+    "Return from mission and a second sortie in the same process are not implemented/tested"
+  ],
+  "live_observations": {
+    "lobby_guest_connected": true,
+    "guest_f14d_acknowledged": true,
+    "lobby_both_ready": true,
+    "hangar_loading_ready_mask": 0,
+    "panel_ready_disabled_during_loading": true,
+    "stock_mission6_briefing_reached": true,
+    "hangar_aircraft_and_sortie": "verified",
+    "host_aircraft": "F/A-18C (7010)",
+    "guest_wingman_aircraft": "F-14D (23010), Baxter slot 1",
+    "hangar_second_ready_mask_initial": 0,
+    "guest_only_ready_mask": 2,
+    "both_ready_mask": 3,
+    "no_automatic_sortie_after_both_ready": true,
+    "explicit_host_button_native_sortie": true,
+    "host_world": "Mission007",
+    "host_pawn_class_prefix": "/PP0007_",
+    "guest_panel_phase": 6,
+    "adapter_errors": false
+  }
+}

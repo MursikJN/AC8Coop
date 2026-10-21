@@ -1,0 +1,59 @@
+{
+  "revision": "r16-player-initialization",
+  "pid": 2328,
+  "game_build": 25201480,
+  "host_aircraft": "F/A-18C",
+  "guest_player_class": "BP_PlayerPlane_PP0023_f14d_C",
+  "guest_plane_type": 23010,
+  "guest_weapons": [
+    16,
+    11
+  ],
+  "own_upgrade_parts": true,
+  "own_network_object": true,
+  "finish_spawning_verified": true,
+  "actor_and_component_updates_disabled": true,
+  "hidden_and_collision_disabled": true,
+  "models_seeded": false,
+  "physics_stepped": false,
+  "guest_input_applied": false,
+  "baxter_replaced": false,
+  "ai_disabled": false,
+  "real_guest_playable": false,
+  "cleanup": "all_owned_identities_retired",
+  "host_and_three_wingmen_preserved": true,
+  "evidence": [
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r16-preflight.tsv",
+      "sha256": "7150c0b1cb74e029764dd03e7f8880bfb4bd03b2244e17ee092192c92298229a"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r16-initialization.tsv",
+      "sha256": "5fa3451e9469f4fb52b174402cf3038ac628f37fedce8762c03a5ee0f055f4a7"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r16-actor-readback.tsv",
+      "sha256": "0afacb0ac3679afcaa837d83aa5b5f23d5c4a925fa960da260096bb36ad1b8d4"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r16-cleanup.tsv",
+      "sha256": "6c81df375849bf3b888ef7f05200f62ba2ae12b334db5e43596f6d0ef75292cd"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r16-source-preservation.tsv",
+      "sha256": "e7fe5e79dbdb1ed3f469275ccdcf9a37131f05f656f894782e9cc838a91da88a"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r15a-retired-proof.tsv",
+      "sha256": "82346edba952c8b06d809d25822985b57e998db2b315bf16202226586c549881"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\guest-player-stage.tsv",
+      "sha256": "d5e69b5307c3ad54b474fe9ac4b3f270dd8ab603753bfafc26412d041b147c92"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\guest-player-stage-constructor.tsv",
+      "sha256": "e84e922dcb36541e86c4908813b17a73241b2ce03868b3b673b765095cafbc32"
+    }
+  ]
+}

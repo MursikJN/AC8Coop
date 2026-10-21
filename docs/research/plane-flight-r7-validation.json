@@ -1,0 +1,49 @@
+{
+  "revision": "r7",
+  "date": "2026-10-20",
+  "status": "prepared_for_first_two_peer_mission_trial",
+  "game_build": 25201480,
+  "native_sha256": "856836F85A35CB37E7185BBB4EB0804D2412AAC366152387AD471AA22A6FB9B4",
+  "package": {
+    "path": "dist/AC8CoopFlight-r7.zip",
+    "bytes": 8923762,
+    "sha256": "7BE47807181DF91F6BA54E3EBB337093419CD339831B2606FE6A26766F274B7A",
+    "manifest_files_verified": 23,
+    "private_settings_and_game_binaries_included": false
+  },
+  "validation": {
+    "native_baseline_checks": 157,
+    "coop_protocol_runtime_checks": 42,
+    "coop_transport_checks": 12,
+    "original_connection_mock_regression": "passed",
+    "python_lua_discovered": 194,
+    "python_lua_passed": 193,
+    "python_lua_skipped": 1,
+    "skip_reason": "standalone native connection DLL fixture not configured",
+    "powershell_syntax": "passed",
+    "local_host_validate_only": "passed",
+    "packaged_guest_validate_only": "passed",
+    "dll_load_and_five_guarded_exports_outside_game": "passed",
+    "accepted_r6_dll_unchanged": true
+  },
+  "implemented": [
+    "Steam authenticated two-peer numeric state on virtual port 383; 20 Hz maximum send rate",
+    "Bound participant/session nonce/mission epoch/plane generation/sequence/config; finite bounded scalar payload only",
+    "Both F8 readiness and individual reviewed token plus F7 arm required before one native allocation attempt per process",
+    "Remote numeric state staged with local owned graph and receiver clock; sender pointers/native clock never transmitted",
+    "F9 peer stop, stale/lost connection stop and original owned identity cleanup/quarantine",
+    "15 second native motion limit and preinstalled 36 second Lua watchdog"
+  ],
+  "not_verified": [
+    "Live Steam callbacks while in mission",
+    "Remote flight appearance, latency and smoothness on two machines",
+    "Live simultaneous arm, peer stop and disconnect cleanup",
+    "Other models/loadouts, weapons, damage, mission authority, four players or reconnect allocation"
+  ],
+  "evidence": [
+    "build/r7-build-final.txt",
+    "build/r7-python-tests.txt",
+    "profiles/ac8-build25201480-r7/trial-manifest.json",
+    "dist/AC8CoopFlight-r7/package-manifest.json"
+  ]
+}

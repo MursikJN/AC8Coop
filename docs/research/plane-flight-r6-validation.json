@@ -1,0 +1,39 @@
+{
+  "revision": "r6",
+  "scope": "cadence experiment; no custom interpolation",
+  "native_sha256": "bef6ba27b5c08a8daf58b7ea2b6d4fff508d56ddd7d97c179350d5806d928cb0",
+  "native_checks": {
+    "cadence": 17,
+    "visibility": 56,
+    "lifecycle": 23,
+    "models": 16,
+    "selection_slots": 10,
+    "component_ticks": 16,
+    "observations_and_serializer": 19,
+    "total_passed": 157
+  },
+  "python_lua": {
+    "discovered": 187,
+    "passed": 186,
+    "skipped": 1,
+    "skip_reason": "Connection Test native DLL not supplied"
+  },
+  "bounded_motion_trace_serializer_verified": {
+    "samples": 4096,
+    "synthetic": true,
+    "json_parsed": true,
+    "analyzer_parsed": true
+  },
+  "powershell_parse_verified": true,
+  "profile_validate_only": true,
+  "r5_1_dll_and_policy_sources_preserved": true,
+  "native_dt_clock": "QPC microseconds; prior 0.1s cap retained",
+  "scheduled_delay_ms": 1,
+  "callback_cap": 4096,
+  "native_motion_deadline_ms": 15000,
+  "active_status_period_ms": 1000,
+  "failure_and_cleanup_status_immediate": true,
+  "game_launched": false,
+  "visual_smoothness_verified": false,
+  "remaining_work": "One fresh F8 review/arming and one F7 live trial; compare cadence trace and user observation with visible R5.1 baseline."
+}

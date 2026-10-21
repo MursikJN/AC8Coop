@@ -1,0 +1,35 @@
+{
+  "revision": "r14-guest-control-development",
+  "scope": "Steam input transport and verified assignment lease; not a playable guest release",
+  "game_build": 25201480,
+  "native_dll_sha256": "908e31278994ea13ad8efc8c5a566536041e093808d5ee8bc263c162b353d59a",
+  "implemented": [
+    "AC8I v1 bounded guest input protocol: pitch, roll, yaw, throttle, brake",
+    "Steam peer/nonce/role validation using the existing connection lifecycle",
+    "Dedicated virtual port 386; unreliable latest-input delivery",
+    "Reject wrong mission generation/revision/slot/model and replay",
+    "300 ms input lease using receiver clock; no total flight-duration cap",
+    "Assignment requires host authority, both worlds loaded, player flight engine, detached NPC and unchanged host pawn",
+    "Bounded read-only mission/wingman ownership probe",
+    "Fresh Baxter role resolver with world/player/AI component checks and four singleton weak-reference arrays",
+    "F-14D player-class asset preparation inside one game-thread consumer callback"
+  ],
+  "checks": {
+    "input_core": 1244,
+    "authenticated_input_transport": 13,
+    "shared_session_regression": 382,
+    "existing_steam_session_regression": 17,
+    "existing_loopback_regression": 31,
+    "slot_resolver_lua": 11
+  },
+  "live_two_pc_verified": false,
+  "npc_replacement_implemented": false,
+  "guest_view_implemented": false,
+  "weapon_replication_implemented": false,
+  "r13_release_preserved": true,
+  "ownership_probe_session": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955",
+  "next_required_evidence": "Stock player-plane instance initialization with a type-safe mission role adapter, then independent control on two PCs",
+  "not_for_friend_install": true,
+  "live_slot_contract": "docs/research/guest-slot-r14-live-contract.json",
+  "ownership_probe_completed": true
+}

@@ -1,0 +1,87 @@
+{
+  "revision": "r20 / r20a",
+  "date": "2026-10-21",
+  "status": "development_only_not_full_coop",
+  "architecture": {
+    "authority": "host",
+    "guest_rendering": "local_client",
+    "transport": "SteamNetworkingSockets; TCP loopback for local tests",
+    "video_streaming": false
+  },
+  "live": {
+    "process_id": 2328,
+    "game_build": 25201480,
+    "host_paused": true,
+    "peer": "external simulated TCP client on same PC",
+    "real_guest_connected": false,
+    "input_packets_accepted": 71,
+    "native_steps": 130,
+    "state_frames_received": 46,
+    "orientation_delta": 0.39572350835252995,
+    "own_checkpoint_restored": true,
+    "host_model_unchanged": true,
+    "position_restore_error_cm": 1.7320507688545,
+    "camera_updates": 97,
+    "camera_manager_position_error_cm": 0,
+    "original_camera_restored": true,
+    "visual_screen_inspection": false
+  },
+  "tests": {
+    "protocol_gate_cadence_input_checks": 405,
+    "steam_transport_checks": 8,
+    "existing_connection_regression": "passed",
+    "lua_camera_and_view_tests": 10
+  },
+  "scope": {
+    "network_state": "four squadron planes only",
+    "pilot_input": "pitch roll yaw throttle brake",
+    "native_model": "own F-14D primary flight model, 60 Hz",
+    "ai_baxter_restored": false,
+    "checkpoint_diagnostic_limit_seconds": 6,
+    "runtime_flight_time_limit": false
+  },
+  "limits": [
+    "No real second PC test by user instruction",
+    "No complete guest scene bootstrap/render lifecycle",
+    "No full mission replication, weapons, effects or mission events",
+    "Only one story damage operation bridged by r19c",
+    "Guest death gate tested; spectator camera not implemented",
+    "r20a raw keyboard/XInput capture compiled and unit tested, not live guest tested",
+    "Paused proof checkpoint is one shot per loaded module",
+    "Production lobby/launch lifecycle not integrated"
+  ],
+  "evidence": {
+    "pilot-loopback-proof.json": {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/pilot-loopback-proof.json",
+      "sha256": "eac1660ecfdad4f25d1d357413a19a679fa7f4d3e3ddda43c10f514ff431247f"
+    },
+    "guest-pilot-checkpoint.tsv": {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/guest-pilot-checkpoint.tsv",
+      "sha256": "a00d9a328d4e099f907cf3ce6d597efcd7d59f52bac5e8597ae07fa3aef22f06"
+    },
+    "pilot-final-local-pilot-native-r20.tsv": {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/pilot-final-local-pilot-native-r20.tsv",
+      "sha256": "87bc2387b26c6a43a346a7fa7df8cf92810abbf94b1e2b5205b2fd80edb4f1f1"
+    },
+    "pilot-camera-guest-camera-preview-r20.tsv": {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/pilot-camera-guest-camera-preview-r20.tsv",
+      "sha256": "afcea53494684d4d913c718ddffacc6c47e50a0f390ea3edb3e3539999b92148"
+    }
+  },
+  "sources": [
+    "https://dev.epicgames.com/documentation/unreal-engine/networking-overview-for-unreal-engine",
+    "https://partner.steamgames.com/doc/features/multiplayer/networking"
+  ],
+  "binaries": {
+    "r20": {
+      "path": "build/guest-pilot-r20/ac8_guest_pilot_r20.dll",
+      "sha256": "f48e84228fdc4dc911584ac1ba7403f025935de33785fc4781f0dc1fb8281f10",
+      "live_loaded": true
+    },
+    "r20a": {
+      "path": "build/guest-pilot-r20a/ac8_guest_pilot_r20a.dll",
+      "sha256": "13e093aedd424c13ebe8755013afd0212cae2e0f091a8fe4d5c0c0fdacea7637",
+      "live_loaded": false
+    }
+  }
+}

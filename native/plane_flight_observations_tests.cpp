@@ -42,5 +42,19 @@ int wmain(int argc,wchar_t** argv){
  frame.owned_before=synthetic_actor(0x30000,{0,0,0});frame.owned_after=synthetic_actor(0x30000,{30000,10000,2000});frame.requested={30000,10000,2000};frame.requested_valid=true;
  observation_check(emit_observation_frame(observation::Stage::seed,0,frame,true,true),"write actual valid JSONL schema");++tests;
  frame={};observation_check(!emit_observation_frame(observation::Stage::before_destroy,15000,frame,false,false),"invalid sample recorded but reported unavailable");++tests;
+ const auto vispath=directory+L"\\plane-flight-visibility-r5.jsonl";
+ f=CreateFileW(vispath.c_str(),GENERIC_WRITE,FILE_SHARE_READ,nullptr,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,nullptr);observation_check(f!=INVALID_HANDLE_VALUE,"open visibility fixture file");CloseHandle(f);
+ visibility_report={};visibility_report.before_valid=true;visibility_report.before.main=synthetic_actor(0x30000,{0,0,0}).root;
+ visibility_report.before.main.raw_flags[0]=0x41;
+ observation_check(emit_visibility_report("before"),"write visibility before-call snapshot");++tests;
+ visibility_report.after=visibility_report.before;visibility_report.after.main.raw_flags[0]=0x61;
+ visibility_report.after_valid=visibility_report.called=visibility_report.verified=true;visibility_report.error="main_visibility_verified";
+ observation_check(emit_visibility_report("after"),"write visibility after-call snapshot");++tests;
+ const auto tracepath=directory+L"\\plane-flight-cadence-r6.json";
+ f=CreateFileW(tracepath.c_str(),GENERIC_WRITE,FILE_SHARE_READ,nullptr,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,nullptr);observation_check(f!=INVALID_HANDLE_VALUE,"open cadence fixture file");CloseHandle(f);
+ motion_trace.count=0;motion_trace.dropped=0;motion_trace.emitted=false;
+ for(unsigned i=0;i<plane_flight_cadence::max_samples;++i){plane_flight_cadence::Sample s;s.begin_us=123456789012+i*1000ull;s.interval_us=1000;s.state_us=120;s.model_us=25;s.pose_us=130;s.total_us=275;s.source_timestamp=639280123456789010ull+i;s.dt=0.001f;s.moved=s.actual_valid=s.success=true;s.requested={-999999999.12345,987654321.98765,123456789.12345};s.actual=s.requested;s.rotation={-359.999999,180.123456,123.987654};motion_trace.append(s);}
+ observation_check(emit_motion_trace(),"full bounded cadence buffer fits actual serializer");++tests;
+ observation_check(emit_motion_trace(),"cadence dump is idempotent");++tests;
  std::printf("%u observation tests passed; two synthetic actual-serializer fixtures written; no native execution\n",tests);return 0;
 }

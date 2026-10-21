@@ -1,0 +1,11 @@
+{
+  "provenance": "R5 live pre-setter memory snapshot, session-20261020-151233, 2026-10-20T15:20:02+07:00; visibility call was refused; no live setter execution",
+  "raw_window_start": "0x188",
+  "raw_window_size": 9,
+  "main_flags_hex": "410008020000000000",
+  "source_main_flags_hex": "610008020000000000",
+  "secondary_flags_hex": "430008020000000000",
+  "source_secondary_flags_hex": "430008020000000000",
+  "expected_precondition_accepts": true,
+  "native_setter_live_verified": false
+}

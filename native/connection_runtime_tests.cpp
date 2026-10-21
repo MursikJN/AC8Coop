@@ -107,7 +107,12 @@ int main() {
     swprintf_s(path,L"%ls\\events.tsv",folder);assert(open_event_log(path));log("test_live_read");
     HANDLE reader=CreateFileW(path,GENERIC_READ,FILE_SHARE_READ|FILE_SHARE_WRITE,nullptr,OPEN_EXISTING,0,nullptr);
     assert(reader!=INVALID_HANDLE_VALUE);CloseHandle(reader);fclose(event_log);event_log=nullptr;
-    assert(DeleteFileW(path));status();swprintf_s(path,L"%ls\\status.txt",folder);
+    assert(DeleteFileW(path));status();
+#ifdef AC8_LOBBY_TRANSPORT
+    swprintf_s(path,L"%ls\\lobby-connection-status.txt",folder);
+#else
+    swprintf_s(path,L"%ls\\status.txt",folder);
+#endif
     FILE* status_file=nullptr;assert(_wfopen_s(&status_file,path,L"r")==0);char text[2048]{};
     assert(fgets(text,sizeof(text),status_file));fclose(status_file);
     assert(strstr(text,"reason=transport_closed") && strstr(text,"steam_end=5003") && strstr(text,"version=0.1.2"));
@@ -121,4 +126,5 @@ int main() {
     stop();const auto dispatches=sdk_dispatch_calls;pump();assert(sdk_dispatch_calls==dispatches);
     reset_fake();api.run_callbacks=nullptr;pump();assert(listener==0 && strcmp(state,"ERROR_CALLBACK_DISPATCH_EXPORT")==0);
     puts("Runtime tests passed: expected peer, stale events, handshake/pong, busy slot, leave/rejoin, release, timeouts, overflow.");
+    return 0;
 }

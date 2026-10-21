@@ -1,0 +1,29 @@
+{
+  "revision": "r5",
+  "session": "session-20261020-151233",
+  "game_exit_code": 0,
+  "proxy_removed": true,
+  "owned_identities_retired": true,
+  "motion_ticks": 0,
+  "models_seeded": true,
+  "components_verified": 70,
+  "visibility_called": false,
+  "before_snapshot_valid": true,
+  "refusal": "visibility_precondition_failed",
+  "root_cause": "Incorrect byte index in main visibility precondition: required byte +0x190 (index 8) == 08; captured byte there is 00. The 08 in the raw window is at +0x18A (index 2).",
+  "main_raw_188_191_hex": "410008020000000000",
+  "corrected_precondition_window": [
+    65,
+    0,
+    8,
+    2,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "rendered_plane_verified": false,
+  "r5_1_fix": "Exact nine-byte precondition using recorded data; new native regression consumes tests/fixtures/plane_visibility_r5_precondition.json; generic precondition error replaced with a specific reason.",
+  "original_prose_guard_also_inconsistent_with_raw_evidence": true
+}

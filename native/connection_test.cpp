@@ -9,6 +9,51 @@
 #include <share.h>
 #include "isteamnetworkingsockets.h"
 #include "connection_protocol.h"
+#ifdef AC8_SESSION_POLICY_R29
+#include <atomic>
+static std::atomic<bool> lobby_join_open{true};
+#endif
+#ifdef AC8_CINEMA_SYNC_R28
+#include "cinema_descriptor.h"
+static ac8cinema::Descriptor cinema_pending;
+static uint64_t cinema_rx=0,cinema_tx=0;
+#endif
+#ifdef AC8_SCENE_TRANSPORT
+#include "scene_transport.h"
+#include <deque>
+static ac8scene::Assembler scene_assembler;
+static std::deque<std::string> scene_pending;
+static uint64_t scene_rx=0,scene_tx=0;
+#endif
+#ifdef AC8_GUEST_PILOT_TRANSPORT
+#include "guest_pilot_transport.h"
+#include <deque>
+static std::deque<std::pair<ac8pilot::Frame,uint64_t>> pilot_pending;
+static uint64_t pilot_rx=0,pilot_tx=0;
+#endif
+#ifdef AC8_GUEST_INPUT_TRANSPORT
+#include "guest_control_transport.h"
+static ac8input::Frame guest_input_mailbox;
+static bool guest_input_pending=false;
+static uint64_t guest_input_rx=0,guest_input_tx=0,guest_input_received_ms=0;
+#endif
+#ifdef AC8_SESSION_TRANSPORT
+#include "shared_session_protocol.h"
+static uint64_t session_v2_rx=0,session_v2_tx=0;
+static bool consume_session_frame(const ac8session::Frame&);
+#endif
+#ifdef AC8_LOBBY_TRANSPORT
+#include "coop_lobby_protocol.h"
+static ac8lobby::Frame lobby_mailbox;
+static bool lobby_pending=false;
+static uint64_t lobby_rx=0,lobby_tx=0,lobby_received_at=0;
+#endif
+#ifdef AC8_FLIGHT_TRANSPORT
+#include "plane_coop_transport.h"
+static ac8flight::Frame flight_mailbox;
+static bool flight_pending=false,flight_terminal=false;
+static uint64_t flight_rx=0,flight_tx=0;
+#endif
 
 using namespace ac8test;
 using Accessor = void*(__cdecl*)();
@@ -25,10 +70,40 @@ struct Api {
     int (__cdecl* receive)(void*,HSteamNetConnection,SteamNetworkingMessage_t**,int){};
 } api;
 
+#ifdef AC8_SESSION_POLICY_R29
+constexpr int virtual_port=391;
+#elif defined(AC8_CINEMA_SYNC_R28)
+constexpr int virtual_port=390;
+#elif defined(AC8_STEAM_COOP_R27)
+constexpr int virtual_port=389;
+#elif defined(AC8_SCENE_TRANSPORT)
+constexpr int virtual_port=388;
+#elif defined(AC8_GUEST_PILOT_TRANSPORT)
+constexpr int virtual_port=387;
+#elif defined(AC8_GUEST_INPUT_TRANSPORT)
+constexpr int virtual_port=386;
+#elif defined(AC8_SESSION_TRANSPORT)
+constexpr int virtual_port=385;
+#elif defined(AC8_LOBBY_TRANSPORT)
+constexpr int virtual_port=384;
+#elif defined(AC8_FLIGHT_TRANSPORT)
+constexpr int virtual_port=383;
+#else
 constexpr int virtual_port=382;
+#endif
 static bool initialized=false, faulted=false, connected=false, reported_ready=false;
 static Role role;
 static uint64_t local_id=0, peer_id=0, tag=0;
+#ifdef AC8_STEAM_LOBBY_R24
+struct LobbyFriends24 {
+ void* handle=nullptr;
+ int (__cdecl* relationship)(void*,uint64)=nullptr;
+ const char* (__cdecl* persona)(void*)=nullptr;
+ const char* (__cdecl* friend_persona)(void*,uint64)=nullptr;
+ bool (__cdecl* request_persona)(void*,uint64,bool)=nullptr;
+} lobby_friends24;
+static bool open_host24=false;
+#endif
 static HSteamListenSocket listener=0;
 static HSteamNetConnection connection=0;
 static Session session;
@@ -80,7 +155,11 @@ static void status(const char* next=nullptr) {
     if(next) { state=next;log(next); }
     if(!output_dir[0]) return;
     wchar_t target[32768], temp[32768];
+#ifdef AC8_LOBBY_TRANSPORT
+    if(swprintf_s(target,L"%ls\\lobby-connection-status.txt",output_dir)<0 || swprintf_s(temp,L"%ls\\lobby-connection-status.tmp",output_dir)<0) return;
+#else
     if(swprintf_s(target,L"%ls\\status.txt",output_dir)<0 || swprintf_s(temp,L"%ls\\status.tmp",output_dir)<0) return;
+#endif
     FILE* file=nullptr;
     if(!_wfopen_s(&file,temp,L"w") && file) {
         fprintf(file,"%s | version=0.1.2 | role=%s | received=%u | pong=%u | rtt_ms=%llu | accepted_connections=%u"
@@ -116,15 +195,29 @@ static bool initialize() {
     wchar_t marker[32], role_text[32], peer_text[32], expected[32768], actual[32768], exe[32768];
     if(!read_env(L"AC8_CONNECTION_TEST",marker,32) || wcscmp(marker,L"25201480") ||
        !read_env(L"AC8_CONNECTION_OUTPUT",output_dir,32768)) return false;
+#ifdef AC8_LOBBY_TRANSPORT
+    if(!read_env(L"AC8_COOP_LOBBY",marker,32)||wcscmp(marker,L"25201480"))return false;
+#endif
     DWORD n=GetModuleFileNameW(nullptr,exe,32768);
     const wchar_t* base=wcsrchr(exe,L'\\');
     if(!n || n>=32768 || !base || _wcsicmp(base+1,L"AceCombat8.exe")) return false;
     if(!read_env(L"AC8_CONNECTION_ROLE",role_text,32) ||
        (wcscmp(role_text,L"host") && wcscmp(role_text,L"guest"))) {status("ERROR_ROLE");return false;}
     role=wcscmp(role_text,L"host")==0?Role::host:Role::guest;
-    if(!read_env(L"AC8_CONNECTION_PEER",peer_text,32) || !id_from_text(peer_text,peer_id)) {status("ERROR_PEER_ID");return false;}
+    if(!read_env(L"AC8_CONNECTION_PEER",peer_text,32)) {status("ERROR_PEER_ID");return false;}
+#ifdef AC8_STEAM_LOBBY_R24
+    open_host24=role==Role::host&&!wcscmp(peer_text,L"0");
+    if(open_host24)peer_id=0;
+    else
+#endif
+    if(!id_from_text(peer_text,peer_id)) {status("ERROR_PEER_ID");return false;}
     if(!event_log) {
-        wchar_t path[32768];if(swprintf_s(path,L"%ls\\connection-events.tsv",output_dir)<0) return false;
+        wchar_t path[32768];
+#ifdef AC8_LOBBY_TRANSPORT
+        if(swprintf_s(path,L"%ls\\lobby-connection-events.tsv",output_dir)<0) return false;
+#else
+        if(swprintf_s(path,L"%ls\\connection-events.tsv",output_dir)<0) return false;
+#endif
         if(!open_event_log(path)) {status("ERROR_LOG");return false;}
     }
     HMODULE steam=GetModuleHandleW(L"steam_api64.dll");
@@ -144,6 +237,15 @@ static bool initialize() {
     void* utils=utils_get();void* user=user_get();
     if(!utils||!user||app(utils)!=2288340||!online(user)) {status("STEAM_NOT_READY");return false;}
     local_id=steam_id(user);if(!local_id || local_id==peer_id) {status("ERROR_SAME_OR_EMPTY_ACCOUNT");return false;}
+#ifdef AC8_STEAM_LOBBY_R24
+    auto friends_get=get<Accessor>(steam,"SteamAPI_SteamFriends_v017");
+    lobby_friends24.handle=friends_get?friends_get():nullptr;
+    lobby_friends24.relationship=get<decltype(lobby_friends24.relationship)>(steam,"SteamAPI_ISteamFriends_GetFriendRelationship");
+    lobby_friends24.persona=get<decltype(lobby_friends24.persona)>(steam,"SteamAPI_ISteamFriends_GetPersonaName");
+    lobby_friends24.friend_persona=get<decltype(lobby_friends24.friend_persona)>(steam,"SteamAPI_ISteamFriends_GetFriendPersonaName");
+    lobby_friends24.request_persona=get<decltype(lobby_friends24.request_persona)>(steam,"SteamAPI_ISteamFriends_RequestUserInformation");
+    if(!lobby_friends24.handle||!lobby_friends24.relationship||!lobby_friends24.persona||!lobby_friends24.friend_persona){status("ERROR_FRIENDS_EXPORTS");return false;}
+#endif
     api.sockets=sockets_get();if(!api.sockets) {status("ERROR_SOCKETS_UNAVAILABLE");return false;}
 #define RESOLVE(field, suffix) api.field=get<decltype(api.field)>(steam,"SteamAPI_ISteamNetworkingSockets_" suffix)
     RESOLVE(listen,"CreateListenSocketP2P"); RESOLVE(connect,"ConnectP2P"); RESOLVE(accept,"AcceptConnection");
@@ -161,9 +263,30 @@ static bool initialize() {
     log("protocol_version",1);log("game_build",build);status("READY_PRESS_F8");return true;
 }
 static void clear_connection(const char* why,bool notify=false) {
+#ifdef AC8_SCENE_TRANSPORT
+    scene_pending.clear();scene_assembler={};scene_rx=scene_tx=0;
+#endif
+#ifdef AC8_GUEST_PILOT_TRANSPORT
+    pilot_pending.clear();pilot_rx=pilot_tx=0;
+#endif
+#ifdef AC8_GUEST_INPUT_TRANSPORT
+    guest_input_mailbox={};guest_input_pending=false;guest_input_rx=guest_input_tx=guest_input_received_ms=0;
+#endif
+#ifdef AC8_SESSION_TRANSPORT
+    session_v2_rx=session_v2_tx=0;
+#endif
+#ifdef AC8_LOBBY_TRANSPORT
+    lobby_pending=false;lobby_rx=lobby_tx=lobby_received_at=0;lobby_mailbox={};
+#endif
+#ifdef AC8_FLIGHT_TRANSPORT
+    flight_pending=false;flight_terminal=false;flight_rx=flight_tx=0;
+#endif
     const auto old=connection;connection=0;connected=false;reported_ready=false;pending_ping=0;
     session={};
     if(old) api.close(api.sockets,old,1000,why,notify);
+#ifdef AC8_STEAM_LOBBY_R24
+    if(open_host24&&role==Role::host)peer_id=0;
+#endif
 }
 static bool send_packet(Kind kind,uint64_t stamp=0) {
     if(!connection||!connected) return false;
@@ -219,10 +342,32 @@ static void handle_event(const SteamNetConnectionStatusChangedCallback_t& event)
     if(info.m_nUserData!=static_cast<int64>(tag)) {++ignored_events;return;}
     if(incoming && event.m_hConn!=connection) {
         if(info.m_eState==k_ESteamNetworkingConnectionState_Connecting) {
-            if(info.m_identityRemote.GetSteamID64()!=peer_id || connection) {
+#ifdef AC8_SESSION_POLICY_R29
+            if(!lobby_join_open){api.close(api.sockets,event.m_hConn,1003,"lobby_only",false);log("rejected_late_join");return;}
+#endif
+            const auto remote_id=info.m_identityRemote.GetSteamID64();bool permitted=remote_id==peer_id;
+#ifdef AC8_STEAM_LOBBY_R24
+            if(open_host24&&!peer_id){
+                const bool individual=(remote_id>>56)==1&&((remote_id>>52)&15)==1&&((remote_id>>32)&0xfffff)==1&&uint32_t(remote_id)!=0;
+                permitted=individual&&remote_id!=local_id&&lobby_friends24.handle&&lobby_friends24.relationship&&lobby_friends24.relationship(lobby_friends24.handle,remote_id)==3;
+            }
+#endif
+            if(!permitted || connection) {
                 api.close(api.sockets,event.m_hConn,1001,"not_expected_peer_or_busy",false);log("rejected_incoming");return;
             }
-            if(!new_session()) {api.close(api.sockets,event.m_hConn,1002,"random_failed",false);return;}
+#ifdef AC8_STEAM_LOBBY_R24
+            if(open_host24&&!peer_id)peer_id=remote_id;
+#endif
+            if(!new_session()) {
+                api.close(api.sockets,event.m_hConn,1002,"random_failed",false);
+#ifdef AC8_STEAM_LOBBY_R24
+                if(open_host24)peer_id=0;
+#endif
+                return;
+            }
+#ifdef AC8_STEAM_LOBBY_R24
+            if(lobby_friends24.request_persona)lobby_friends24.request_persona(lobby_friends24.handle,peer_id,true);
+#endif
             connection=event.m_hConn;
             const EResult accepted=api.accept(api.sockets,connection);
             if(accepted!=k_EResultOK) {log("accept_failed",accepted);connection_ended("accept_failed");return;}
@@ -281,6 +426,98 @@ static void pump() {
         if(count_received<0) {connection_ended("receive_failed");return;}
         for(int i=0;i<count_received;++i) {
             auto* message=messages[i];if(!message) continue;
+#ifdef AC8_CINEMA_SYNC_R28
+            if(message->m_cbSize>=4&&message->m_pData&&memcmp(message->m_pData,"AC8C",4)==0){
+                ac8cinema::Descriptor d;
+                const bool ok=role==Role::guest&&connection==handle&&message->m_conn==handle&&message->m_identityPeer.GetSteamID64()==peer_id&&session.ready()&&ac8cinema::decode(message->m_pData,size_t(message->m_cbSize),d)&&d.sender==peer_id&&d.session==session.remote&&d.echo==session.nonce;
+                message->Release();if(!ok){connection_ended("invalid_cinema_descriptor");continue;}
+                if(d.sequence>cinema_rx){cinema_rx=d.sequence;cinema_pending=std::move(d);last_receive=now;}continue;
+            }
+#endif
+#ifdef AC8_SCENE_TRANSPORT
+            if(message->m_cbSize>=static_cast<int>(ac8scene::header_size)&&message->m_pData&&std::memcmp(message->m_pData,"AC8R",4)==0){
+                ac8scene::Chunk frame;
+                const bool valid=role==Role::guest&&connection==handle&&message->m_conn==handle&&message->m_identityPeer.GetSteamID64()==peer_id&&session.ready()&&
+                    ac8scene::decode(message->m_pData,static_cast<size_t>(message->m_cbSize),frame)&&frame.sender==peer_id&&frame.session==session.remote&&frame.echo==session.nonce;
+                message->Release();if(!valid){connection_ended("invalid_scene_packet");continue;}
+                if(frame.sequence>scene_rx){
+                    std::string complete;if(!scene_assembler.accept(frame,complete)){connection_ended("invalid_scene_order");continue;}
+                    scene_rx=frame.sequence;last_receive=now;
+                    if(!complete.empty()){
+                        if(scene_pending.size()>=4){connection_ended("scene_queue_overflow");continue;}
+                        scene_pending.emplace_back(std::move(complete));
+                    }
+                }
+                continue;
+            }
+#endif
+#ifdef AC8_GUEST_PILOT_TRANSPORT
+            if(message->m_cbSize==static_cast<int>(ac8pilot::packet_size)&&message->m_pData&&std::memcmp(message->m_pData,"AC8P",4)==0){
+                ac8pilot::Frame frame;
+                const bool valid=connection==handle&&message->m_conn==handle&&message->m_identityPeer.GetSteamID64()==peer_id&&
+                    session.ready()&&ac8pilot::decode(message->m_pData,static_cast<size_t>(message->m_cbSize),frame)&&
+                    frame.sender==peer_id&&frame.session==session.remote&&frame.echo==session.nonce&&
+                    (frame.kind==ac8pilot::Kind::stop||(role==Role::host?(frame.kind==ac8pilot::Kind::loaded||frame.kind==ac8pilot::Kind::input):frame.kind==ac8pilot::Kind::state));
+                message->Release();
+                if(!valid){connection_ended("invalid_pilot_packet");continue;}
+                if(frame.sequence>pilot_rx){
+                    if(pilot_pending.size()>=64){connection_ended("pilot_queue_overflow");continue;}
+                    pilot_rx=frame.sequence;pilot_pending.emplace_back(frame,now);last_receive=now;
+                }
+                continue;
+            }
+#endif
+#ifdef AC8_GUEST_INPUT_TRANSPORT
+            if(message->m_cbSize==static_cast<int>(ac8input::packet_size)&&message->m_pData&&std::memcmp(message->m_pData,"AC8I",4)==0){
+                ac8input::Frame frame;
+                const bool valid=role==Role::host&&connection==handle&&message->m_conn==handle&&message->m_identityPeer.GetSteamID64()==peer_id&&
+                    session.ready()&&ac8input::decode(message->m_pData,static_cast<size_t>(message->m_cbSize),frame)&&
+                    frame.sender==peer_id&&frame.session==session.remote&&frame.echo==session.nonce;
+                message->Release();
+                if(!valid){connection_ended("invalid_guest_input_packet");continue;}
+                if(frame.sequence>guest_input_rx){guest_input_rx=frame.sequence;guest_input_mailbox=frame;guest_input_pending=true;guest_input_received_ms=now;last_receive=now;}
+                continue;
+            }
+#endif
+#ifdef AC8_SESSION_TRANSPORT
+            if(message->m_cbSize==static_cast<int>(ac8session::packet_size)&&message->m_pData&&std::memcmp(message->m_pData,"AC8S",4)==0){
+                ac8session::Frame frame;
+                const bool valid=connection==handle&&message->m_conn==handle&&message->m_identityPeer.GetSteamID64()==peer_id&&
+                    session.ready()&&ac8session::decode(message->m_pData,static_cast<size_t>(message->m_cbSize),frame)&&
+                    frame.sender==peer_id&&frame.session==session.remote&&frame.echo==session.nonce;
+                message->Release();
+                if(!valid){connection_ended("invalid_session_packet");continue;}
+                if(frame.sequence>session_v2_rx){
+                    session_v2_rx=frame.sequence;last_receive=now;
+                    if(!consume_session_frame(frame))connection_ended("session_authority_violation");
+                }
+                continue;
+            }
+#endif
+#ifdef AC8_LOBBY_TRANSPORT
+            if(message->m_cbSize==static_cast<int>(ac8lobby::packet_size)&&message->m_pData&&std::memcmp(message->m_pData,"AC8L",4)==0){
+                ac8lobby::Frame frame;
+                const bool valid=connection==handle&&message->m_conn==handle&&message->m_identityPeer.GetSteamID64()==peer_id&&
+                    session.ready()&&ac8lobby::decode(message->m_pData,static_cast<size_t>(message->m_cbSize),frame)&&
+                    frame.sender==peer_id&&frame.session==session.remote&&frame.echo==session.nonce;
+                message->Release();
+                if(!valid){connection_ended("invalid_lobby_packet");continue;}
+                if(frame.sequence>lobby_rx){lobby_rx=frame.sequence;lobby_mailbox=frame;lobby_pending=true;lobby_received_at=now;last_receive=now;}
+                continue;
+            }
+#endif
+#ifdef AC8_FLIGHT_TRANSPORT
+            if(message->m_cbSize==static_cast<int>(ac8flight::packet_size)&&message->m_pData&&std::memcmp(message->m_pData,"AC8F",4)==0){
+                ac8flight::Frame frame;
+                const bool valid=connection==handle&&message->m_conn==handle&&message->m_identityPeer.GetSteamID64()==peer_id&&
+                    session.ready()&&ac8flight::decode(message->m_pData,static_cast<size_t>(message->m_cbSize),frame)&&
+                    frame.sender==peer_id&&frame.session==session.remote&&frame.echo_session==session.nonce;
+                message->Release();
+                if(!valid){connection_ended("invalid_flight_packet");continue;}
+                if(!flight_terminal&&frame.sequence>flight_rx){flight_rx=frame.sequence;flight_mailbox=frame;flight_pending=true;flight_terminal=frame.flags==ac8flight::stop_flag;last_receive=now;}
+                continue;
+            }
+#endif
             Packet packet{};
             const bool ok=connection==handle && message->m_conn==handle &&
                 message->m_identityPeer.GetSteamID64()==peer_id && message->m_cbSize>=0 &&
@@ -322,3 +559,77 @@ extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_connection_start(void*)
 extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_connection_stop(void*) {return boundary(2);}
 extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_connection_pump(void*) {return boundary(0);}
 extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_connection_status(void*) {return boundary(3);}
+#ifdef AC8_SCENE_TRANSPORT
+namespace ac8scene_transport {
+void start(){boundary(1);}void stop(){boundary(2);}void poll(){boundary(0);}
+bool ready(){return initialized&&!faulted&&connected&&session.ready()&&action_thread==GetCurrentThreadId();}
+bool send(const std::string&payload,uint64_t generation,uint64_t transfer){
+ if(!ready()||role!=Role::host||payload.empty()||payload.size()>ac8scene::max_bytes||!generation||!transfer)return false;
+ const size_t chunks=(payload.size()+ac8scene::chunk_size-1)/ac8scene::chunk_size;if(scene_tx>UINT64_MAX-chunks)return false;
+ for(size_t i=0;i<chunks;++i){
+  ac8scene::Chunk f;f.sender=local_id;f.session=session.nonce;f.echo=session.remote;f.sequence=++scene_tx;f.generation=generation;f.transfer=transfer;
+  f.index=uint32_t(i);f.count=uint32_t(chunks);f.total=uint32_t(payload.size());f.data=payload.substr(i*ac8scene::chunk_size,ac8scene::chunk_size);const auto b=ac8scene::encode(f);
+  if(api.send(api.sockets,connection,b.data(),uint32(b.size()),k_nSteamNetworkingSend_ReliableNoNagle,nullptr)!=k_EResultOK){connection_ended("scene_send_failed");return false;}
+ }return true;
+}
+bool take(std::string&payload){payload.clear();if(!ready()||scene_pending.empty())return false;payload=std::move(scene_pending.front());scene_pending.pop_front();return true;}
+}
+#endif
+#ifdef AC8_GUEST_PILOT_TRANSPORT
+namespace ac8pilot_transport {
+void start(){boundary(1);}void stop(){boundary(2);}void poll(){boundary(0);}
+bool ready(){return initialized&&!faulted&&connected&&session.ready()&&action_thread==GetCurrentThreadId();}
+ac8pilot::Context context(){return ready()?ac8pilot::Context{local_id,peer_id,session.nonce,session.remote,role==Role::host}:ac8pilot::Context{};}
+bool send(ac8pilot::Frame frame){
+ if(!ready()||pilot_tx==UINT64_MAX)return false;
+ if(frame.kind!=ac8pilot::Kind::stop&&(role==Role::host?(frame.kind!=ac8pilot::Kind::state):(frame.kind!=ac8pilot::Kind::loaded&&frame.kind!=ac8pilot::Kind::input)))return false;
+ frame.sender=local_id;frame.session=session.nonce;frame.echo=session.remote;frame.sequence=pilot_tx+1;
+ if(!ac8pilot::valid(frame))return false;const auto bytes=ac8pilot::encode(frame);++pilot_tx;
+ const bool reliable=frame.kind==ac8pilot::Kind::loaded||frame.kind==ac8pilot::Kind::stop;
+ return api.send(api.sockets,connection,bytes.data(),static_cast<uint32>(bytes.size()),reliable?k_nSteamNetworkingSend_ReliableNoNagle:k_nSteamNetworkingSend_UnreliableNoNagle,nullptr)==k_EResultOK;
+}
+bool take(ac8pilot::Frame&frame,uint64_t&received_ms){
+ frame={};received_ms=0;if(!ready()||pilot_pending.empty())return false;
+ frame=pilot_pending.front().first;received_ms=pilot_pending.front().second;pilot_pending.pop_front();return true;
+}
+}
+#endif
+#ifdef AC8_FLIGHT_TRANSPORT
+namespace ac8flight_transport {
+void start(){boundary(1);}
+void stop(){boundary(2);}
+void poll(){boundary(0);}
+bool ready(){return initialized&&!faulted&&connected&&session.ready();}
+bool host(){return role==Role::host;}
+bool send(ac8flight::Frame frame,bool reliable){
+ if(!ready()||action_thread!=GetCurrentThreadId()||flight_tx==UINT64_MAX)return false;
+ frame.sender=local_id;frame.session=session.nonce;frame.echo_session=session.remote;frame.sequence=++flight_tx;
+ if(!ac8flight::valid_state(frame))return false;
+ const auto bytes=ac8flight::encode(frame);
+ return api.send(api.sockets,connection,bytes.data(),static_cast<uint32>(bytes.size()),reliable?k_nSteamNetworkingSend_ReliableNoNagle:k_nSteamNetworkingSend_UnreliableNoNagle,nullptr)==k_EResultOK;
+}
+bool take(ac8flight::Frame& frame){if(!flight_pending)return false;frame=flight_mailbox;flight_pending=false;return true;}
+}
+#endif
+
+#ifdef AC8_GUEST_INPUT_TRANSPORT
+namespace ac8input_transport {
+void start(){boundary(1);}void stop(){boundary(2);}void poll(){boundary(0);}
+bool ready(){return initialized&&!faulted&&connected&&session.ready();}
+bool host(){return role==Role::host;}
+bool send(ac8input::Frame frame){
+ if(!ready()||host()||action_thread!=GetCurrentThreadId()||guest_input_tx==UINT64_MAX)return false;
+ frame.sender=local_id;frame.session=session.nonce;frame.echo=session.remote;frame.sequence=guest_input_tx+1;
+ if(!ac8input::valid(frame))return false;
+ const auto bytes=ac8input::encode(frame);++guest_input_tx;
+ return api.send(api.sockets,connection,bytes.data(),static_cast<uint32>(bytes.size()),k_nSteamNetworkingSend_UnreliableNoNagle,nullptr)==k_EResultOK;
+}
+bool take(ac8input::Frame&frame,uint64_t&received_ms){
+ frame={};received_ms=0;
+ if(action_thread!=GetCurrentThreadId()||!ready()||!host()||!guest_input_pending)return false;
+ guest_input_pending=false;const auto now=GetTickCount64();
+ if(now<guest_input_received_ms||now-guest_input_received_ms>ac8input::input_timeout_ms)return false;
+ frame=guest_input_mailbox;received_ms=guest_input_received_ms;return true;
+}
+}
+#endif

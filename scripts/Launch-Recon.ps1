@@ -5,6 +5,15 @@ param(
     [switch]$DummyLifecycle,
     [switch]$PlaneStaging,
     [switch]$PlaneFlight,
+    [switch]$CoopFlight,
+    [switch]$CoopMenu,
+    [switch]$CoopLobby,
+    [switch]$Continuous,
+    [ValidateSet('host','guest')][string]$Role='host',
+    [string]$PeerSteamId='',
+    [string]$PlaneFlightHash = '',
+    [string]$LobbyHash = '',
+    [string]$MenuRouteHash = '',
     [ValidateSet('state_probe.lua','network_lifecycle_probe.lua','steam_interface_probe.lua','plane_motion_probe.lua','plane_initialization_probe.lua','plane_configuration_probe.lua')]
     [string]$ReadOnlyProbe = 'state_probe.lua',
     [string]$GameDirectory = 'D:\SteamLibrary\steamapps\common\ACE COMBAT 8\Game\Binaries\Win64'
@@ -17,6 +26,11 @@ $gameExe = Join-Path $gameDir 'AceCombat8.exe'
 $proxySource = Join-Path $toolRoot 'packages\ue4ss-3.0.1-1181-g83330635\dwmapi.dll'
 $proxyTarget = Join-Path $gameDir 'dwmapi.dll'
 $runtimeDll = Join-Path $profileRoot 'runtime\UE4SS.dll'
+if ($CoopFlight -and !$PlaneFlight) { throw 'CoopFlight requires PlaneFlight.' }
+if ($CoopMenu -and !$CoopFlight) { throw 'CoopMenu requires CoopFlight.' }
+if ($Continuous -and !$CoopLobby) { throw 'Continuous requires CoopLobby.' }
+if ($CoopLobby -and !$CoopMenu) { throw 'CoopLobby requires CoopMenu.' }
+if ($CoopFlight -and !$CoopMenu -and $PeerSteamId -notmatch '^[0-9]{17}$') { throw 'Specify the other participant SteamID64.' }
 if ($ManualControl -and $PSBoundParameters.ContainsKey('ReadOnlyProbe')) {
     throw 'ManualControl and an explicit ReadOnlyProbe cannot be combined.'
 }
@@ -29,7 +43,7 @@ if ($PlaneStaging -and ($DummyLifecycle -or $ManualControl -or $PSBoundParameter
 if ($PlaneFlight -and ($PlaneStaging -or $DummyLifecycle -or $ManualControl -or $PSBoundParameters.ContainsKey('ReadOnlyProbe'))) {
     throw 'PlaneFlight is a separate experiment; do not combine it with other probes.'
 }
-$extensionName = if ($PlaneFlight) { 'plane_flight_probe.lua' } elseif ($PlaneStaging) { 'plane_staging_probe.lua' } elseif ($DummyLifecycle) { 'dummy_lifecycle_probe.lua' } elseif ($ManualControl) { 'manual_control.lua' } else { $ReadOnlyProbe }
+$extensionName = if ($CoopFlight) { 'plane_coop_probe.lua' } elseif ($PlaneFlight) { 'plane_flight_probe.lua' } elseif ($PlaneStaging) { 'plane_staging_probe.lua' } elseif ($DummyLifecycle) { 'dummy_lifecycle_probe.lua' } elseif ($ManualControl) { 'manual_control.lua' } else { $ReadOnlyProbe }
 $extensionPath = Join-Path $profileRoot ('runtime\Mods\AC8CoopRecon\Scripts\' + $extensionName)
 $expectedGame = '51510E2A520565DBE81FB0D569E95CD4393077ACAAA859371489B80B8128829F'
 $expectedProxy = '93B9431A5A4F32C675D269C5DA1C9B3EC6F88552EC20C282AB435F411E9271FB'
@@ -49,8 +63,8 @@ $dummyProbeDll = Join-Path $profileRoot 'runtime\ac8_dummy_lifecycle_probe.dll'
 $expectedDummyProbe = '9EF30DE4EB850B0D0881B4DADD43E0DBAAEBFE6C12B747920BC605BCAF35CFD7'
 $planeStagingDll = Join-Path $profileRoot 'runtime\ac8_plane_staging_probe.dll'
 $expectedPlaneStaging = '3370B68B216B025C0CFE0B3887C74EA1222752C0755CCD4392228D0211FC8AFF'
-$planeFlightDll = Join-Path $profileRoot 'runtime\ac8_plane_flight_probe_r4.dll'
-$expectedPlaneFlight = '261B7330D8DF536956CD877DF92A2701C93F5D5BEA11BB95B25287DD2BC21727'
+$planeFlightDll = if ($Continuous) { Join-Path $profileRoot 'runtime\ac8_plane_coop_r10.dll' } elseif ($CoopMenu) { Join-Path $profileRoot 'runtime\ac8_plane_coop_r8.dll' } elseif ($CoopFlight) { Join-Path $profileRoot 'runtime\ac8_plane_coop_r7.dll' } else { Join-Path $profileRoot 'runtime\ac8_plane_flight_probe_r6.dll' }
+$expectedPlaneFlight = $PlaneFlightHash
 $steamDll = [IO.Path]::GetFullPath((Join-Path $gameDir '..\..\..\Engine\Binaries\ThirdParty\Steamworks\Steamv157\Win64\steam_api64.dll'))
 $expectedNativeProbe = '1A9A174FF311C965BE9A770483277F2F26CCF9A0FB87E043274617A581B355CF'
 $expectedSteamDll = '4DF999C0C8CB12589F0864D52BE5D4C775577AEB27FEE28B49B188F9BA083EEA'
@@ -73,7 +87,22 @@ if ($DummyLifecycle) {
 if ($PlaneStaging) {
     if ((Get-FileHash -LiteralPath $planeStagingDll).Hash -ne $expectedPlaneStaging) { throw 'Plane staging probe DLL hash mismatch.' }
 }
+if ($CoopFlight -and (Get-FileHash -LiteralPath $steamDll).Hash -ne $expectedSteamDll) { throw 'Coop Steam DLL differs from the inspected build.' }
+if ($CoopMenu) {
+    foreach ($menuFile in @('Collect-CoopLogs.ps1','runtime\Mods\AC8CoopRecon\Scripts\coop_main_menu.lua','runtime\Mods\AC8CoopRecon\Scripts\coop_menu_session.lua')) {
+        if (!(Test-Path -LiteralPath (Join-Path $profileRoot $menuFile))) { throw "Menu file missing: $menuFile" }
+    }
+}
+if ($CoopLobby) {
+    foreach ($entry in @(@('ac8_coop_lobby_r9.dll',$LobbyHash),@('ac8_menu_route_r9.dll',$MenuRouteHash))) {
+        if ($entry[1] -notmatch '^[0-9A-Fa-f]{64}$' -or (Get-FileHash -LiteralPath (Join-Path $profileRoot ('runtime\'+$entry[0]))).Hash -ne $entry[1]) { throw 'Lobby/route native module hash mismatch.' }
+    }
+    foreach ($name in @('coop_lobby_session.lua','coop_lobby_services.lua','coop_lobby_route.lua')) {
+        if (!(Test-Path -LiteralPath (Join-Path $profileRoot ('runtime\Mods\AC8CoopRecon\Scripts\'+$name)))) { throw "Lobby source missing: $name" }
+    }
+}
 if ($PlaneFlight) {
+    if ($expectedPlaneFlight -notmatch '^[0-9A-Fa-f]{64}$') { throw 'R6 requires -PlaneFlightHash with the reviewed build SHA256. See docs/DEVELOPMENT-RU.md.' }
     if ((Get-FileHash -LiteralPath $planeFlightDll).Hash -ne $expectedPlaneFlight) { throw 'Plane flight probe DLL hash mismatch.' }
 }
 if (Test-Path -LiteralPath $proxyTarget) { throw 'Existing game proxy: refusing to overwrite it. Use cleanup after an interrupted research session.' }
@@ -86,12 +115,15 @@ New-Item -ItemType Directory -Path $sessionDir | Out-Null
 $record = [ordered]@{started=(Get-Date -Format o);game_sha256=$expectedGame;proxy_sha256=$expectedProxy;runtime=$runtimeDll;manual_control=[bool]$ManualControl;extension=$extensionName;extension_sha256=(Get-FileHash -LiteralPath $extensionPath).Hash;pid=$null;exit_code=$null;proxy_removed=$false}
 if ($DummyLifecycle) { $record.experiment = 'dummy_lifecycle_single_owned_attempt'; $record.native_probe_sha256 = $expectedDummyProbe }
 if ($PlaneStaging) { $record.experiment = 'plane_staging_no_finish_single_attempt'; $record.native_probe_sha256 = $expectedPlaneStaging }
-if ($PlaneFlight) { $record.experiment = 'plane_flight_bounded_local_copy'; $record.native_probe_sha256 = $expectedPlaneFlight }
+if ($CoopFlight) { $record.coop_role=$Role; $record.coop_peer=$PeerSteamId; $record.coop_revision='r7' }
+if ($PlaneFlight) { $record.experiment = if ($CoopFlight) { 'plane_coop_remote_state_trial_r7' } else { 'plane_flight_bounded_local_copy' }; $record.native_probe_sha256 = $expectedPlaneFlight }
+if ($CoopMenu) { $record.coop_revision='r8';$record.experiment='stock_main_menu_coop_trial_r8';$record.coop_role='selected_in_menu';$record.coop_peer='selected_in_menu' }
+if ($CoopLobby) { $record.coop_revision=if ($Continuous) { 'r10' } else { 'r9' };$record.experiment='stock_main_menu_common_lobby_r9';$record.lobby_sha256=$LobbyHash;$record.menu_route_sha256=$MenuRouteHash }
 $ownedProxy = $false
 $gameProcess = $null
 $motionProcess = $null
 try {
-    # Only the loader is placed beside the game; all research data stays on D:.
+    # Only the loader is placed beside the game; research data stays in the profile.
     [System.IO.File]::Copy($proxySource, $proxyTarget, $false)
     $ownedProxy = $true
     $startInfo = New-Object System.Diagnostics.ProcessStartInfo
@@ -99,10 +131,24 @@ try {
     $startInfo.WorkingDirectory = $gameDir
     $startInfo.UseShellExecute = $false
     $startInfo.Arguments = '-SaveToUserDir --ue4ss-path "' + $runtimeDll + '"'
+    $startInfo.EnvironmentVariables.Remove('AC8_COOP_CONTINUOUS')
+    if ($Continuous) { $startInfo.EnvironmentVariables['AC8_COOP_CONTINUOUS']='25201480' }
     $startInfo.EnvironmentVariables['SteamAppId'] = '2288340'
     $startInfo.EnvironmentVariables['AC8_COOP_RECON'] = '1'
     $startInfo.EnvironmentVariables['AC8_COOP_RECON_OUTPUT'] = $sessionDir
     $startInfo.EnvironmentVariables['AC8_COOP_RECON_EXTENSION'] = $extensionPath
+    foreach ($name in @('AC8_COOP_MENU','AC8_COOP_MENU_ENTRY','AC8_COOP_MENU_SETTINGS')) { $startInfo.EnvironmentVariables.Remove($name) }
+    foreach ($name in @('AC8_COOP_LOBBY','AC8_COOP_LOBBY_DLL','AC8_COOP_MENU_ROUTE_DLL')) { $startInfo.EnvironmentVariables.Remove($name) }
+    if ($CoopLobby) {
+        $startInfo.EnvironmentVariables['AC8_COOP_LOBBY']='25201480'
+        $startInfo.EnvironmentVariables['AC8_COOP_LOBBY_DLL']=Join-Path $profileRoot 'runtime\ac8_coop_lobby_r9.dll'
+        $startInfo.EnvironmentVariables['AC8_COOP_MENU_ROUTE_DLL']=Join-Path $profileRoot 'runtime\ac8_menu_route_r9.dll'
+    }
+    if ($CoopMenu) {
+        $startInfo.EnvironmentVariables['AC8_COOP_MENU']='25201480'
+        $startInfo.EnvironmentVariables['AC8_COOP_MENU_ENTRY']=Join-Path $profileRoot 'runtime\Mods\AC8CoopRecon\Scripts\coop_main_menu.lua'
+        $startInfo.EnvironmentVariables['AC8_COOP_MENU_SETTINGS']=Join-Path $profileRoot 'state\coop-menu-settings.tsv'
+    }
     foreach ($name in @('AC8_COOP_STEAM_PROBE','AC8_COOP_STEAM_PROBE_DLL','AC8_COOP_STEAM_DLL')) {
         $startInfo.EnvironmentVariables.Remove($name)
     }
@@ -114,6 +160,14 @@ try {
     }
     foreach ($name in @('AC8_COOP_PLANE_FLIGHT','AC8_COOP_PLANE_FLIGHT_DLL')) {
         $startInfo.EnvironmentVariables.Remove($name)
+    }
+    foreach ($name in @($startInfo.EnvironmentVariables.Keys)) { if ($name -like 'AC8_CONNECTION_*') { $startInfo.EnvironmentVariables.Remove($name) } }
+    if ($CoopFlight) {
+        $startInfo.EnvironmentVariables['AC8_CONNECTION_TEST']='25201480'
+        $startInfo.EnvironmentVariables['AC8_CONNECTION_ROLE']=$Role
+        $startInfo.EnvironmentVariables['AC8_CONNECTION_PEER']=$PeerSteamId
+        $startInfo.EnvironmentVariables['AC8_CONNECTION_OUTPUT']=$sessionDir
+        $startInfo.EnvironmentVariables['AC8_CONNECTION_STEAM_DLL']=$steamDll
     }
     if ($PlaneFlight) {
         $startInfo.EnvironmentVariables['AC8_COOP_PLANE_FLIGHT'] = '25201480'
@@ -140,6 +194,16 @@ try {
     $startInfo.EnvironmentVariables.Remove('AC8_COOP_MANUAL')
     if ($ManualControl) { $startInfo.EnvironmentVariables['AC8_COOP_MANUAL'] = '25201480' }
     Copy-Item -LiteralPath $extensionPath -Destination (Join-Path $sessionDir 'initial-extension.lua')
+    if ($CoopMenu) {
+        $record.menu_sources=[ordered]@{}
+        $menuSources=@('main.lua','coop_main_menu.lua','coop_menu_services.lua','coop_menu_session.lua')
+        if ($CoopLobby) { $menuSources+=@('coop_lobby_session.lua','coop_lobby_services.lua','coop_lobby_route.lua') }
+        foreach ($menuSource in $menuSources) {
+            $menuSourcePath=Join-Path $profileRoot ('runtime\Mods\AC8CoopRecon\Scripts\'+$menuSource)
+            $record.menu_sources[$menuSource]=(Get-FileHash -LiteralPath $menuSourcePath).Hash
+            Copy-Item -LiteralPath $menuSourcePath -Destination (Join-Path $sessionDir ('menu-source-'+$menuSource))
+        }
+    }
     $gameProcess = [System.Diagnostics.Process]::Start($startInfo)
     $record.pid = $gameProcess.Id
     if ($samplerEnabled) {
@@ -160,6 +224,12 @@ try {
         } else {
             Write-Output 'Mission 6, F-14D, after refueling: F8 once, then fly normally for 30 seconds. Read-only flight capture; F6/F7 control experiments are disabled.'
         }
+    } elseif ($CoopLobby) {
+        Write-Output 'R9: open Co-op in the stock main menu; both participants connect and press Ready. The host starts mission 6 / F-14D for both. Debug reports are local and archived on exit. Remote aircraft lifetime: continuous in r10; 15 seconds in r9.'
+    } elseif ($CoopMenu) {
+        Write-Output 'R8: use the stock main menu Co-op entry. Mission 6 / F-14D only. Debug logs are local and archived automatically on exit. The first remote flight remains bounded to 15 seconds.'
+    } elseif ($CoopFlight) {
+        Write-Output 'R7: both PCs enter mission 6, F-14D with identical configuration, after refueling. F8 on both. Wait for peer_ready=1, run Review-And-Arm on each PC, then F7 once on both within 20 seconds. One remote-state copy for at most 15 seconds, with diagnostic world offset. F9 stops the trial.'
     } elseif ($PlaneFlight) {
         Write-Output 'Mission 6, F-14D, after refueling: F8 preflight; wait for review before F7. One local copy at a fixed world offset for at most 15 seconds; actual pose and render-state observations are recorded. F9 cleanup. No peer connection, possession or camera change. If quarantine is reported, exit normally.'
     } elseif ($PlaneStaging) {
@@ -171,7 +241,34 @@ try {
     } else {
         Write-Output 'Stay in single-player. F8 captures objects. Exit the game normally to remove the loader.'
     }
-    while (!$gameProcess.WaitForExit(1000)) { }
+    $lastCoopLine=''
+    $lastReportRequest=''
+    while (!$gameProcess.WaitForExit(1000)) {
+        if ($CoopMenu) {
+            $reportRequest=Join-Path $sessionDir 'coop-report-request.txt'
+            if (Test-Path -LiteralPath $reportRequest) {
+                try {
+                    $requestText=[IO.File]::ReadAllText($reportRequest)
+                    if ($requestText.Length -le 80 -and $requestText -ne $lastReportRequest) {
+                        $lastReportRequest=$requestText
+                        $runtimeLog=Join-Path $profileRoot 'runtime\UE4SS.log'
+                        if (Test-Path -LiteralPath $runtimeLog) { Copy-Item -LiteralPath $runtimeLog -Destination (Join-Path $sessionDir 'UE4SS.log') -ErrorAction SilentlyContinue }
+                        & (Join-Path $profileRoot 'Collect-CoopLogs.ps1') -SessionDirectory $sessionDir -ReportsDirectory (Join-Path $profileRoot 'reports')
+                    }
+                } catch { Write-Warning ('Debug report: '+$_.Exception.Message) }
+            }
+        }
+        if ($CoopFlight) {
+            $coopPath=Join-Path $sessionDir 'coop-status.tsv'
+            if (Test-Path -LiteralPath $coopPath) {
+                try {
+                    $fields=@{}; [IO.File]::ReadAllLines($coopPath) | ForEach-Object { $kv=$_ -split "`t",2;if ($kv.Count -eq 2) { $fields[$kv[0]]=$kv[1] } }
+                    $line="R7 $($fields.detail) | peer_ready=$($fields.peer_ready) | local_armed=$($fields.local_armed) | peer_armed=$($fields.peer_armed) | received=$($fields.accepted) | stopped=$($fields.stopped)"
+                    if ($line -ne $lastCoopLine) { Write-Output $line;$lastCoopLine=$line }
+                } catch [IO.IOException] { }
+            }
+        }
+    }
     $record.exit_code = $gameProcess.ExitCode
 }
 finally {
@@ -196,5 +293,9 @@ finally {
     if (Test-Path -LiteralPath $log) { Copy-Item -LiteralPath $log -Destination (Join-Path $sessionDir 'UE4SS.log') }
     $record.finished = Get-Date -Format o
     $record | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $sessionDir 'session.json') -Encoding UTF8
+    if ($CoopMenu) {
+        try { & (Join-Path $profileRoot 'Collect-CoopLogs.ps1') -SessionDirectory $sessionDir -ReportsDirectory (Join-Path $profileRoot 'reports') }
+        catch { Write-Warning ('Final debug report: '+$_.Exception.Message) }
+    }
     if (!$record.proxy_removed) { Write-Warning 'Loader remains. After the game exits, run Remove-ReconLoader.ps1 before ordinary play.' }
 }

@@ -1,0 +1,22 @@
+{
+  "revision": "r27-development",
+  "date": "2026-10-21",
+  "game_launched": false,
+  "friend_involved": false,
+  "live_validation": false,
+  "first_shared_flight_ready": false,
+  "client_world_loader_implemented": true,
+  "client_world_loader_game_verified": false,
+  "guest_cinematic_visuals_implemented": false,
+  "lua_tests_passed": 114,
+  "pilot_protocol_checks_passed": 405,
+  "pause_ownership_checks_passed": 7,
+  "clock_skip_invite_barrier_tests_passed": true,
+  "lua_sources_parsed": 31,
+  "native_sha256": "3B92D24630336303EE9F338ECE8A658B84B137E075002510804EBFA609EED950",
+  "archive": "C:\\Users\\Administrator\\Desktop\\ACE\\dist\\ac8-steam-coop-r27-development.zip",
+  "archive_sha256": "BA175748BC1D7188DA634F795E82E98A7666AB8D8B756CE9C6ECDD9AC48ED3A5",
+  "package_files": 50,
+  "archive_manifest_verified": true,
+  "full_mission_replication": false
+}

@@ -6,7 +6,7 @@ using namespace plane_flight;
 struct Mock {
  Ledger* l=nullptr; Seen plane=Seen::safe,net=Seen::safe,parts=Seen::safe;
  bool identify=true,barrier=true,configure_ok=true,preseed_ok=true,ready=true,components=true,graph=true,seed_ok=true,motion_ok=true,cleanup_ok=true,pending_flag=false;
- bool receipt=true,duplicate=false,mismatch=false,unknown_net=false;unsigned closes=0,quarantine_passes=0,finish_calls=0,spawn_calls=0,destroy_calls=0;
+ bool receipt=true,duplicate=false,mismatch=false,unknown_net=false;unsigned closes=0,quarantine_passes=0,finish_calls=0,spawn_calls=0,destroy_calls=0,seed_calls=0;
  uint64_t clock=100;
  bool acquire(uintptr_t p,Identity& i,int){i={p,1,2};return identify;}
  Seen resolve(const Identity& i){return i.pointer==22?net:i.pointer==33?parts:plane;}
@@ -28,7 +28,7 @@ struct Mock {
  void finish(){++finish_calls;}
  bool disable_components(){return components;}
  bool finished_graph(){return graph;}
- bool seed(){return seed_ok;}
+ bool seed(){++seed_calls;return seed_ok;}
  bool motion(){return motion_ok;}
  uint64_t now(){return clock;}
 };
@@ -58,5 +58,10 @@ int main(){unsigned n=0;
  {Ledger l;Mock b;b.graph=false;l.run(b);b.pending_flag=true;l.cleanup(b);check(state(l,"quarantine"),"quarantine sticky during pending");++n;}
  {Ledger l;Mock b;l.run(b);for(int i=0;i<5;++i)l.cleanup(b);check(b.destroy_calls==3,"bounded destroy retries");++n;}
  {Ledger l;Mock b;l.run(b);b.pending_flag=true;l.cleanup(b);check(!b.destroy_calls&&state(l,"cleanup_pending"),"pending engine destroy not repeated");++n;}
+ {Ledger l;Mock b;l.lifetime_ms=0;l.run(b);b.clock+=3600000;l.tick(b);check(l.running&&l.ticks==1&&b.destroy_calls==0,"continuous survives one hour");++n;}
+ {Ledger l;Mock b;l.lifetime_ms=0;l.run(b);b.clock+=3600000;b.motion_ok=false;l.tick(b);check(!l.running&&b.destroy_calls==1,"continuous failure still cleans up");++n;}
+ {Ledger l;Mock b;l.lifetime_ms=0;l.run(b);b.clock+=3600000;l.cleanup(b);check(!l.running&&b.destroy_calls==1,"continuous explicit stop cleans up");++n;}
+ {Ledger l;Mock b;check(l.prepare(b)&&l.finished_ready&&!l.running&&state(l,"prepared")&&b.seed_calls==0&&b.finish_calls==1,"prepare holds actor without motion seed");++n;l.cleanup(b);check(b.destroy_calls==1,"prepared actor remains owned and cleanable");++n;}
+ {Ledger l;Mock b;b.graph=false;check(!l.prepare(b)&&state(l,"quarantine")&&!l.running&&!b.seed_calls,"prepare rejects partial graph");++n;}
  std::printf("%u plane flight lifecycle tests passed\n",n);return 0;
 }

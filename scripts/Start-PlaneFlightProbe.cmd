@@ -1,5 +1,5 @@
 @echo off
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0Launch-Recon.ps1" -PlaneFlight
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0Launch-Recon.ps1" -PlaneFlight %*
 set "probeExit=%errorlevel%"
 echo.
 echo Research launcher finished. Check the cleanup message before ordinary play.

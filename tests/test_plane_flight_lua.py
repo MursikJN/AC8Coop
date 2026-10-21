@@ -8,11 +8,13 @@ from lupa import LuaRuntime
 
 ROOT = Path(__file__).resolve().parents[1]
 EXTRA = r'''
-H.keys={};H.delayed={};H.now=0;H.native={preflight=0,run=0,tick=0,cleanup=0}
+H.keys={};H.delayed={};H.requested_delays={};H.now=0;H.native={preflight=0,run=0,tick=0,cleanup=0}
 Key={F7=7,F9=9}
 RegisterKeyBind=function(key,fn) assert(not H.keys[key],"duplicate key");H.keys[key]=fn end
 ExecuteInGameThread=function(fn) fn() end
 ExecuteInGameThreadWithDelay=function(ms,fn)
+ H.requested_delays[#H.requested_delays+1]=ms
+ if ms==1 then ms=H.frame_ms or 16 end -- an engine callback runs at most once per frame
  H.delayed[#H.delayed+1]={when=H.now+ms,fn=fn}
 end
 H.advance=function(ms)
@@ -22,11 +24,11 @@ H.advance=function(ms)
   for i,entry in ipairs(H.delayed) do if entry.when<earliest then index=i;earliest=entry.when end end
   if not index then break end
   local entry=table.remove(H.delayed,index);H.now=entry.when;entry.fn();count=count+1
-  assert(count<1000,"callback runaway")
+  assert(count<10000,"callback runaway")
  end
  H.now=limit
 end
-os.getenv=function(key) if key=="AC8_COOP_RECON" then return H.marker or "1" end end
+os.getenv=function(key) if key=="AC8_COOP_RECON" then return H.marker or "1" elseif key=="AC8_COOP_PLANE_FLIGHT_DLL" then return "test-r5.dll" end end
 H.status=function(kind,stamp)
  local f=assert(io.open(H.dir.."/plane-flight-status.tsv","w"))
  f:write("status\t",kind,"\nstamp\t",stamp or "test","\nreason\tfixture\n");f:close()
@@ -82,12 +84,13 @@ class FlightLuaTests(unittest.TestCase):
 
     def test_f9_stops_producer_without_player_lookup(self):
         self.stage(); self.lua.execute('H.keys[7]();H.advance(100);H.pcprops.Pawn=nil;H.keys[9]();H.advance(100)')
-        self.assertEqual(self.lua.eval('H.native.tick'), 2)
+        self.assertEqual(self.lua.eval('H.native.tick'), 6)
         self.assertEqual(self.lua.eval('H.native.cleanup'), 1)
 
     def test_timeout_is_bounded_and_precedes_run(self):
         self.stage(); self.lua.execute('H.keys[7]();H.advance(20000)')
-        self.assertLessEqual(self.lua.eval('H.native.tick'), 300)
+        self.assertGreaterEqual(self.lua.eval('H.native.tick'), 800)
+        self.assertLessEqual(self.lua.eval('H.native.tick'), 1000)
         self.assertFalse(self.lua.eval('AC8PlaneFlightLifecycle.active'))
         self.assertEqual(self.lua.eval('H.native.cleanup'), 3)
 
@@ -110,7 +113,7 @@ class FlightLuaTests(unittest.TestCase):
         self.stage(); self.lua.execute('H.keys[7]();H.advance(50)')
         self.stage('second'); self.lua.execute('H.keys[7]();H.advance(100)')
         self.assertEqual(self.lua.eval('H.native.run'), 1)
-        self.assertEqual(self.lua.eval('H.native.tick'), 1)
+        self.assertEqual(self.lua.eval('H.native.tick'), 3)
         self.assertEqual(self.lua.eval('H.native.preflight'), 1)
 
     def test_rejected_preflight_or_changed_world_never_runs(self):
@@ -128,6 +131,25 @@ class FlightLuaTests(unittest.TestCase):
     def test_native_tick_failure_stops_immediately(self):
         self.stage(); self.lua.execute("H.keys[7]();H.tick_status='error';H.advance(1000)")
         self.assertEqual(self.lua.eval('H.native.tick'), 1)
+        self.assertEqual(self.lua.eval('H.native.cleanup'), 1)
+
+    def test_next_frame_cadence_uses_positive_delay_and_retains_fallback(self):
+        self.stage(); self.lua.execute('H.keys[7]()')
+        self.assertEqual(self.lua.eval('H.requested_delays[1]'), 15000)
+        self.assertEqual(self.lua.eval('H.requested_delays[2]'), 1)
+        self.assertTrue(self.lua.eval('H.delayed[1].when==15000'))
+
+    def test_high_frame_rate_reaches_absolute_deadline(self):
+        self.stage(); self.lua.execute('H.frame_ms=4;H.keys[7]();H.advance(20000)')
+        self.assertGreater(self.lua.eval('H.native.tick'), 3000)
+        self.assertLess(self.lua.eval('H.native.tick'), 4096)
+        self.assertFalse(self.lua.eval('AC8PlaneFlightLifecycle.active'))
+        self.assertEqual(self.lua.eval('H.native.cleanup'), 3)
+
+    def test_pathological_scheduler_hits_callback_cap_and_stops(self):
+        self.stage(); self.lua.execute('H.frame_ms=1;H.keys[7]();H.advance(10000)')
+        self.assertEqual(self.lua.eval('H.native.tick'), 4096)
+        self.assertFalse(self.lua.eval('AC8PlaneFlightLifecycle.active'))
         self.assertEqual(self.lua.eval('H.native.cleanup'), 1)
 
 

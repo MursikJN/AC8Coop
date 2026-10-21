@@ -11,7 +11,7 @@ struct Ledger {
  uintptr_t raw_owned=0,raw_network=0,raw_parts=0;
  Identity owned{},network{},parts{};
  unsigned callbacks=0,destroys=0,ticks=0;
- uint64_t start_ms=0;
+ uint64_t start_ms=0,lifetime_ms=15000;
  const char* status="error"; const char* reason="not_preflighted";
  template<class B> void receipt(B& b,uintptr_t actor) {
   ++callbacks;
@@ -46,26 +46,30 @@ struct Ledger {
   ++destroys;b.event("destroy_enter");bool accepted=b.destroy(raw_owned);b.event(accepted?"destroy_return_true":"destroy_return_false");
   status="cleanup_pending";reason="destroy_requested_retirement_unverified";
  }
- template<class B> void run(B& b) {
-  if(attempted){status="error";reason="attempt_already_consumed";return;}
+ template<class B> bool prepare(B& b) {
+  if(attempted){status="error";reason="attempt_already_consumed";return false;}
   attempted=true;b.event("spawn_enter");uintptr_t returned=b.spawn(*this);b.event("spawn_return");
-  if(!receipt_seen){unknown_spawn=true;status="quarantine";reason="no_preinit_receipt";return;}
+  if(!receipt_seen){unknown_spawn=true;status="quarantine";reason="no_preinit_receipt";return false;}
   if(returned&&returned!=raw_owned)unknown_spawn=true;
-  if(!identified||!barrier||callbacks!=1||returned!=raw_owned){cleanup(b);return;}
-  if(!b.configure()){cleanup(b);return;}
-  if(!b.preseed()){cleanup(b);return;}
-  if(!b.ready_to_finish()){cleanup(b);return;}
+  if(!identified||!barrier||callbacks!=1||returned!=raw_owned){cleanup(b);return false;}
+  if(!b.configure()){cleanup(b);return false;}
+  if(!b.preseed()){cleanup(b);return false;}
+  if(!b.ready_to_finish()){cleanup(b);return false;}
   finish_entered=true;b.event("finish_enter");b.finish();b.event("finish_return");
   b.close_actor_barrier();
-  if(!b.disable_components()||!b.finished_graph()){quarantine(b,"finished_component_graph_unverified");return;}
+  if(!b.disable_components()||!b.finished_graph()){quarantine(b,"finished_component_graph_unverified");return false;}
   finished_ready=true;
+  status="prepared";reason="native_initialized_actor_barrier_held";return true;
+ }
+ template<class B> void run(B& b) {
+  if(!prepare(b))return;
   if(!b.seed()){cleanup(b);return;}
   start_ms=b.now();running=true;status="active";reason="native_manual_motion_window";
  }
  template<class B> void tick(B& b) {
   if(cleanup_requested){cleanup(b);return;}
   if(!running){if(attempted)cleanup(b);else{status="error";reason="not_running";}return;}
-  if(b.now()-start_ms>=15000){cleanup(b);return;}
+  if(lifetime_ms && b.now()-start_ms>=lifetime_ms){cleanup(b);return;}
   if(!b.motion()){cleanup(b);return;}
   ++ticks;status="active";reason="native_remote_motion_applied";
  }

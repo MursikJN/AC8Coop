@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-20",
+  "revision": "r10",
+  "native_sha256": "E96377F0D8F78CF71BDB9725EF4BAACABF591B0C0E793217E41EE92D5A69E2AC",
+  "lifetime_ms": 0,
+  "native_ledger_checks": 26,
+  "python_tests": 242,
+  "python_result": "OK (skipped=1)",
+  "role_controls": [
+    "Создать лобби",
+    "Присоединиться к другу"
+  ],
+  "cleanup_triggers": [
+    "F9",
+    "peer or transport loss",
+    "world/pawn/configuration change",
+    "motion failure",
+    "stalled Lua update watchdog"
+  ],
+  "continuous_lua_test": "80 seconds / >4096 ticks without forced stop",
+  "native_continuous_test": "one simulated hour; failure and explicit stop still clean up",
+  "live_two_pc": "not verified",
+  "live_ui": "awaiting normal title Enter",
+  "package": {
+    "directory": "C:\\Users\\Administrator\\Desktop\\ACE\\dist\\AC8CoopLobby-r10",
+    "archive": "C:\\Users\\Administrator\\Desktop\\ACE\\dist\\AC8CoopLobby-r10.zip",
+    "bytes": 9155603,
+    "sha256": "BB0DFF20F6FA2AF8832DD3C694B2C8FECD357FC90D4EE1AF801B7B8A8837C8DC"
+  }
+}

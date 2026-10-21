@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-20",
+  "milestone": "r12-control-core-development",
+  "production_transport": "SteamNetworkingSockets, custom host authority; no native ClientTravel",
+  "local_transport": "TCP exclusively on 127.0.0.1, fresh test token, instance IDs 1 and 2",
+  "validation": {
+    "authority_and_wire_checks": 347,
+    "steam_transport_fake_sdk_checks": 17,
+    "legacy_connection_regression": "passed",
+    "loopback_checks": 31,
+    "two_process_trial_successful_runs": 3,
+    "trial_assertions": ["host mission/difficulty received", "guest mission change rejected", "both readiness bits replicated", "host selection resets both ready bits", "guest clears own ready bit"],
+    "loopback_assertions": ["fragmentation", "replay rejection", "wrong token rejection", "exclusive bind", "disconnect"],
+    "evidence_root": "build/local-session-*",
+    "command": "powershell -NoProfile -File scripts/Test-LocalSession.ps1"
+  },
+  "not_verified": ["two simultaneous AceCombat8 processes", "loopback integrated into game", "new Steam transport between PCs", "r12 menu integration", "game adapter", "NPC wingman replacement", "world and flight replication"],
+  "game_adapter_ready": false,
+  "release_ready": false
+}

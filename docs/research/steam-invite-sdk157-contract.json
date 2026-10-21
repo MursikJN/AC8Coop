@@ -1,0 +1,58 @@
+{
+  "source": "https://github.com/ValveSoftware/Proton/tree/proton_9.0/lsteamclient/steamworks_sdk_157",
+  "callback_base": {
+    "size_x64": 16,
+    "flags_offset": 8,
+    "id_offset": 12,
+    "vtable": [
+      "Run(void*)",
+      "Run(void*,bool,uint64_t)",
+      "GetCallbackSizeBytes()"
+    ],
+    "virtual_destructor": false
+  },
+  "callbacks": {
+    "337": {
+      "name": "GameRichPresenceJoinRequested_t",
+      "size": 264
+    },
+    "331": {
+      "name": "GameOverlayActivated_t",
+      "size": 8
+    }
+  },
+  "exports_verified": {
+    "SteamAPI_RegisterCallback": true,
+    "SteamAPI_UnregisterCallback": true,
+    "SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialogConnectString": true,
+    "SteamAPI_ISteamUtils_IsOverlayEnabled": true,
+    "SteamAPI_SteamFriends_v017": true,
+    "SteamAPI_SteamUtils_v010": true
+  },
+  "reference_files": [
+    {
+      "name": "isteamfriends.h",
+      "sha256": "1DEA7EA2C0825FB8775891F2ED8CF9C09CA5A1BF663BC5DC6219D17E5B532DF8"
+    },
+    {
+      "name": "isteamutils.h",
+      "sha256": "C3F72686CEC30B94FB2D5971E6E8BF0B7A3F7592E4E02856781B30E1EBE7798D"
+    },
+    {
+      "name": "steam_api.h",
+      "sha256": "9D2F7C898C0698EFF8852F8826F0F44424E57A93FAEA714276C41D38B50E3E4C"
+    },
+    {
+      "name": "steam_api_common.h",
+      "sha256": "E86071C231A5209CABFEB43767F9B99B0A3289EB670241CA07D1D51A4950D634"
+    },
+    {
+      "name": "steam_api_flat.h",
+      "sha256": "FCE4748FF57EB3406855F21FB4632266B37C243990121A72E84614AFAF482761"
+    },
+    {
+      "name": "steam_api_internal.h",
+      "sha256": "51AFFEF4DE43205127BAF245C2E9E45DF4DC105FBC3E168CA2D500E76D779BB4"
+    }
+  ]
+}

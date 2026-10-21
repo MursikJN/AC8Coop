@@ -1,0 +1,36 @@
+{
+  "revision": "r5",
+  "date_local": "2026-10-20",
+  "game_build": "25201480",
+  "native_sha256": "224190148e3ffdf26886b6aeb1a8e54ac957427cbcd6aa10f73041328b6c0d3e",
+  "native_compiler": "MSVC 14.51.36231 x64; C++17 /W4 /WX /O2 /fp:strict /MT",
+  "native_checks": {
+    "main_visibility": 52,
+    "lifecycle": 23,
+    "flight_state": 16,
+    "selection_slots": 10,
+    "component_ticks": 16,
+    "observations_and_real_serializer": 17,
+    "total_passed": 134
+  },
+  "python_lua": {
+    "discovered": 178,
+    "passed": 177,
+    "skipped": 1,
+    "skip_reason": "Connection Test native DLL not supplied; AC8_CONNECTION_NATIVE_TEST_DLL unset"
+  },
+  "powershell_parse_files": 5,
+  "profile_validate_only": true,
+  "serializer_json_verified": true,
+  "ue4ss": {
+    "package": "UE4SS_v3.0.1-1181-g83330635.zip",
+    "archive_sha256": "b9a166a756605b21058a64cde93bcaab1a855dba3553e5c7e6ce0fa8fdfad7b9",
+    "upstream": "https://github.com/UE4SS-RE/RE-UE4SS/releases/tag/experimental-latest",
+    "profile_reconstructed": true,
+    "original_author_used_zdev": true
+  },
+  "game_launched": false,
+  "live_visibility_verified": false,
+  "game_proxy_installed": false,
+  "next_step": "Launch isolated profile; mission 6 F-14D after refueling; F8; inspect fresh result before issuing arming token for a single F7 trial."
+}

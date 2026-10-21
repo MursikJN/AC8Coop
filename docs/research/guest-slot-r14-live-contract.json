@@ -1,0 +1,69 @@
+{
+  "revision": "r14-slot-contract",
+  "pid": 2328,
+  "read_only_ownership_checks": true,
+  "mission": "Mission007",
+  "host_aircraft": "F/A-18C",
+  "target_aircraft": "F-14D",
+  "target_role": "Joker2",
+  "target_callsign_key": "ContainerAllyCallsign_Name_Professor",
+  "slot": 1,
+  "active_wingmen": 3,
+  "host_player_controllers": 1,
+  "verified_unit_arrays": [
+    "RootAIGameObjects",
+    "ChildAIGameObjects",
+    "GroupLeadPlanes",
+    "AliveChildAIGameObjects"
+  ],
+  "array_types": {
+    "ChildAIGameObjects": {
+      "class_pointer": "0x2b1aa800",
+      "class": "LiveAIGameObject"
+    },
+    "RootAIGameObjects": {
+      "class_pointer": "0x2b1aa800",
+      "class": "LiveAIGameObject"
+    },
+    "AliveChildAIGameObjects": {
+      "class_pointer": "0x2b1aa800",
+      "class": "LiveAIGameObject"
+    },
+    "GroupLeadPlanes": {
+      "class_pointer": "0x2b1aaa00",
+      "class": "LiveAIPlane"
+    }
+  },
+  "player_inherits_ai_plane": false,
+  "player_inherits_ai_game_object": false,
+  "f14_player_class_load_verified": true,
+  "f14_player_cdo_verified": true,
+  "class_lifetime_across_callbacks_guaranteed": false,
+  "spawn_called": false,
+  "possession_called": false,
+  "ai_mutated": false,
+  "real_guest_control_ready": false,
+  "next_step": "Implement stock player-plane initialization and a type-safe mission-role adapter; direct insertion of LivePlayerPlane into AI arrays is invalid",
+  "evidence": [
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\guest-control-inspect-guest-bind-weak-r14.tsv",
+      "sha256": "5a6193705a0d214a96500d7d8eb89d1ceb9d4019e46552d737c6d997f5139728"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\guest-slot-resolve-baxter-path-r14.tsv",
+      "sha256": "af73c6c37146f48a1994efcb098ffbb952b1a36aaf740e7dc51e6745a77d71b1"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\guest-player-preparation-f14-player-prepare-r14.tsv",
+      "sha256": "123e1fa2345172be2c79ec0260f54b56760a79413e9e6d69e31cdb12355d6495"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\guest-array-type-contract.json",
+      "sha256": "fdeb5074991a80751c0e9a66598a08514abb99f330df7eee362262a1874038c1"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\guest-type-contract-baxter-types-r14.tsv",
+      "sha256": "f0470ef8d7db162817d046bc182a44ce8e4756c80669de1dc5a92a1b075c9cbc"
+    }
+  ]
+}

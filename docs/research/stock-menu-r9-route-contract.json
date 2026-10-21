@@ -1,0 +1,94 @@
+{
+  "build": 25201480,
+  "game_sha256": "51510E2A520565DBE81FB0D569E95CD4393077ACAAA859371489B80B8128829F",
+  "command_stride": "0x1b8",
+  "selected_offset": "0x688",
+  "command_tag_type": "FString",
+  "command_tag_offset": "0xf8",
+  "caption_offset": "0x130",
+  "mission_offset": "0x154",
+  "aircraft_entry_offset": "0x158",
+  "weapon_offset": "0x160",
+  "targets": [
+    {
+      "kind": "aircraft_f14",
+      "vtable_rva": "0xc81d2b0",
+      "confirm_rva": "0x7af0610",
+      "confirm_first16": "4055565741574881ec88000000488b01"
+    },
+    {
+      "kind": "main_campaign",
+      "vtable_rva": "0xc82cf38",
+      "confirm_rva": "0x7b4ff50",
+      "confirm_first16": "48895c241855565741564157488d6c24"
+    },
+    {
+      "kind": "campaign_continue",
+      "vtable_rva": "0xc7f05b0",
+      "confirm_rva": "0x7b13100",
+      "confirm_first16": "4055574156488d6c24b94881ecf00000"
+    },
+    {
+      "kind": "campaign_free_mission",
+      "vtable_rva": "0xc7f05b0",
+      "confirm_rva": "0x7b13100",
+      "confirm_first16": "4055574156488d6c24b94881ecf00000"
+    },
+    {
+      "kind": "difficulty_pilot",
+      "vtable_rva": "0xc7f6630",
+      "confirm_rva": "0x7ac98e0",
+      "confirm_first16": "488bc45553488d68a14881ec88000000"
+    },
+    {
+      "kind": "mission6",
+      "vtable_rva": "0xc7f5c20",
+      "confirm_rva": "0x7b10e20",
+      "confirm_first16": "405557488d6c24b14881eca800000048"
+    },
+    {
+      "kind": "narrative",
+      "vtable_rva": "0xc7efc38",
+      "confirm_rva": "0x7b114c0",
+      "confirm_first16": "40555357488bec4883ec30488bf9488b"
+    },
+    {
+      "kind": "briefing_hangar",
+      "vtable_rva": "0xc7f7ba0",
+      "confirm_rva": "0x16b43e0",
+      "confirm_first16": "32c0c3cccccccccccccccccccccccccc"
+    },
+    {
+      "kind": "hangar_aircraft",
+      "vtable_rva": "0xc80f698",
+      "confirm_rva": "0x7afd080",
+      "confirm_first16": "4055534154488d6c24b94881ecb00000"
+    },
+    {
+      "kind": "weapon1_default",
+      "vtable_rva": "0xc8109e8",
+      "confirm_rva": "0x7aff250",
+      "confirm_first16": "40555357488d6c24b94881ecb0000000"
+    },
+    {
+      "kind": "weapon2_none",
+      "vtable_rva": "0xc811bd0",
+      "confirm_rva": "0x7affdd0",
+      "confirm_first16": "48895c2410488974241855574156488d"
+    },
+    {
+      "kind": "squad_standby",
+      "vtable_rva": "0xc815438",
+      "confirm_rva": "0x7af9630",
+      "confirm_first16": "48894c24085553565741554156415748"
+    },
+    {
+      "kind": "sortie",
+      "vtable_rva": "0xc815d90",
+      "confirm_rva": "0x7afb890",
+      "confirm_first16": "48895c24184889742420555741544156"
+    }
+  ],
+  "loaded_main_command_count": 6,
+  "title_transition_allowed": false
+}

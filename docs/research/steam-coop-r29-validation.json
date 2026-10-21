@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-21",
+  "revision": "r29-development",
+  "game_launched": false,
+  "game_interaction": false,
+  "friend_involved": false,
+  "python_lua_tests_passed": 213,
+  "session_policy_cpp_checks_passed": 169,
+  "cinema_cpp_checks_passed": 177,
+  "pilot_cpp_checks_passed": 405,
+  "pause_cpp_checks_passed": 7,
+  "powershell_filesystem_and_policy_checks_passed": 19,
+  "steam_clock_invite_barrier_cpp_tests": "passed",
+  "msvc": "x64 /W4 /WX",
+  "lua_files_syntax_checked": 36,
+  "archive_files": 55,
+  "archive_sha256": "BC979A6811F80C1E82F2E98EBA909551952357D9CE42CB14410A8668D49921E1",
+  "dll_sha256": "A325612DFFDF5FF73CF193024FF243ACCC2B18B6A31A573FCD502B064041DA28",
+  "manifest_integrity": "all files verified against disk and ZIP",
+  "r28_archive": "unchanged",
+  "host_progress_policy": "persistent host userdata; guest userdata per run; no guest copyback",
+  "shared_restart": "fresh_process_return_to_lobby; normal title input and fresh readiness required",
+  "in_process_mission_restart_supported": false,
+  "loading_watchdog_ms": 120000,
+  "first_shared_flight_ready": false,
+  "runtime_validation": "deferred by user",
+  "unverified": [
+    "Actual stock pause and recovery controls",
+    "QuitGame and two-machine relaunch cycle",
+    "Game save paths and any game-managed cloud behavior",
+    "Local cinematic AV, replica scene and full flight remain unaccepted"
+  ]
+}

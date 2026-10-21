@@ -1,0 +1,87 @@
+{
+  "revision": "r5.1",
+  "session": "session-20261020-154101",
+  "native_sha256": "a4523f087effa02f49aa99701b9799beacac10b44e4a71b4c89dec98e752b5f4",
+  "user_observation": {
+    "plane_visible": true,
+    "appeared_then_disappeared": true,
+    "flew_ahead": true,
+    "shaking": true,
+    "source": "user message in this chat"
+  },
+  "native_visibility_called": true,
+  "native_visibility_verified": true,
+  "main_flags_before": "410008020000000000",
+  "main_flags_after": "610008020000000000",
+  "secondary_unchanged": true,
+  "source_flags_unchanged": true,
+  "motion_ticks": 215,
+  "observation_attempts": 5,
+  "observation_failures": 0,
+  "requested_pose_errors_m": [
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "source_distance_range_m": [
+    312.6990427932416,
+    346.561308237202
+  ],
+  "tick_interval_ms": {
+    "min": 62,
+    "median": 63.0,
+    "mean": 69.14018691588785,
+    "max": 422,
+    "observed_rate_hz": 14.463368477967018
+  },
+  "geometry_samples": [
+    {
+      "stage": "seed",
+      "main_flags": "610008020000000000",
+      "secondary_flags": "430008020000000000",
+      "main_base_tick": 0,
+      "secondary_base_tick": 0
+    },
+    {
+      "stage": "t1",
+      "main_flags": "610008020000000000",
+      "secondary_flags": "430008020000000000",
+      "main_base_tick": 0,
+      "secondary_base_tick": 0
+    },
+    {
+      "stage": "t5",
+      "main_flags": "610008020000000000",
+      "secondary_flags": "430008020000000000",
+      "main_base_tick": 0,
+      "secondary_base_tick": 0
+    },
+    {
+      "stage": "t10",
+      "main_flags": "610008020000000000",
+      "secondary_flags": "430008020000000000",
+      "main_base_tick": 0,
+      "secondary_base_tick": 0
+    },
+    {
+      "stage": "before_destroy",
+      "main_flags": "610008020000000000",
+      "secondary_flags": "430008020000000000",
+      "main_base_tick": 0,
+      "secondary_base_tick": 0
+    }
+  ],
+  "owned_identities_retired": true,
+  "retirement_verified_after_user_f9": true,
+  "game_exit_verified": true,
+  "proxy_removal_verified": true,
+  "jitter_assessment": {
+    "confirmed": "pose applied at approximately 14.46 Hz; max observed interval 422 ms; current loop has no separate per-frame pose interpolation",
+    "hypothesis": "Sparse and uneven pose updates contribute to visible shaking",
+    "cause_proven": false,
+    "next_step": "Preserve visible r5.1 baseline; investigate update cadence and pose smoothing before treating movement quality as complete."
+  },
+  "peer_coop_verified": false,
+  "game_exit_code": 0
+}

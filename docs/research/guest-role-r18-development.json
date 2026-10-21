@@ -1,0 +1,76 @@
+{
+  "revision": "r18d-reversible-native-role-bridge",
+  "status": "development_not_playable",
+  "verified": {
+    "steam_persona_read_from_existing_game_api": true,
+    "nickname_in_stock_objname_and_callsign_caches": true,
+    "source_role_ids_preserved": true,
+    "per_unit_health_interface_forwarded": true,
+    "forwarded_methods": [
+      "WorldUILocation",
+      "DisplayFaction",
+      "DisplayHealthRate",
+      "DisplayName"
+    ],
+    "native_unit_interface_restored": true,
+    "npc_detached_from_ai_during_trial": true,
+    "unit_ai_arrays_cleared": 6,
+    "manager_planes_during_trial": 2,
+    "manager_units_during_trial": 2,
+    "npc_component_tick_domains_disabled": 34,
+    "original_graph_restored": true,
+    "all_owned_identities_retired": true
+  },
+  "npc_retired": false,
+  "player_activated": false,
+  "live_hud_marker_visually_verified": false,
+  "all_story_events_forwarded": false,
+  "real_guest_control": false,
+  "notes": [
+    "r18 rejected an incorrect fingerprint before name mutation; corrected the omitted REX prefix in r18a",
+    "r18b rejected the assumption that AI uses the Actor base tick setter; identified the AI-specific virtual pair before retry",
+    "r18c restored the source graph after detecting an additional base tick on Live components. Its constant manager count lines are not observations; NPC detachment was false. r18d logs actual counts and disables/restores both tick domains."
+  ],
+  "evidence": [
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r18a-health-result.tsv",
+      "sha256": "8844beb42b90251ec2977ca5e6cc4c87e8b3673eb30d3a3f29514cf6e94c046e"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\guest-role-health-r18a.tsv",
+      "sha256": "e6e8903cf4bc6eb449e8da902ae3aab4d762699e02756e963a84423b0de6b792"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r18a-cleanup.tsv",
+      "sha256": "64446140e72beb4750d574d1b64a4a677c02a4e57fa6f62e0295e10dc4a4e672"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r18d-detach-result.tsv",
+      "sha256": "2e2cb7a36226729c1b90118891e6e63237cc6f6a31a08619d96e295fe3ce0e85"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\guest-role-detach-r18d.tsv",
+      "sha256": "4884b7788b95b6e875af32af5c79fb6889efd09c3a277f6a0158e94be2a211db"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r18d-cleanup.tsv",
+      "sha256": "5674849e82186df7b8d8b264a120791211753d3fe3aefdfa5e0073c98cfe2c42"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r18d-source-preservation.tsv",
+      "sha256": "e7fe5e79dbdb1ed3f469275ccdcf9a37131f05f656f894782e9cc838a91da88a"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\guest-role-health-r18d.tsv",
+      "sha256": "e6e8903cf4bc6eb449e8da902ae3aab4d762699e02756e963a84423b0de6b792"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\role-detach-layout-r18b.tsv",
+      "sha256": "e3cd5e04f858d518c2af3fad9ac27b7e7fcd266bf03b26b0cf9f7c302a98a960"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\guest-role-native-role-forward-health-r18.json",
+      "sha256": "0b2ee426a1ded2ddce592a880b868934fab38d0d64841b882338ab4423e972e1"
+    }
+  ]
+}

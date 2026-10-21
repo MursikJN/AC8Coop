@@ -1,0 +1,111 @@
+{
+  "date": "2026-10-20",
+  "status": "automatic local route, r9 stock UI, Steam host startup and local report collection verified; two-PC acceptance pending",
+  "live_confirm": {
+    "session": "session-20261020-173903",
+    "pid": 21292,
+    "request": "menu-task-20261020-180126-route-confirm13.lua",
+    "widget": "WBP_Menu_Hangar_AircraftSettings_000_C",
+    "vtable_rva": "0xc81d2b0",
+    "handler_rva": "0x7af0610",
+    "slot": 238,
+    "selected_index": 2,
+    "selected_aircraft_entry": 23010,
+    "native_return": true,
+    "screen_after": "WBP_Menu_Hangar_WeaponSettings1_000_C; LAAM",
+    "dll_sha256": "B8746E549C17E59357770F2EDCFFEF85B4EE04FD9503F0FD39FAFCFD7864D7AA"
+  },
+  "subsequent_diagnostic_crash": {
+    "job": "resolve-names15",
+    "failure": "FString pointer at command+0xf8 incorrectly treated as FName comparison index",
+    "script_used": "profiles\\ac8-build25201480-menu-dev\\evidence\\session-20261020-173903\\menu-task-20261020-180326-resolve-names15.lua",
+    "session_exit_code": 3,
+    "proxy_removed": true,
+    "scope": "diagnostic experiment only; command confirmation had already returned successfully",
+    "fix": "Read command+0xf8 as bounded FString; no FName integer construction for this field"
+  },
+  "lobby_tests": {
+    "native": 96,
+    "original_connection_regression": "passed",
+    "lua_state_machine": 13
+  },
+  "remaining": [
+    "Two-PC lobby, readiness, joint mission loading and remote flight acceptance"
+  ],
+  "stock_route_steps": [
+    "main_campaign",
+    "campaign_free_mission",
+    "difficulty_pilot",
+    "mission6",
+    "narrative",
+    "briefing_hangar",
+    "hangar_aircraft",
+    "aircraft_f14",
+    "weapon1_default",
+    "weapon2_none",
+    "squad_standby",
+    "sortie"
+  ],
+  "native_menu_contract_checks": 50,
+  "native_route_sha256": "0B481040C6E62591D278AE617033A12DE3AD2D19519BB0EB1373865BCF481712",
+  "local_steps_verified_session": "session-20261020-180542; all stock steps reached Mission007/F14D refueling tutorial; exit0, proxy removed",
+  "complete_route_hover_failure": {
+    "session": "session-20261020-184325",
+    "step": "mission6",
+    "result": "Stopped before mission confirm when hover replaced selection",
+    "fix": "Select, inspect and confirm now share one game-thread callback; Lua regression passed"
+  },
+  "title_transition_rejected": {
+    "session": "session-20261020-185029",
+    "time": "2026-10-20T18:56:06+07:00",
+    "diagnostic_dll": "ac8_menu_route_r9q.dll",
+    "result": "Direct page4 transition skipped profile initialization. Campaign had only New Game; route stopped with target_missing before mission selection.",
+    "action": "Removed title_enter branch from source; never shipped in r9 prepared profile; normal restart required",
+    "save_backup": "build/save-backup-20261020-185752",
+    "save_hashes_after_exit_match_backup": true,
+    "campaign_sha256": "423E4A0C25DCF9258F518FDF9D9C980B5AB476744FD285D60882BB51E9A1A87A",
+    "exit_code": 0,
+    "proxy_removed": true
+  },
+  "profile_after_normal_start": {
+    "session": "session-20261020-185951",
+    "user_confirmed_saves_loaded": true,
+    "normal_title_enter": "physical Enter by user; automated key not accepted",
+    "main_menu_commands": 6
+  },
+  "python_tests": {
+    "run": 235,
+    "result": "OK",
+    "skipped": 1,
+    "log": "build/r9-python-tests.txt"
+  },
+  "complete_automatic_route": {
+    "session": "session-20261020-185951",
+    "job": "complete-route5",
+    "steps_confirmed": 12,
+    "phase": "flight",
+    "mission_loaded": true,
+    "world": "Mission007",
+    "plane": "PP0023_f14d",
+    "steam_started": false,
+    "copy_spawned": false,
+    "active_flight_required_by_fixture": false
+  },
+  "prepared_r9_ui": {
+    "session": "session-20261020-191349",
+    "pid": 1464,
+    "stock_main_menu_button": true,
+    "lobby_screen_opened": true,
+    "ready_disabled_without_peer": true,
+    "host_launch_disabled_without_ready_peers": true,
+    "native_transport_startup": "HOST_WAITING_FOR_FRIEND; reason none",
+    "report_button": "click not verified due concurrent user input; launcher report mailbox verified",
+    "report_archive": "session-20261020-191349-20261020-191844-374.zip"
+  },
+  "package": {
+    "directory": "C:\\Users\\Administrator\\Desktop\\ACE\\dist\\AC8CoopLobby-r9",
+    "archive": "C:\\Users\\Administrator\\Desktop\\ACE\\dist\\AC8CoopLobby-r9.zip",
+    "bytes": 9154632,
+    "sha256": "350F837643F429615808DA430B6D7130A9DFD7F625B1719B2D1C02593CB21568"
+  }
+}

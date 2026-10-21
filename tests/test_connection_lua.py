@@ -55,8 +55,12 @@ class GlueTests(unittest.TestCase):
 
     def test_native_exports_load_unarmed(self):
         self.assertNotIn('AC8_CONNECTION_TEST', os.environ)
+        dll = os.environ.get('AC8_CONNECTION_NATIVE_TEST_DLL')
+        if not dll:
+            self.skipTest('Set AC8_CONNECTION_NATIVE_TEST_DLL to a built Connection Test DLL')
+        self.assertTrue(Path(dll).is_file(), 'Configured native test DLL does not exist')
         lua = LuaRuntime()
-        lua.globals().dll = 'D:/projects/unreal-mod-tools/build/connection-test/ac8_connection_test.dll'
+        lua.globals().dll = str(Path(dll).resolve()).replace('\\', '/')
         lua.execute('''for _,name in ipairs({'start','stop','pump','status'}) do
             local f, err = package.loadlib(dll, 'luaopen_ac8_connection_' .. name)
             assert(f, err); assert(select('#', f()) == 0)

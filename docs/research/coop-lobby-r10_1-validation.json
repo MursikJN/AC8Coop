@@ -1,0 +1,39 @@
+{
+  "revision": "r10.1",
+  "python_tests": 248,
+  "result": "OK (skipped=1)",
+  "native_transport_checks": 96,
+  "native_connection_regression": "passed",
+  "lobby_sha256": "D2D79F8FE0A728ACB4CCEADEFD56BB46D998FC1DB88822C4412683BE5257AFCC",
+  "changes": [
+    "SteamID field followed by direct Create/Join buttons",
+    "No duplicate role dropdown or confirmation step in continuous UI",
+    "No stop/report buttons in normal flow; reports archived on exit",
+    "Single action consumed per click",
+    "Back resets lobby before local mission travel; permits changing peer/role",
+    "Native reset closes connection/listener, invalidates initialized peer binding and reloads the next explicit configuration"
+  ],
+  "continuous_flight_native_unchanged": true,
+  "live_validation": "Two-PC launch handshake observed; loading failed before flight; host-authoritative shared mission remains unimplemented",
+  "package": {
+    "directory": "C:\\Users\\Administrator\\Desktop\\ACE\\dist\\AC8CoopLobby-r10_1",
+    "archive": "C:\\Users\\Administrator\\Desktop\\ACE\\dist\\AC8CoopLobby-r10_1.zip",
+    "bytes": 9156740,
+    "sha256": "3117C9EBF476E2CDF85D5DFE8B94D0AB84645E1F44B3B97C787B4934D1027A04"
+  },
+  "live_two_pc": {
+    "host_session": "session-20261020-200706",
+    "host_configured": true,
+    "host_ready": "2026-10-20T20:13:43+07:00",
+    "host_prepare": "2026-10-20T20:13:51+07:00",
+    "commit_after_guest_ack": "2026-10-20T20:13:54+07:00",
+    "host_local_route_begin": "2026-10-20T20:13:57+07:00",
+    "last_confirmed_step": "briefing_hangar",
+    "abort": "2026-10-20T20:14:36+07:00",
+    "abort_reason": "peer snapshot age 3188ms exceeded Lua 3000ms; Steam still CONNECTED_TEST_OK",
+    "peer_phase_at_abort": 4,
+    "remote_aircraft_or_shared_mission_verified": false,
+    "architecture": "authenticated lobby launch handshake followed by independent local single-player routes; not host-authoritative mission replication"
+  },
+  "user_requirement_correction": "Host controls mission/aircraft; guest waits and joins host mission. Independent simultaneous menu automation does not satisfy this requirement."
+}

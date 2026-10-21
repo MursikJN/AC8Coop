@@ -1,0 +1,127 @@
+{
+  "revision": "r17b-player-physics-role-preparation",
+  "status": "development_not_playable",
+  "pid": 2328,
+  "mission": "Mission007",
+  "host_aircraft": "F/A-18C",
+  "guest_aircraft": "F-14D",
+  "guest_plane_type": 23010,
+  "module": {
+    "path": "build\\guest-player-r17b\\ac8_guest_player_init_r17b.dll",
+    "sha256": "edf32d43718d43da8fc53ad2aedd0a895bbd84b6ed3f3d08b4e2fea46fee1876"
+  },
+  "verified": {
+    "stock_player_class_initialized": true,
+    "own_equipment_and_network_object": true,
+    "flight_model_parameters_from_own_f14_provider": true,
+    "models_seeded_and_input_readback_verified": true,
+    "independent_native_steps": 120,
+    "trajectory_steps_per_case": 60,
+    "dt_seconds": 0.016666666666666666,
+    "cases": [
+      "neutral",
+      "roll_16384_of_32767"
+    ],
+    "orientation_quaternion_difference": 0.21804273440587768,
+    "host_model_byte_comparison_unchanged": true,
+    "model_finite_every_step": true,
+    "actor_hidden_inactive_collision_disabled": true,
+    "actor_and_component_updates_fenced": true,
+    "role_preparation_on_real_objects": true,
+    "role": "Joker2",
+    "callsign": "Professor",
+    "unit_singleton_ai_references_verified": 4,
+    "all_owned_identities_retired": true,
+    "native_fault_dump_produced": false
+  },
+  "not_implemented": [
+    "Engine mission-role lookup bridge",
+    "Unit events and mission health/death forwarding to player",
+    "HUD nickname and wingman marker",
+    "Guest exclusion from wingman AI orders",
+    "Retirement and replacement of original Baxter NPC",
+    "Guest input capture and live Steam transport wiring",
+    "Guest world and camera",
+    "Combat, damage and mission replication"
+  ],
+  "not_executed": [
+    "NPC mutation",
+    "Player insertion into AI-typed arrays",
+    "Player activation/visible flight",
+    "Controller possession",
+    "Real guest connection"
+  ],
+  "input_authorized": false,
+  "engine_role_routes_verified": false,
+  "offline_tests": {
+    "player_lifecycle": 29,
+    "physics_mapping_and_pose": 116,
+    "role_replacement_and_lease": 44,
+    "lua_resolver_and_hangar": 19,
+    "legacy_flight_regression": 163
+  },
+  "earlier_r17_attempt": {
+    "outcome": "Read size limit rejected host snapshot before model calls; actor retired",
+    "fix": "Two bounded reads within the existing 4096-byte limit; used new pinned r17a module"
+  },
+  "type_boundary": {
+    "FindAIGameObjectByWDName.ReturnValue": "LiveAIGameObject",
+    "BattleNavigation.AIObjectToPing": "LiveAIGameObject",
+    "BattleNavigationUnit.UnitToPing": "LiveUnit",
+    "direct_player_substitution_valid": false
+  },
+  "evidence": [
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r17a-model-result.tsv",
+      "sha256": "f1536bc0f2b95f4036ec91e27b32515236063e2d6d864692b1f73a30a0801600"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r17a-cleanup.tsv",
+      "sha256": "8cbfdb6d9abb7767ba3cd7245d8911b6f4a07c0a9d3d30e085cf36a00a7af934"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\guest-player-model-trial-r17a.tsv",
+      "sha256": "83217979c5a37f49eae11acb76007cecf4e5968eaeb2aefc3f119d2b64ddbaed"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r17b-preflight.tsv",
+      "sha256": "6837f959f3eb7ca8f44f917b92326140d936c7607fd9ae3abd290ae42ce227bb"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r17b-initialization.tsv",
+      "sha256": "ea89865ce5efbf0ee8d611432add82656be4f0ae76c2329630e61656cc7de972"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r17b-model-result.tsv",
+      "sha256": "17a0a5f623b4194f83ba861e10cb9a1583501395f883cc76323b64a3d877d28b"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r17b-cleanup.tsv",
+      "sha256": "c248a4036120d9119991c269bd710cddc532b664f6f48c95c0d6a1d80f003612"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\r17b-source-preservation.tsv",
+      "sha256": "e7fe5e79dbdb1ed3f469275ccdcf9a37131f05f656f894782e9cc838a91da88a"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\guest-player-model-trial-r17b.tsv",
+      "sha256": "83217979c5a37f49eae11acb76007cecf4e5968eaeb2aefc3f119d2b64ddbaed"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\guest-role-preparation-r17b.tsv",
+      "sha256": "b0535743e86456fd5c75100a5e5962c39bdba6fcd11fbf17971b1dbe3bc90746"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\guest-role-native-boundaries.json",
+      "sha256": "1ad5d02062e76451555837c4bf82555ba94d704dc3b94428ec4174f8df3788e9"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\guest-role-schema-baxter-role-library-r18.tsv",
+      "sha256": "8f8c85957c638cf09f9bd783c96a04810fc762abfbbbae99484069360a35963a"
+    },
+    {
+      "path": "profiles\\ac8-local-r13\\evidence\\pair-20261021-011448-955\\host\\adapter-job-baxter-role-player-preparation-r17b.lua",
+      "sha256": "3c86f4515b8c29cd729385d18f4d3dc1b56b30b274b9a6f3222410014d276dfd"
+    }
+  ]
+}

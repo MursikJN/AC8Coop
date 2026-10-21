@@ -1,0 +1,138 @@
+{
+  "revision": "r19-native-retirement-r19c-story-damage",
+  "status": "development_not_playable",
+  "live_process": {
+    "pid": 2328,
+    "mission": "Mission007",
+    "host_aircraft": "F/A-18C",
+    "replacement_aircraft": "F-14D",
+    "game_paused_by_user": true
+  },
+  "verified": {
+    "npc_canonical_identity_retired": true,
+    "existing_story_unit_preserved": true,
+    "player_pointer_in_ai_arrays": false,
+    "active_player_planes": 2,
+    "active_wingman_ai_planes": 2,
+    "active_baxter_ai_planes": 0,
+    "host_controller_and_view_target_preserved": true,
+    "unit_health_interface_forwarded": true,
+    "native_unit_damage_execution_routed_to_player": true,
+    "damage_trial_health": [
+      206,
+      205,
+      206
+    ],
+    "steam_nickname_cached": true,
+    "stock_world_space_hud_actor_owned_by_replacement": true,
+    "one_nickname_label_visible_flags": true,
+    "label_updates_follow_replacement": true,
+    "post_gc_role_graph_valid": true,
+    "old_markers_hidden_synchronously": true
+  },
+  "not_implemented_or_unverified": [
+    "real_guest_input_binding",
+    "continuous_player_flight_loop",
+    "guest_world_and_camera",
+    "all_story_operations_and_conditions",
+    "weapons_and_damage_replication",
+    "shared_restart_and_spectator_camera",
+    "visual_screen_acceptance_of_marker",
+    "public_launcher_integration",
+    "old_hidden_hud_actor_retirement_after_rebind"
+  ],
+  "death_rule": "spectate_until_shared_restart",
+  "death_rule_core_tests_passed": true,
+  "spectator_camera_implemented": false,
+  "live_modules": {
+    "ac8_guest_player_init_r19.dll": "2de2078faf4cef02f4c539b562193113a477b8f19132f33eb1795fc3ae258203",
+    "ac8_guest_story_r19c.dll": "e38faf93e8254dc9880655749309f6098ab5cb718488ccc27ce4a9281156d0fc"
+  },
+  "source_build_with_spectator_core": "r19d_compiled_not_loaded",
+  "validation": {
+    "native_lifecycle": 29,
+    "native_player_physics": 116,
+    "native_role_and_spectator": 48,
+    "story_selector": 11,
+    "lua_marker": 7,
+    "lua_resolver_and_hangar": 19,
+    "legacy_flight": 163
+  },
+  "notes": [
+    "All flight and component update domains of the replacement remain fenced. It is stationary; this is not real guest flight.",
+    "Unit damage uses stock DamageEvent initialization and player damage virtual. ModifyHealth intentionally refuses LivePlayerPlane via virtual aa0.",
+    "r19 story trial stopped on an overly conservative internal-health guard; r19a selected the role but ModifyHealth made no damage; r19b rejected a mistyped constructor fingerprint before installation. r19c corrected both issues and passed.",
+    "GetUnitName is a display-cache helper, not story Unit lookup. Do not override it to return an NPC identity.",
+    "No fifth aircraft or AI-input steering is used. The nickname container is a HUD actor."
+  ],
+  "evidence": [
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/r19-final-commit.tsv",
+      "sha256": "b160200d55cd36fa3d9224cd16b95dc4ab7641381b51a98dce3dcdaa76136413"
+    },
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/r19-final-runtime.tsv",
+      "sha256": "8f11625add5bd5320a631c58d9b40327ded8737f110334cb4f30969d6404d672"
+    },
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/r19-final-story-binding.tsv",
+      "sha256": "bf2f369d57012b11677c6e87f51bd7ddcb0c142a66a28f706e04692fcdde7f8f"
+    },
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/r19-preflight.tsv",
+      "sha256": "e4783d6b9adc876e96da06c3d870ed69e05d3b72ca9a2ea9df46a0aa27651588"
+    },
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/r19-initialization.tsv",
+      "sha256": "d10fe5f5ac8a4513aecdbc0009e31adfbfd66a58172a9e250475c04f2b5ce532"
+    },
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/r19-model-result.tsv",
+      "sha256": "2fd942a63264581d67aa28cc004cb59510b0a18198c9bc96f544618056f98368"
+    },
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/r19-reversible-detach.tsv",
+      "sha256": "269c4bade601baa8c8766f57b399bd43aa94d76d28bbb52f64e943e06e71d665"
+    },
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/r19-retire-result.tsv",
+      "sha256": "34316b1c1878002643463b363558ca624a67f2c877b7d0dd898e5a4b4d272744"
+    },
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/r19-retirement-poll.tsv",
+      "sha256": "d8c799953389af9b8855c976cf4bacbdda4ddb022e7d066a960f47762d285270"
+    },
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/r19-visible-readback.tsv",
+      "sha256": "dfe7ef08e7df620e1e65ddc8ce1c45a3d0ef1da8372ea0120725bf8c9a16d927"
+    },
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/guest-role-detach-r19.tsv",
+      "sha256": "4884b7788b95b6e875af32af5c79fb6889efd09c3a277f6a0158e94be2a211db"
+    },
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/guest-story-trial-r19c.tsv",
+      "sha256": "2004278e1ea1c6e5a097a22a53b811b44bda51cd9b2a1fe9bad7797fd837a286"
+    },
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/r19c-story-result.tsv",
+      "sha256": "68f4707dec632c7911d316eeaa467f78ade0ee57e0b21940094e53c84a589905"
+    },
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/r19c-story-unbind.tsv",
+      "sha256": "d41c5215979e56b77c803d160cac1a6e8d868172429ccd0cedbdc461a1b90475"
+    },
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/guest-marker-stock-guest-marker-r19.tsv",
+      "sha256": "141682dcb44806adda87dc49560e5a9457bd4d2ef711390c60f235141cf7ba4a"
+    },
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/marker-rebind-marker-retirement-r19.tsv",
+      "sha256": "d7bc8f1c77d56e5d8a884518ff32621aded6c4810226c9709a1f743fe9b8d79a"
+    },
+    {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-011448-955/host/role-audit-post-gc-role-audit-r19.tsv",
+      "sha256": "06ddb6ea006288a8691284585419237bbf621bcdb6df5363a510cfe0c5a8b3af"
+    }
+  ]
+}

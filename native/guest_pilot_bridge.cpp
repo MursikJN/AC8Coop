@@ -1,0 +1,214 @@
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include "guest_pilot_loopback.h"
+#include "guest_player_physics.h"
+#include "plane_component_ticks.h"
+#include "plane_flight_state.h"
+#ifndef AC8_R27_EMBEDDED_PILOT
+#define AC8_GUEST_PILOT_TRANSPORT
+#include "connection_test.cpp"
+#endif
+#include <map>
+#include <string>
+#include <vector>
+#include <cerrno>
+#include <ctime>
+#include <dbghelp.h>
+#include <xinput.h>
+#include "guest_pilot_input.h"
+#ifndef AC8_PILOT_REV
+#define AC8_PILOT_REV r20
+#endif
+#define PILOT_STR_(x) #x
+#define PILOT_STR(x) PILOT_STR_(x)
+#define PILOT_WIDE_(x) L##x
+#define PILOT_WIDE(x) PILOT_WIDE_(x)
+#define PILOT_REV_W PILOT_WIDE(PILOT_STR(AC8_PILOT_REV))
+#include "guest_pilot_engine.inl"
+namespace pilot_bridge {
+bool active=false,is_host=true,local=true,local_paused_proof=false,checkpoint_done=false;
+uint64_t generation=0,local_token=0,sequence=0,last_report=0,last_send=0,trial_deadline=0;
+uint32_t revision=0;const char*detail="idle";
+#ifdef AC8_R27_EMBEDDED_PILOT
+ac8pilot::Context room_binding{};
+#endif
+ac8pilot::Loopback loop;ac8pilot::Gate gate;ac8pilot::Cadence cadence;ac8pilot::Frame latest{};
+uint64_t received_state_ms=0,accepted_inputs=0;bool have_state=false,loaded_sent=false;
+using pilot_engine::read;using pilot_engine::bytes;
+uint64_t microseconds(){LARGE_INTEGER q{},f{};if(!QueryPerformanceCounter(&q)||!QueryPerformanceFrequency(&f)||f.QuadPart<=0)return 0;return uint64_t(q.QuadPart/f.QuadPart)*1000000+uint64_t(q.QuadPart%f.QuadPart)*1000000/uint64_t(f.QuadPart);}
+bool env(const wchar_t*key,wchar_t*out,DWORD n){auto size=GetEnvironmentVariableW(key,out,n);return size>0&&size<n;}
+bool setup(){
+ wchar_t marker[32]{},out[32768]{},scripts[32768]{},actual[32768]{},expected[32768]{};
+ const bool development=env(L"AC8_LOCAL_ADAPTER_DEV",marker,32)&&!wcscmp(marker,L"25201480");
+ const bool enabled=env(L"AC8_GUEST_PILOT",marker,32)&&!wcscmp(marker,L"25201480");
+ if((!development&&!enabled)||!env(L"AC8_COOP_RECON_OUTPUT",out,32768)||!env(L"AC8_LOCAL_SCRIPTS",scripts,32768))return false;
+ HMODULE self=nullptr;if(!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_PIN,reinterpret_cast<LPCWSTR>(&setup),&self)||!GetModuleFileNameW(self,actual,32768))return false;
+#ifdef AC8_R27_EMBEDDED_PILOT
+ const auto path=std::wstring(scripts)+L"\\..\\..\\..\\ac8_steam_coop_"+PILOT_REV_W+L".dll";
+#else
+ const auto path=std::wstring(scripts)+L"\\..\\..\\..\\ac8_guest_pilot_"+PILOT_REV_W+L".dll";
+#endif
+ if(!GetFullPathNameW(path.c_str(),32768,expected,nullptr)||_wcsicmp(actual,expected)||!GetModuleFileNameW(nullptr,actual,32768))return false;
+ auto name=wcsrchr(actual,L'\\');if(!name||_wcsicmp(name+1,L"AceCombat8.exe"))return false;
+ if(!pilot_engine::thread)pilot_engine::thread=GetCurrentThreadId();if(pilot_engine::thread!=GetCurrentThreadId())return false;
+ pilot_engine::image=reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));pilot_engine::directory=out;return true;
+}
+void binary(const wchar_t*name,const ac8pilot::Frame&frame){
+ if(!ac8pilot::valid(frame))return;const auto b=ac8pilot::encode(frame);FILE*f=nullptr;
+ if(!_wfopen_s(&f,(pilot_engine::directory+L"\\"+name).c_str(),L"wb")&&f){fwrite(b.data(),1,b.size(),f);fclose(f);}
+}
+ac8pilot::Context context(){return local?loop.context():
+#ifdef AC8_R27_EMBEDDED_PILOT
+ ac8coop_transport::context();
+#else
+ ac8pilot_transport::context();
+#endif
+}
+bool send(ac8pilot::Frame f){return local?loop.send_frame(f):
+#ifdef AC8_R27_EMBEDDED_PILOT
+ ac8coop_transport::send(f);
+#else
+ ac8pilot_transport::send(f);
+#endif
+}
+bool paused(){
+ std::map<std::string,std::string>r;uint64_t created=0;
+ if(!pilot_engine::file(L"guest-pilot-clock.tsv",r)||!pilot_engine::number(r["created_unix"],created)||std::llabs(int64_t(time(nullptr))-int64_t(created))>1)return true;
+ return r["paused"]!="0";
+}
+void report(){
+ const auto ctx=context();FILE*f=nullptr;if(_wfopen_s(&f,(pilot_engine::directory+L"\\guest-pilot-status.tsv").c_str(),L"wb")||!f)return;
+ fprintf(f,"revision\t%s\nstate\t%s\nactive\t%d\nrole\t%s\ntransport\t%s\nport\t%u\nlocal_test_token\t%llu\ngeneration\t%llu\nconfiguration_revision\t%u\npeer_loaded\t%d\nreal_guest_connected\t%d\nspectating\t%d\naccepted_inputs\t%llu\nnative_steps\t%llu\nstate_sequence\t%llu\nlast_roll_input\t%.9g\nall_story_commands_bridged\t0\nfull_mission_replication\t0\n",PILOT_STR(AC8_PILOT_REV),detail,active?1:0,is_host?"host":"guest",local?"loopback_test":"steam",unsigned(loop.port),static_cast<unsigned long long>(local?local_token:0),static_cast<unsigned long long>(generation),revision,gate.loaded?1:0,!local&&ctx.peer&&gate.loaded?1:0,gate.spectating?1:0,static_cast<unsigned long long>(accepted_inputs),static_cast<unsigned long long>(pilot_engine::native_steps),static_cast<unsigned long long>(sequence),double(pilot_engine::last_controls[2]));
+ fprintf(f,"engine_detail\t%s\n",pilot_engine::reason);fclose(f);last_report=GetTickCount64();
+}
+ac8input::Assignment assignment(){const auto c=context();return {c.peer,c.remote,c.nonce,generation,revision,1,23,is_host,pilot_engine::bound,gate.loaded,pilot_engine::bound,pilot_engine::bound,pilot_engine::bound};}
+void consume(const ac8pilot::Frame&f,uint64_t now){
+ const auto ctx=context();if(!ctx.peer)return;
+ if(is_host){
+  if(gate.context.peer!=ctx.peer||gate.context.nonce!=ctx.nonce||gate.context.remote!=ctx.remote)gate.bind(ctx,generation,revision);
+  if(gate.accept(f,now,assignment())&&f.kind==ac8pilot::Kind::input)++accepted_inputs;
+ }else if(f.kind==ac8pilot::Kind::state&&ac8pilot::matches(f,ctx)&&(!have_state||f.sequence>latest.sequence)){
+  if(have_state&&(f.generation!=latest.generation||f.revision!=latest.revision)){loaded_sent=false;}
+  latest=f;have_state=true;received_state_ms=now;generation=f.generation;revision=f.revision;binary(L"guest-pilot-state.ac8p",f);
+ }else if(f.kind==ac8pilot::Kind::stop){have_state=false;loaded_sent=false;detail="host_stopped";}
+}
+bool start(){
+ if(active)return false;std::map<std::string,std::string>r;uint64_t created=0,value=0;
+ if(!pilot_engine::file(L"guest-pilot-request.tsv",r)||!pilot_engine::number(r["created_unix"],created)||std::llabs(int64_t(time(nullptr))-int64_t(created))>3)return false;
+ if(r["role"]!="host"&&r["role"]!="guest")return false;is_host=r["role"]=="host";
+ if(r["transport"]!="loopback"&&r["transport"]!="steam")return false;local=r["transport"]=="loopback";
+ if(!pilot_engine::number(r["generation"],generation)||!generation||!pilot_engine::number(r["revision"],value)||!value||value>UINT32_MAX)return false;revision=uint32_t(value);
+ local_paused_proof=local&&is_host&&r["paused_proof"]=="1";
+ if(is_host){if(!pilot_engine::bind(r))return false;if(local_paused_proof&&!pilot_engine::checkpoint_capture())return false;}
+ if(local){uint64_t port=0;if(!pilot_engine::number(r["port"],port)||port>65535||!pilot_engine::number(r["token"],local_token)||!local_token||!loop.open(is_host,uint16_t(port),local_token))return false;}
+ else{
+#ifdef AC8_R27_EMBEDDED_PILOT
+  if(!ac8coop_transport::session_matches(generation,revision))return false;
+  const auto ctx=ac8coop_transport::context();if(ctx.host!=is_host||!pilot_engine::number(r["peer"],value)||ctx.peer!=value)return false;
+  room_binding=ctx;
+#else
+  if(!pilot_engine::number(r["peer"],value)||r["peer"].size()!=17)return false;
+  wchar_t steam_path[32768]{};auto steam=GetModuleHandleW(L"steam_api64.dll");if(!steam||!GetModuleFileNameW(steam,steam_path,32768))return false;
+  std::wstring peer(r["peer"].begin(),r["peer"].end()),out=pilot_engine::directory+L"\\pilot-connection";CreateDirectoryW(out.c_str(),nullptr);
+  SetEnvironmentVariableW(L"AC8_CONNECTION_TEST",L"25201480");SetEnvironmentVariableW(L"AC8_CONNECTION_OUTPUT",out.c_str());SetEnvironmentVariableW(L"AC8_CONNECTION_ROLE",is_host?L"host":L"guest");SetEnvironmentVariableW(L"AC8_CONNECTION_PEER",peer.c_str());SetEnvironmentVariableW(L"AC8_CONNECTION_STEAM_DLL",steam_path);
+  ac8pilot_transport::start();
+#endif
+ }
+ cadence={};gate={};have_state=loaded_sent=checkpoint_done=false;sequence=accepted_inputs=0;last_send=0;active=true;detail=local?"waiting_local_test_peer":"waiting_steam_peer";
+ trial_deadline=local_paused_proof?GetTickCount64()+6000:0;report();return true;
+}
+void stop(bool restore){
+ if(active){ac8pilot::Frame f;f.kind=ac8pilot::Kind::stop;f.generation=generation;f.revision=revision;send(f);}
+ if(local)loop.close();
+#ifndef AC8_R27_EMBEDDED_PILOT
+ else ac8pilot_transport::stop();
+#endif
+ gate.lease.revoke();gate.loaded=false;active=false;
+ if(restore&&local_paused_proof&&!checkpoint_done){checkpoint_done=pilot_engine::checkpoint_restore();detail=checkpoint_done?"local_trial_stopped_and_own_checkpoint_restored":"local_trial_restore_unverified";}
+ else detail="pilot_transport_stopped";report();
+}
+void tick(){
+ if(!active)return;
+ if(local){if(!loop.poll(consume)){gate.lease.revoke();gate.loaded=false;detail=loop.error;}}
+ else{
+#ifdef AC8_R27_EMBEDDED_PILOT
+  if(!ac8coop_transport::session_matches(generation,revision)){detail="room_or_sortie_changed";stop(false);return;}
+  const auto bound=ac8coop_transport::context();if(bound.peer!=room_binding.peer||bound.nonce!=room_binding.nonce||bound.remote!=room_binding.remote){detail="authenticated_room_changed";stop(false);return;}
+  ac8pilot::Frame f;uint64_t at=0;while(ac8coop_transport::take(f,at))consume(f,at);
+#else
+  ac8pilot_transport::poll();ac8pilot::Frame f;uint64_t at=0;while(ac8pilot_transport::take(f,at))consume(f,at);
+#endif
+ }
+ const auto now=GetTickCount64();
+ if(trial_deadline&&now>=trial_deadline){stop(true);return;}
+ if(is_host){
+  if(!pilot_engine::graph()){detail="host_role_graph_lost";stop(false);return;}
+  const auto ctx=context();if(!ctx.peer){gate.lease.revoke();gate.loaded=false;cadence.advance(microseconds(),true);detail="waiting_authenticated_peer";}
+  else{
+   ac8input::Frame input;const bool fresh=gate.lease.sample(now,input);const bool held=!fresh||(!local_paused_proof&&paused())||gate.spectating
+#ifdef AC8_R27_EMBEDDED_PILOT
+    ||!ac8coop_transport::controls_allowed()
+#endif
+   ;
+   unsigned steps=cadence.advance(microseconds(),held);
+   if(steps&&!pilot_engine::apply(input,steps)){detail="native_player_model_or_pose_failed";stop(false);return;}
+   detail=held?(gate.spectating?"guest_spectating":fresh?"host_paused":"waiting_fresh_guest_input"):(local?"local_test_input_drives_player":"steam_guest_input_drives_player");
+   if(now-last_send>=33){
+    ac8pilot::Frame f;f.flags=ac8pilot::flight_only|(paused()?ac8pilot::paused:0);f.generation=generation;f.revision=revision;f.source_us=microseconds();f.count=4;
+#ifdef AC8_R27_EMBEDDED_PILOT
+    if(gate.loaded)f.flags|=ac8pilot::loaded_ack;
+#endif
+    bool valid=true;for(unsigned i=0;i<4;++i)valid=pilot_engine::pose(i,f.poses[i])&&valid;
+    if(valid){if(f.poses[1].health<=0){gate.died();f.flags|=ac8pilot::dead;}f.sender=ctx.local;f.session=ctx.nonce;f.echo=ctx.remote;f.sequence=++sequence;binary(L"guest-pilot-host-state.ac8p",f);send(f);last_send=now;}
+   }
+  }
+ }
+ if(now-last_report>=250)report();
+}
+bool guest_loaded(){
+ if(is_host||!active||!have_state||GetTickCount64()-received_state_ms>1000)return false;
+ ac8pilot::Frame f;f.kind=ac8pilot::Kind::loaded;f.generation=latest.generation;f.revision=latest.revision;
+ loaded_sent=send(f);return loaded_sent;
+}
+bool guest_input(){
+ if(is_host||!active||!have_state||!loaded_sent||GetTickCount64()-received_state_ms>300||(latest.flags&(ac8pilot::paused|ac8pilot::dead)))return false;
+#ifdef AC8_R27_EMBEDDED_PILOT
+ if(!(latest.flags&ac8pilot::loaded_ack)||!ac8coop_transport::controls_allowed())return false;
+#endif
+ std::map<std::string,std::string>r;uint64_t created=0;if(!pilot_engine::file(L"guest-pilot-input.tsv",r)||!pilot_engine::number(r["created_unix"],created)||std::llabs(int64_t(time(nullptr))-int64_t(created))>1)return false;
+ ac8pilot::Frame f;f.kind=ac8pilot::Kind::input;f.generation=latest.generation;f.revision=latest.revision;
+ unsigned i=0;for(auto key:{"pitch","roll","yaw","throttle","brake"}){const auto&s=r[key];errno=0;char*e=nullptr;const auto n=strtol(s.c_str(),&e,10);if(s.empty()||errno||e!=s.c_str()+s.size()||n<-32767||n>32767||(i>=3&&n<0))return false;f.axes[i++]=int16_t(n);}
+ return send(f);
+}
+bool capture_guest_input(){
+ if(is_host||!active||!have_state||!loaded_sent||GetTickCount64()-received_state_ms>300||(latest.flags&(ac8pilot::paused|ac8pilot::dead)))return false;
+#ifdef AC8_R27_EMBEDDED_PILOT
+ if(!(latest.flags&ac8pilot::loaded_ack)||!ac8coop_transport::controls_allowed())return false;
+#endif
+ ac8pilot::RawInput raw;DWORD foreground=0;GetWindowThreadProcessId(GetForegroundWindow(),&foreground);raw.focused=foreground==GetCurrentProcessId();
+ if(raw.focused){
+  auto down=[](int key){return (GetAsyncKeyState(key)&0x8000)!=0;};raw.up=down(VK_UP);raw.down=down(VK_DOWN);raw.left=down(VK_LEFT);raw.right=down(VK_RIGHT);
+  raw.yaw_left=down('Q');raw.yaw_right=down('E');raw.throttle=down('W');raw.brake=down('S');
+  static HMODULE xinput=LoadLibraryExW(L"xinput1_4.dll",nullptr,LOAD_LIBRARY_SEARCH_SYSTEM32);
+  using GetPad=DWORD(WINAPI*)(DWORD,XINPUT_STATE*);static auto get=xinput?reinterpret_cast<GetPad>(GetProcAddress(xinput,"XInputGetState")):nullptr;
+  if(get){for(DWORD i=0;i<4;++i){XINPUT_STATE pad{};if(get(i,&pad)==ERROR_SUCCESS){raw.stick_x=pad.Gamepad.sThumbLX;raw.stick_y=pad.Gamepad.sThumbLY;raw.trigger_left=pad.Gamepad.bLeftTrigger;raw.trigger_right=pad.Gamepad.bRightTrigger;raw.pad_left=(pad.Gamepad.wButtons&XINPUT_GAMEPAD_LEFT_SHOULDER)!=0;raw.pad_right=(pad.Gamepad.wButtons&XINPUT_GAMEPAD_RIGHT_SHOULDER)!=0;break;}}}
+ }
+ ac8pilot::Frame f;f.kind=ac8pilot::Kind::input;f.generation=latest.generation;f.revision=latest.revision;f.axes=ac8pilot::axes(raw);return send(f);
+}
+int dispatch(unsigned action){
+ if(!setup())return 0;
+ if(action==0){if(!start()){detail="pilot_start_refused";report();}}
+ if(action==1)tick();
+ if(action==2)stop(true);
+ if(action==3){detail=guest_loaded()?"guest_world_loaded_sent":"guest_world_loaded_refused";report();}
+ if(action==4){guest_input();}
+ if(action==5){capture_guest_input();}
+ return 0;
+}
+}
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_pilot_start(void*){return pilot_bridge::dispatch(0);}
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_pilot_tick(void*){return pilot_bridge::dispatch(1);}
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_pilot_stop(void*){return pilot_bridge::dispatch(2);}
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_pilot_loaded(void*){return pilot_bridge::dispatch(3);}
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_pilot_input(void*){return pilot_bridge::dispatch(4);}
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_pilot_capture_input(void*){return pilot_bridge::dispatch(5);}

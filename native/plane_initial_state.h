@@ -116,11 +116,11 @@ template<class R> bool capture(R& r, uintptr_t source, uintptr_t image, uint64_t
         bool bit0=false;
         if(!(flags&(1u<<17))) {
             bit0=std::fabs(rounded(in[2]-1))<0.0001f&&std::fabs(rounded(in[3]-1))<0.0001f;
-            uintptr_t mode=0,actor=0,child=0; uint8_t state=0,b29=0,b10=0;
+            uintptr_t mode=0,actor=0,child=0; uint8_t mode_state=0,b29=0,b10=0;
             if(!get(r,source+0x18c8,mode))return false;
             if(mode) {
-                if(!get(r,mode+0x108,state)||!get(r,mode+0x100,actor))return false;
-                bool active=state==4;
+                if(!get(r,mode+0x108,mode_state)||!get(r,mode+0x100,actor))return false;
+                bool active=mode_state==4;
                 if(actor) {
                     if(!get(r,actor+0xb29,b29)||!get(r,actor+0xb40,child))return false;
                     active=active&&b29!=1;

@@ -1,0 +1,161 @@
+{
+  "status": "native session feasibility research; no shared mission implemented",
+  "host_authority": [
+    "mission",
+    "difficulty",
+    "own aircraft and equipment",
+    "wingman roster",
+    "guest replacement role",
+    "sortie start and mission results"
+  ],
+  "guest_authority": [
+    "own aircraft",
+    "own weapons",
+    "own supported stock modifications"
+  ],
+  "guest_slot": null,
+  "nickname": "Steam persona name, displayed with stock ally aircraft nameplate",
+  "forbidden_substitute": "independent menu automation on both peers",
+  "research_session": "session-20261020-203342",
+  "live_findings": {
+    "LiveNetworkManager": 1,
+    "LiveNetworkP2P": 1,
+    "reflected_create_join_on_LiveNetworkManager": false,
+    "STRIX_native_RTTI_found": true,
+    "StrixNetworkFacade_in_binary": true,
+    "active_NetDriver_in_main_menu_before_trial": 0,
+    "active_NetDriver_after_listen": "SteamNetDriver",
+    "native_connection_class": "OnlineSubsystemSteam.SteamNetConnection",
+    "EOS_listen_trial": "server=true, standalone=false, dedicated=false, one PlayerState, no guests",
+    "Steam_listen_trial": "new SteamNetDriver and SteamNetConnection class observed; no guests yet",
+    "first_GameNetDriver_definition_wins": true,
+    "driver_definition_after_Steam_trial": "restored to original EOS value; current Steam driver remains active",
+    "LivePlayerPlane_default_bReplicates": true,
+    "LivePlayerPlane_default_bReplicateMovement": false
+  },
+  "sources": [
+    "https://dev.epicgames.com/documentation/en-us/unreal-engine/travelling-in-multiplayer-in-unreal-engine",
+    "https://www.strixengine.com/doc/unreal/guide/en/overview/lifecycle.html"
+  ],
+  "next": "Collect existing guest UE crash context/minidump without another game launch; symbolize against pinned build before another native trial",
+  "nickname_native_candidates": {
+    "GetCallsign_exec_rva": "0x7d17cf0",
+    "GetCallsign_text_cache_offset": "0x6e8",
+    "GetObjName_exec_rva": "0x7d18090",
+    "GetObjName_text_cache_offset": "0x6d8",
+    "status": "read-only wrappers inspected; no hook or text write tested"
+  },
+  "shared_world_proof_required": [
+    "host has a verified network session/world authority",
+    "guest native connect completes",
+    "guest has a distinct controlled pawn; same host entity identity for at least one AI",
+    "host-selected mission epoch matches",
+    "guest mission/wingman edits rejected",
+    "guest replaces one existing NPC wingman role; host plus guest plus two AI; no duplicate NPC",
+    "nickname visible in stock aircraft HUD"
+  ],
+  "guest_trial_package": {
+    "path": "dist\\AC8NativeGuest-r11b.zip",
+    "sha256": "D724998A8ED91FBD892FC1628FA673BCE6044B07B3BB3FE1A6FE0D70F6CFAA39",
+    "native_connection_live_verified": false,
+    "tests": "9 native travel/observer tests passed; MSVC W4 WX build; Lua and PowerShell syntax; package integrity verified",
+    "changes": [
+      "stock HandleNetworkError and HandleTravelError observers",
+      "read-only Steam legacy P2P state and transition history",
+      "guest_connection_failed after pending driver destruction"
+    ]
+  },
+  "guest_trial_r11a_result": {
+    "session": "session-20261020-205350",
+    "connect_time_local": "2026-10-20 20:55:27",
+    "startup_return_time_local": "2026-10-20 20:55:43",
+    "guest_pending_SteamNetDriver_seen": true,
+    "guest_native_server_connection_seen": false,
+    "host_client_count": 0,
+    "host_player_count": 1,
+    "bound_host_address_matches_guest_url": true,
+    "cause": "not recorded by r11a; unresolved",
+    "observer_bug": "continued guest_connecting after pending driver was destroyed"
+  },
+  "guest_trial_r11b_result": {
+    "session": "session-20261020-210856",
+    "connect_time_local": "2026-10-20 21:10:14",
+    "failure_time_local": "2026-10-20 21:10:31",
+    "steam_p2p_error": 4,
+    "meaning": "connection timeout; target did not respond (root cause not established)",
+    "peak_queued_bytes": 720,
+    "peak_queued_packets": 14,
+    "guest_pending_native_connection_seen": true,
+    "guest_connected_world_seen": false,
+    "host_peer_session_seen": false,
+    "stock_GameInstance_failure_events_seen": false
+  },
+  "host_acceptance_trial": {
+    "session": "session-20261020-203342",
+    "job": "native-host-accept1",
+    "dll_sha256": "3DF311CFFE79B8064171506F592C946FA2211132D3145322120F00056ABE3B79",
+    "callbacks": [
+      1202,
+      1203
+    ],
+    "accept_only_after_request_callback": true,
+    "allowed_peer": "configured friend only",
+    "dispatch": "SteamAPI_RunCallbacks on game thread every 100ms while in our stock main-menu Steam listen world",
+    "safety_scope": "no Steam init/shutdown, no packet injection, no accepting unrelated peers, no session closure",
+    "registration_live_verified": true,
+    "connection_fixed_live_verified": false,
+    "tests": "6 native callback guard checks passed; MSVC W4 WX; Lua syntax verified",
+    "abi_source": "https://raw.githubusercontent.com/ValveSoftware/source-sdk-2013/master/src/public/steam/steam_api_common.h",
+    "native_login_live_verified": true,
+    "stable_connection_live_verified": false
+  },
+  "native_join_proof": {
+    "session": "session-20261020-203342",
+    "evidence": "native-joined-world-*-joined-world-proof2.tsv",
+    "summary": true,
+    "host_client_count_at_proof": 1,
+    "shared_PlayerArray_count": 2,
+    "distinct_remote_controller": true,
+    "remote_controller_world_matches_host": true,
+    "remote_controller_NetConnection_matches_driver_client": true,
+    "remote_PlayerState_in_shared_GameState": true,
+    "remote_player_name": "Ghost",
+    "remote_pawn_present": false,
+    "retained_connection": false,
+    "subsequent_host_P2P_error": 4,
+    "first_guest_crash_reported_by_user": true,
+    "second_disconnect_crash_confirmed_by_user": true
+  },
+  "latest_guest_crash": {
+    "session": "session-20261020-212149",
+    "exit_code": 3,
+    "connect_time_local": "2026-10-20 21:23:38",
+    "process_exit_local": "2026-10-20 21:23:51",
+    "last_observer_time_local": "2026-10-20 21:23:42",
+    "stack_or_dump_in_provided_archive": false,
+    "root_cause": "unknown; need UE crash context/minidump",
+    "collector": "dist/AC8CrashCollector.zip",
+    "collector_validation": "Windows PowerShell 5.1 fixture run; crash XML and log copied, saves excluded, ZIP verified"
+  },
+  "requirements_revision": "1.1",
+  "guest_slot_policy": "replace one existing NPC wingman role; no fifth unit",
+  "group_size": 4,
+  "ai_wingmen": 2,
+  "mission_selection": "manual selection by host; first mission is a pilot candidate, availability of hangar and replacement role unverified",
+  "aircraft_selection": "player-selected supported stock aircraft and modifications; former F-14D-only scope superseded",
+  "readiness_stages": [
+    "lobby ready: both ready starts shared introductory sequence",
+    "hangar ready: both ready enables host sortie command"
+  ],
+  "cutscenes": {
+    "synchronized": true,
+    "skip_input": "hold Escape to stock threshold",
+    "votes_required": 2,
+    "votes_total": 2,
+    "show_progress_to_both": true,
+    "single_vote_cannot_skip_locally": true,
+    "votes_reset_per_cutscene": true
+  },
+  "preferred_future_join": "Steam invitation; SteamID remains acceptable for initial working version",
+  "scope_change_note": "User replaced fifth-unit requirement with NPC wingman replacement and added difficulty, synchronized cutscenes, skip voting, two readiness stages and stock aircraft modifications. These are requirements, not implemented features."
+}

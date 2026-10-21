@@ -1,0 +1,14 @@
+{
+  "revision": "r5.1",
+  "native_sha256": "a4523f087effa02f49aa99701b9799beacac10b44e4a71b4c89dec98e752b5f4",
+  "native_checks_passed": 138,
+  "recorded_memory_regression_passed": true,
+  "python_lua_passed": 177,
+  "python_lua_skipped": 1,
+  "skip_reason": "Connection Test DLL not provided",
+  "profile_validate_only": true,
+  "actual_serializer_json_verified": true,
+  "original_session_cleaned": true,
+  "live_setter_called": false,
+  "rendered_plane_verified": false
+}

@@ -1,0 +1,292 @@
+{
+  "revision": "r23-local-menu-development",
+  "date": "2026-10-21",
+  "build": 25201480,
+  "live_process": 6928,
+  "session": "profiles/ac8-local-r13/evidence/pair-20261021-053615-768",
+  "scope": "one_game_and_native_tcp_guest_panel",
+  "menu_in_stock_widget_tree": true,
+  "exact_stock_difficulty_captions": [
+    "НОВИЧОК (СЮЖЕТ)",
+    "ПИЛОТ",
+    "ВЕТЕРАН",
+    "ЭЛИТА"
+  ],
+  "caption_evidence": "profiles/ac8-build25201480-menu-dev/evidence/session-20261020-180542/menu-dialog-20261020-181827-dialog-tree29.tsv",
+  "tests": {
+    "frontend_and_widgets": 19,
+    "stock_menu_regression": 15,
+    "local_services": 5,
+    "hangar_adapter": 10,
+    "guest_panel": 4,
+    "total": 53,
+    "result": "passed"
+  },
+  "verified": {
+    "create_local_room": true,
+    "guest_receives_veteran": true,
+    "guest_f14d": true,
+    "both_ready": true,
+    "settings_clear_both_ready": true,
+    "repeated_ready_enables_hangar": true,
+    "no_automatic_transition": true,
+    "back_restores_native_header": true,
+    "back_releases_owned_input": true,
+    "reopen_same_room": true
+  },
+  "unverified": [
+    "real_Steam_join_from_new_form",
+    "Steam_Invite",
+    "network_room_close_and_recreation",
+    "live_guest_world",
+    "full_coop_flight",
+    "other_mission_and_difficulty_launches",
+    "Steam_persona_names_in_this_local_room"
+  ],
+  "historical_failure": {
+    "session": "pair-20261021-052507-851",
+    "exit_code": 3,
+    "context": "repeated_hot_reconstruction_of_menu",
+    "cause_established": false,
+    "mitigation": "unique names per attachment, no hot reconstruction during final clean test"
+  },
+  "current_local_join_backend": "guest_simulator_panel; new SteamID form callback is not bound",
+  "source_files": [
+    {
+      "path": "probe/AC8CoopRecon/Scripts/coop_main_menu.lua",
+      "sha256": "4EB4165E35A0A3A22B7BD3123071A8C04801D62B3782977634D4F3037601385A"
+    },
+    {
+      "path": "probe/AC8CoopRecon/Scripts/coop_lobby_frontend.lua",
+      "sha256": "4284BDA731EE0871AE52114E22081B66F219EC98607BB2BA11479434FA5C8BBF"
+    },
+    {
+      "path": "probe/AC8CoopRecon/Scripts/coop_lobby_layout.lua",
+      "sha256": "F78E83624927A913C7D49BAC4FC356A6205B2C148BDECB6CFB1029402A477655"
+    },
+    {
+      "path": "probe/AC8CoopRecon/Scripts/coop_menu_catalog.lua",
+      "sha256": "083FF0F195E48B1C7C97A28786523435F5CE6526FD61A7C54DC707DD7F19896E"
+    },
+    {
+      "path": "probe/AC8CoopRecon/Scripts/shared_session_local_services.lua",
+      "sha256": "65CBEC145B5BF1DC721BCE338F170E4D9E6707ECAB93B7E877D15AC3552097F2"
+    },
+    {
+      "path": "probe/AC8CoopRecon/Scripts/shared_session_local_main.lua",
+      "sha256": "340C1BDC0671AC54C3072216ADA9ED86CC29BE4FC51C00ABCF197DE78B2BFA73"
+    }
+  ],
+  "proofs": {
+    "menu-audit-r23-back-main-menu": {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-053615-768/host/menu-audit-r23-back-main-menu.tsv",
+      "sha256": "9552E73A55CF47AD1392E41DB59CA9099EFA97E113FD745DD7A417E8173960A6",
+      "observations": {
+        "view_screen": "room",
+        "view_room": "true",
+        "view_host": "true",
+        "view_mission": "6",
+        "view_difficulty": "1",
+        "view_difficulty_caption": "ПИЛОТ",
+        "view_connected": "true",
+        "view_host_ready": "true",
+        "view_guest_ready": "true",
+        "view_primary": "ПЕРЕЙТИ В АНГАР",
+        "view_can_primary": "true",
+        "view_can_unready": "true",
+        "view_detail": "Оба участника готовы. Хост может продолжить.",
+        "native_connected": "1",
+        "native_mission": "6",
+        "native_difficulty": "1",
+        "native_ready_mask": "3",
+        "native_guest_aircraft": "23",
+        "native_revision": "4",
+        "native_request_ack": "5",
+        "native_reject": "0",
+        "native_phase": "0",
+        "input_mode_owned": "false",
+        "page": "VerticalBox /Engine/Transient.LiveGameEngine_2147482452:BP_LiveGameInstance_C_2147482376.WBP_Menu_MainTop_000_C_2147480494.WidgetTree_2147480493.AC8_Lobby_Page_AC8UI1"
+      }
+    },
+    "menu-audit-r23-both-ready-pilot": {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-053615-768/host/menu-audit-r23-both-ready-pilot.tsv",
+      "sha256": "250422C553EE9D9AD9301EC523C06044F0D2A0897B2AC71847CCD6DE12A633ED",
+      "observations": {
+        "view_screen": "room",
+        "view_room": "true",
+        "view_host": "true",
+        "view_mission": "6",
+        "view_difficulty": "1",
+        "view_difficulty_caption": "ПИЛОТ",
+        "view_connected": "true",
+        "view_host_ready": "true",
+        "view_guest_ready": "true",
+        "view_primary": "ПЕРЕЙТИ В АНГАР",
+        "view_can_primary": "true",
+        "view_can_unready": "true",
+        "view_detail": "Оба участника готовы. Хост может продолжить.",
+        "native_connected": "1",
+        "native_mission": "6",
+        "native_difficulty": "1",
+        "native_ready_mask": "3",
+        "native_guest_aircraft": "23",
+        "native_revision": "4",
+        "native_request_ack": "5",
+        "native_reject": "0",
+        "native_phase": "0",
+        "input_mode_owned": "true",
+        "page": "VerticalBox /Engine/Transient.LiveGameEngine_2147482452:BP_LiveGameInstance_C_2147482376.WBP_Menu_MainTop_000_C_2147480494.WidgetTree_2147480493.AC8_Lobby_Page_AC8UI1"
+      }
+    },
+    "menu-audit-r23-both-ready-veteran": {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-053615-768/host/menu-audit-r23-both-ready-veteran.tsv",
+      "sha256": "C978DFB5A025A2B5E315B62E919F3374082BAF2B1B62961D666FA37AB17ADBFE",
+      "observations": {
+        "view_screen": "room",
+        "view_room": "true",
+        "view_host": "true",
+        "view_mission": "6",
+        "view_difficulty": "2",
+        "view_difficulty_caption": "ВЕТЕРАН",
+        "view_connected": "true",
+        "view_host_ready": "true",
+        "view_guest_ready": "true",
+        "view_primary": "ПРОДОЛЖЕНИЕ НЕДОСТУПНО",
+        "view_can_primary": "false",
+        "view_can_unready": "true",
+        "view_detail": "Для запуска сейчас поддерживается сложность «ПИЛОТ».",
+        "native_connected": "1",
+        "native_mission": "6",
+        "native_difficulty": "2",
+        "native_ready_mask": "3",
+        "native_guest_aircraft": "23",
+        "native_revision": "3",
+        "native_request_ack": "3",
+        "native_reject": "0",
+        "native_phase": "0",
+        "input_mode_owned": "true",
+        "page": "VerticalBox /Engine/Transient.LiveGameEngine_2147482452:BP_LiveGameInstance_C_2147482376.WBP_Menu_MainTop_000_C_2147480494.WidgetTree_2147480493.AC8_Lobby_Page_AC8UI1"
+      }
+    },
+    "menu-audit-r23-connected-veteran": {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-053615-768/host/menu-audit-r23-connected-veteran.tsv",
+      "sha256": "93BE46E42548DC324783CFC32701C02B35C7E8E65ADDF89A87B047AFE0D40A03",
+      "observations": {
+        "view_screen": "room",
+        "view_room": "true",
+        "view_host": "true",
+        "view_mission": "6",
+        "view_difficulty": "2",
+        "view_difficulty_caption": "ВЕТЕРАН",
+        "view_connected": "true",
+        "view_host_ready": "false",
+        "view_guest_ready": "false",
+        "view_primary": "ГОТОВ",
+        "view_can_primary": "true",
+        "view_can_unready": "false",
+        "view_detail": "Для запуска сейчас поддерживается сложность «ПИЛОТ».",
+        "native_connected": "1",
+        "native_mission": "6",
+        "native_difficulty": "2",
+        "native_ready_mask": "0",
+        "native_guest_aircraft": "23",
+        "native_revision": "3",
+        "native_request_ack": "2",
+        "native_reject": "0",
+        "native_phase": "0",
+        "input_mode_owned": "true",
+        "page": "VerticalBox /Engine/Transient.LiveGameEngine_2147482452:BP_LiveGameInstance_C_2147482376.WBP_Menu_MainTop_000_C_2147480494.WidgetTree_2147480493.AC8_Lobby_Page_AC8UI1"
+      }
+    },
+    "menu-audit-r23-guest-ready-veteran": {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-053615-768/host/menu-audit-r23-guest-ready-veteran.tsv",
+      "sha256": "C3871991440E94C06CEAE7D96807EFB3868FE89E91A71162DA936FD44E7424DE",
+      "observations": {
+        "view_screen": "room",
+        "view_room": "true",
+        "view_host": "true",
+        "view_mission": "6",
+        "view_difficulty": "2",
+        "view_difficulty_caption": "ВЕТЕРАН",
+        "view_connected": "true",
+        "view_host_ready": "false",
+        "view_guest_ready": "true",
+        "view_primary": "ГОТОВ",
+        "view_can_primary": "true",
+        "view_can_unready": "false",
+        "view_detail": "Для запуска сейчас поддерживается сложность «ПИЛОТ».",
+        "native_connected": "1",
+        "native_mission": "6",
+        "native_difficulty": "2",
+        "native_ready_mask": "2",
+        "native_guest_aircraft": "23",
+        "native_revision": "3",
+        "native_request_ack": "2",
+        "native_reject": "0",
+        "native_phase": "0",
+        "input_mode_owned": "true",
+        "page": "VerticalBox /Engine/Transient.LiveGameEngine_2147482452:BP_LiveGameInstance_C_2147482376.WBP_Menu_MainTop_000_C_2147480494.WidgetTree_2147480493.AC8_Lobby_Page_AC8UI1"
+      }
+    },
+    "menu-audit-r23-pilot-reset-ready": {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-053615-768/host/menu-audit-r23-pilot-reset-ready.tsv",
+      "sha256": "9FA62663458CB2967D3B9C228466F5CDF919970943E391DA8A9A97D5882D49D7",
+      "observations": {
+        "view_screen": "room",
+        "view_room": "true",
+        "view_host": "true",
+        "view_mission": "6",
+        "view_difficulty": "1",
+        "view_difficulty_caption": "ПИЛОТ",
+        "view_connected": "true",
+        "view_host_ready": "false",
+        "view_guest_ready": "false",
+        "view_primary": "ГОТОВ",
+        "view_can_primary": "true",
+        "view_can_unready": "false",
+        "view_detail": "Подтвердите готовность к совместному вылету.",
+        "native_connected": "1",
+        "native_mission": "6",
+        "native_difficulty": "1",
+        "native_ready_mask": "0",
+        "native_guest_aircraft": "23",
+        "native_revision": "4",
+        "native_request_ack": "4",
+        "native_reject": "0",
+        "native_phase": "0",
+        "input_mode_owned": "true",
+        "page": "VerticalBox /Engine/Transient.LiveGameEngine_2147482452:BP_LiveGameInstance_C_2147482376.WBP_Menu_MainTop_000_C_2147480494.WidgetTree_2147480493.AC8_Lobby_Page_AC8UI1"
+      }
+    },
+    "menu-audit-r23-reopen-room": {
+      "path": "profiles/ac8-local-r13/evidence/pair-20261021-053615-768/host/menu-audit-r23-reopen-room.tsv",
+      "sha256": "250422C553EE9D9AD9301EC523C06044F0D2A0897B2AC71847CCD6DE12A633ED",
+      "observations": {
+        "view_screen": "room",
+        "view_room": "true",
+        "view_host": "true",
+        "view_mission": "6",
+        "view_difficulty": "1",
+        "view_difficulty_caption": "ПИЛОТ",
+        "view_connected": "true",
+        "view_host_ready": "true",
+        "view_guest_ready": "true",
+        "view_primary": "ПЕРЕЙТИ В АНГАР",
+        "view_can_primary": "true",
+        "view_can_unready": "true",
+        "view_detail": "Оба участника готовы. Хост может продолжить.",
+        "native_connected": "1",
+        "native_mission": "6",
+        "native_difficulty": "1",
+        "native_ready_mask": "3",
+        "native_guest_aircraft": "23",
+        "native_revision": "4",
+        "native_request_ack": "5",
+        "native_reject": "0",
+        "native_phase": "0",
+        "input_mode_owned": "true",
+        "page": "VerticalBox /Engine/Transient.LiveGameEngine_2147482452:BP_LiveGameInstance_C_2147482376.WBP_Menu_MainTop_000_C_2147480494.WidgetTree_2147480493.AC8_Lobby_Page_AC8UI1"
+      }
+    }
+  }
+}

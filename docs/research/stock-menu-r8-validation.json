@@ -1,0 +1,73 @@
+{
+  "revision": "r8",
+  "date": "2026-10-20",
+  "status": "stock menu and log automation verified; two-PC flight pending",
+  "native_sha256": "2906831A2738991F2464345D42BF513C2107A48445325DF88FB2C345E82A28F8",
+  "package": {
+    "path": "dist\\AC8CoopMenu-r8.zip",
+    "bytes": 8935086,
+    "sha256": "C3CA445797E66293D9AD4D2AE8788CB252668DC5E27DD72C37277A9C08C0F14D"
+  },
+  "live_session": "session-20261020-172431",
+  "live_observed": [
+    "stock main menu entry appeared automatically without F8",
+    "settings page opens within stock menu tree",
+    "report button creates ZIP",
+    "normal exit code 0",
+    "temporary proxy removed",
+    "exit automatically creates final ZIP"
+  ],
+  "development_ui_checks": [
+    "SteamID text input",
+    "empty SteamID rejected",
+    "Back restores stock menu"
+  ],
+  "reports_verified": [
+    {
+      "path": "profiles\\ac8-build25201480-r8\\reports\\session-20261020-172431-20261020-172921-335.zip",
+      "files_verified": 5,
+      "exit_code_in_snapshot": null,
+      "proxy_removed_in_snapshot": false,
+      "skipped": []
+    },
+    {
+      "path": "profiles\\ac8-build25201480-r8\\reports\\session-20261020-172431-20261020-173301-572.zip",
+      "files_verified": 6,
+      "exit_code_in_snapshot": 0,
+      "proxy_removed_in_snapshot": true,
+      "skipped": []
+    }
+  ],
+  "tests": {
+    "python": {
+      "ran": 210,
+      "passed": 209,
+      "skipped": 1,
+      "log": "build/r8-python-final.txt"
+    },
+    "native_checks": 227,
+    "latest_ui_tests": 6,
+    "profile_validate_only": "PASS",
+    "portable_validate_only": "PASS",
+    "powershell_launcher_parse": "PASS"
+  },
+  "final_source_delta_from_live_candidate": [
+    "wait quietly until stock reserved row is hidden; clear transient startup error after attachment; tested autonomously",
+    "record menu source files and hashes in each future session; parsed and ValidateOnly passed"
+  ],
+  "not_live_verified": [
+    "final startup-message correction in a fresh game process",
+    "native settings export through Confirm",
+    "two-PC remote flight through menu",
+    "automatic mission travel and aircraft selection are not implemented",
+    "native gamepad navigation into added entry",
+    "initial diagnostic startup crash root cause"
+  ],
+  "scope": {
+    "mission": 6,
+    "aircraft": "F-14D",
+    "motion_seconds": 15,
+    "mission_ai_weapons_damage_synchronized": false,
+    "flight_started_during_ui_verification": false
+  }
+}

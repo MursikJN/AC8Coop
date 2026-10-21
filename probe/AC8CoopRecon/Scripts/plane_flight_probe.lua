@@ -2,7 +2,7 @@
 -- F9 requests owned cleanup. Native code owns lifetime, readiness and absolute deadline.
 return function(output_dir, stamp)
     assert(os.getenv("AC8_COOP_RECON")=="1", "research launcher absent")
-    local dll="D:/projects/unreal-mod-tools/profiles/ac8-build25201480/runtime/ac8_plane_flight_probe_r4.dll"
+    local dll=assert(os.getenv("AC8_COOP_PLANE_FLIGHT_DLL"),"flight DLL path absent")
     local preflight=assert(package.loadlib(dll,"luaopen_ac8_flight_preflight"))
     local run=assert(package.loadlib(dll,"luaopen_ac8_flight_run"))
     local cleanup=assert(package.loadlib(dll,"luaopen_ac8_flight_cleanup"))
@@ -113,12 +113,12 @@ return function(output_dir, stamp)
     local function step()
         if not state.active or _G.AC8PlaneFlightLifecycle~=state then return end
         local ok,err=pcall(function()
-            assert(state.ticks<300,"tick callback bound reached")
+            assert(state.ticks<4096,"tick callback bound reached")
             state.ticks=state.ticks+1
             tick()
             local status=show_status()
             if status.status~="active" then stop(); return end
-            ExecuteInGameThreadWithDelay(50,step)
+            ExecuteInGameThreadWithDelay(1,step)
         end)
         if not ok then
             state.active=false
@@ -138,7 +138,7 @@ return function(output_dir, stamp)
         end)
         run()
         state.active=show_status().status=="active"
-        if state.active then ExecuteInGameThreadWithDelay(50,step) end
+        if state.active then ExecuteInGameThreadWithDelay(1,step) end
         for _,delay in ipairs({16000,18000}) do
             ExecuteInGameThreadWithDelay(delay,function()
                 local ok,err=pcall(stop)

@@ -1,0 +1,103 @@
+{
+  "revision": "r25",
+  "date": "2026-10-21",
+  "build": 25201480,
+  "scope": "Steam invitation to lobby; both games already running",
+  "protocol": 3,
+  "live_pid": 25280,
+  "session": "profiles/ac8-steam-lobby-r25/evidence/session-20261021-062421-160-host",
+  "tests": {
+    "lua_new": 17,
+    "lua_regressions": 71,
+    "lua_total": 88,
+    "native_invite": 39,
+    "native_lobby": 21,
+    "native_previous_transport": 17,
+    "connection_regressions": "passed twice",
+    "msvc": "/W4 /WX"
+  },
+  "live_verified": {
+    "callbacks_registered": true,
+    "steam_overlay_available": true,
+    "invite_dialog_requested": true,
+    "overlay_activation_observed": true,
+    "steam_friend_selector_visible_in_game": true,
+    "selector_closed_without_lobby_action": true
+  },
+  "accepted_invite_live_verified": false,
+  "two_accounts_connected": false,
+  "full_mission_replication": false,
+  "unverified": [
+    "live invitation delivery to friend",
+    "live acceptance by second Steam account",
+    "connection of second account",
+    "shared mission/flight"
+  ],
+  "archive": {
+    "path": "dist/ac8-steam-lobby-r25.zip",
+    "files": 20,
+    "bytes": 9090279,
+    "sha256": "B7720FE8F01E387C81033F1FCC5E23B0DF0536BD4B3C8654EFA01466CC2444DA",
+    "manifest_verified": true,
+    "whitelist_only": true
+  },
+  "native_sha256": "1A95370BB5AF22B5190AAE2309F259A7F5558CFABF4873D5B6AE1E626FEB950F",
+  "source_files": [
+    {
+      "path": "native/steam_invite_core.h",
+      "sha256": "90863E6B325FFC313D8271F1183A6E30B5203E1730C4E1CBDA911D2D7730564D"
+    },
+    {
+      "path": "native/steam_invite_abi.h",
+      "sha256": "40980E5A4BF1783B74F644979646C900F46FE02A7743AEF9F213449D98D8ACF3"
+    },
+    {
+      "path": "native/steam_invites.inl",
+      "sha256": "61C2D5B7F02291FDB0B90B1438BBF16028FA53387361DAE425F9C709E40DF19F"
+    },
+    {
+      "path": "native/steam_invite_tests.cpp",
+      "sha256": "F59CD1E28D5D74F97B11D55ADE90B4B60662F0EA0B321AA71F35F420874745B0"
+    },
+    {
+      "path": "native/steam_lobby_bridge.cpp",
+      "sha256": "FE1D720D98978ADCFFD476B84A61598817FA30A7588C2747ABD9897A0556CA84"
+    },
+    {
+      "path": "scripts/Build-SteamLobby.ps1",
+      "sha256": "F15B2B62BD19848339EA951ADC112E482DDEB454FD23E6F123F19552291C4AD5"
+    },
+    {
+      "path": "scripts/Start-SteamLobby.ps1",
+      "sha256": "2635759FD35758280DB8F359EEB268030B13AA434ABEFF984147EC5D7DB4E1EC"
+    },
+    {
+      "path": "scripts/package_steam_lobby.py",
+      "sha256": "ACCF1CBBE7901BCB7C3548C60827FE2FDDBB9DAA79D70B0A75B552CD56BD84AC"
+    },
+    {
+      "path": "probe/AC8CoopRecon/Scripts/steam_lobby_services.lua",
+      "sha256": "0CB75E547A102F5FF9784DE99BE8ABF75F1AFE6D88C73CF794C8B95331F855C9"
+    },
+    {
+      "path": "probe/AC8CoopRecon/Scripts/steam_lobby_main.lua",
+      "sha256": "D54114B51190D618A8051DA5629BD63F8B4EA85255397C69F70E4C12FB7E243C"
+    },
+    {
+      "path": "probe/AC8CoopRecon/Scripts/coop_main_menu.lua",
+      "sha256": "AA4E183A5FCE7B58FAF5A6953CDE395EB1147CD5FA5AAE0FEB9220DC2DF76E9A"
+    },
+    {
+      "path": "probe/AC8CoopRecon/Scripts/coop_lobby_frontend.lua",
+      "sha256": "08CE394AAC2B315E9EDE0010DDF6F18F4A82E042EC91320CC81733DBF8507268"
+    },
+    {
+      "path": "probe/AC8CoopRecon/Scripts/coop_lobby_layout.lua",
+      "sha256": "414E27E77E3333B92B88B9FB54C912ED04E36F121AC7EA107D2C8C49BE9DF251"
+    },
+    {
+      "path": "tests/test_steam_invites.py",
+      "sha256": "60B1B12C88EA6EE310DC919E6500C81819FA79CFFF03770BBAAA14F48C51D4CB"
+    }
+  ]
+}

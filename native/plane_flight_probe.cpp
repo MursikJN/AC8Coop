@@ -19,8 +19,53 @@
 #include "plane_flight_slots.h"
 #include "plane_component_ticks.h"
 #include "plane_flight_observations.h"
+#include "plane_main_visibility.h"
+#include "plane_flight_cadence.h"
 #include <vector>
+#ifdef AC8_BAXTER_INITIALIZATION
+#include <dbghelp.h>
+#ifdef AC8_BAXTER_MODEL_TRIAL
+#include "guest_player_physics.h"
+#include "guest_role_core.h"
+#ifndef AC8_GUEST_MODEL_REV
+#define AC8_GUEST_MODEL_REV r17
+#endif
+#define AC8_STRING_I(x) #x
+#define AC8_STRING(x) AC8_STRING_I(x)
+#define AC8_WIDE_I(x) L##x
+#define AC8_WIDE(x) AC8_WIDE_I(x)
+#define AC8_GUEST_REV_W AC8_WIDE(AC8_STRING(AC8_GUEST_MODEL_REV))
+#define AC8_GUEST_DLL_W L"ac8_guest_player_init_" AC8_GUEST_REV_W L".dll"
+#else
+#define AC8_GUEST_REV_W L"r16"
+#define AC8_GUEST_DLL_W L"ac8_guest_player_init_r16.dll"
+#endif
+#endif
 #include "plane_flight_core.h"
+#ifdef AC8_ENABLE_COOP
+#include <bcrypt.h>
+#include "plane_coop_runtime.h"
+#ifdef AC8_ENABLE_COOP_MENU
+#include "plane_coop_menu_config.h"
+#ifdef AC8_ENABLE_CONTINUOUS
+#define AC8_FLIGHT_REVISION "r10"
+#else
+#define AC8_FLIGHT_REVISION "r8"
+#endif
+#else
+#define AC8_FLIGHT_REVISION "r7"
+#endif
+#else
+#ifdef AC8_BAXTER_INITIALIZATION
+#ifdef AC8_BAXTER_MODEL_TRIAL
+#define AC8_FLIGHT_REVISION AC8_STRING(AC8_GUEST_MODEL_REV)
+#else
+#define AC8_FLIGHT_REVISION "r16"
+#endif
+#else
+#define AC8_FLIGHT_REVISION "r6"
+#endif
+#endif
 
 namespace {
 constexpr uintptr_t array_rva=0xdc60cd0, spawn_rva=0x465a120, serial_rva=0x1aae560,
@@ -32,6 +77,9 @@ uintptr_t image_base=0;
 std::wstring directory;
 HANDLE journal=INVALID_HANDLE_VALUE;
 plane_flight::Ledger ledger;
+#if defined(AC8_ENABLE_CONTINUOUS) || defined(AC8_BAXTER_INITIALIZATION)
+struct ContinuousLifetime { ContinuousLifetime(){ledger.lifetime_ms=0;} } continuous_lifetime;
+#endif
 unsigned write_count=0; bool cache_readback=false;
 const char* cache_error="not_started";
 uint64_t capture_timestamp=0; float capture_scale=0;
@@ -48,6 +96,20 @@ plane_component_ticks::State component_failure_state;
 unsigned components_verified=0;
 plane_flight_observations::Schedule observation_schedule;
 unsigned observation_attempts=0,observation_failures=0;
+plane_main_visibility::Report visibility_report;
+plane_flight_cadence::StatusGate status_gate;
+plane_flight_cadence::Trace motion_trace;
+plane_flight_cadence::Sample motion_sample;
+bool motion_recording=false;
+#ifdef AC8_ENABLE_COOP
+ac8flight::Runtime coop;
+
+#endif
+uint64_t performance_us(){
+ LARGE_INTEGER q{},f{};if(!QueryPerformanceCounter(&q)||!QueryPerformanceFrequency(&f)||q.QuadPart<=0||f.QuadPart<=0)return 0;
+ const auto ticks=static_cast<uint64_t>(q.QuadPart),hz=static_cast<uint64_t>(f.QuadPart);
+ return (ticks/hz)*1000000+(ticks%hz)*1000000/hz;
+}
 bool component_fail(const char* reason,int32_t index=-1,uintptr_t object=0,uintptr_t setter=0,uintptr_t getter=0,const plane_component_ticks::State& state={}) {
  if(!component_failure_seen){component_failure_seen=true;component_failure=reason;component_failure_index=index;component_failure_pointer=object;component_failure_setter=setter;component_failure_getter=getter;component_failure_state=state;}
  return diagnostic_fail(component_failure);
@@ -63,6 +125,19 @@ bool flag_snapshot(uintptr_t actor,RawFlags& v) {
 bool ready=false;
 ULONGLONG ready_tick=0;
 std::string ready_stamp;
+#ifdef AC8_ENABLE_COOP
+void coop_status(bool force=false){
+ if(directory.empty()||(!force&&GetTickCount64()-coop.last_status_ms<1000))return;
+ coop.last_status_ms=GetTickCount64();
+ const auto tmp=directory+L"\\coop-status.tsv.tmp",path=directory+L"\\coop-status.tsv";
+ FILE* f=nullptr;if(_wfopen_s(&f,tmp.c_str(),L"wb")||!f)return;
+ std::fprintf(f,"revision\t" AC8_FLIGHT_REVISION "\nstamp\t%s\ndetail\t%s\nconfigured\t%d\ntransport_ready\t%d\npeer_ready\t%d\npeer_armed\t%d\nlocal_armed\t%d\nstopped\t%d\nepoch\t%llu\ngeneration\t%llu\npeer_generation\t%llu\nsent\t%u\naccepted\t%u\nrejected\t%u\npeer_sequence\t%llu\n",ready_stamp.c_str(),coop.detail,coop.configured?1:0,ac8flight_transport::ready()?1:0,coop.gate.ready(GetTickCount64())?1:0,coop.gate.armed(GetTickCount64())?1:0,coop.armed?1:0,coop.stopped?1:0,static_cast<unsigned long long>(coop.gate.epoch),static_cast<unsigned long long>(coop.gate.local_generation),static_cast<unsigned long long>(coop.gate.peer_generation),coop.sent,coop.accepted,coop.rejected,static_cast<unsigned long long>(coop.gate.last_sequence));
+ int32_t local_position[3]{},peer_position[3]{};std::memcpy(local_position,coop.local.state.main.data()+0x2c,12);std::memcpy(peer_position,coop.gate.peer.state.main.data()+0x2c,12);
+ std::fprintf(f,"has_peer\t%d\nlocal_position_cm\t%d,%d,%d\npeer_position_cm\t%d,%d,%d\npeer_age_ms\t%llu\n",coop.gate.have_peer?1:0,local_position[0],local_position[1],local_position[2],peer_position[0],peer_position[1],peer_position[2],static_cast<unsigned long long>(coop.gate.have_peer?GetTickCount64()-coop.gate.received_ms:UINT64_MAX));
+ std::fclose(f);MoveFileExW(tmp.c_str(),path.c_str(),MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH);
+}
+#endif
+
 
 // SEH applies ONLY to bounded reads. Never catches/continues an engine mutation fault.
 bool guarded_read(uintptr_t address, void* out, size_t bytes) {
@@ -96,6 +171,8 @@ bool read_file(const wchar_t* name,std::string& result) {
     CloseHandle(f); return ok;
 }
 void status(const char* state,const char* reason) {
+ // Never throttle a failure/cleanup. Only repetitive successful active reports.
+ if(!status_gate.publish(GetTickCount64(),!std::strcmp(state,"active")&&!std::strcmp(reason,"native_remote_motion_applied")))return;
  event(reason);
  const auto tmp=directory+L"\\plane-flight-status.tsv.tmp",path=directory+L"\\plane-flight-status.tsv";
  FILE* f=nullptr;if(_wfopen_s(&f,tmp.c_str(),L"wb")||!f)return;
@@ -103,9 +180,11 @@ void status(const char* state,const char* reason) {
  static_cast<unsigned long long>(ledger.raw_owned),ledger.owned.index,ledger.owned.serial,ledger.finish_entered?1:0,ledger.finished_ready?1:0,
  static_cast<unsigned long long>(ledger.raw_network),static_cast<unsigned long long>(ledger.raw_parts),ledger.ticks,ledger.destroys,write_count,cache_readback?1:0,cache_error,
  static_cast<unsigned long long>(capture_timestamp),static_cast<double>(capture_scale));
- int extra=std::fprintf(f,"native_detail\t%s\nmodel_detail\t%s\nmodel_native_calls\t%u\nmodel_verified_scalars\t%u\nmodels_seeded\t%d\ninputs_verified\t%d\nunknown_spawn\t%d\nunknown_network\t%d\nunknown_parts\t%d\ndispatcher_verified\t%d\nmodule_revision\tr4\nselection_slots_copy_verified\t%d\nobservation_attempts\t%u\nobservation_failures\t%u\n",native_failure,model_report.error,model_report.native_calls,model_report.verified_scalars,model_report.models_seeded?1:0,model_report.inputs_verified?1:0,ledger.unknown_spawn?1:0,ledger.unknown_network?1:0,ledger.unknown_parts?1:0,dispatcher_verified?1:0,selection_slots_copy_verified?1:0,observation_attempts,observation_failures);
+ int extra=std::fprintf(f,"native_detail\t%s\nmodel_detail\t%s\nmodel_native_calls\t%u\nmodel_verified_scalars\t%u\nmodels_seeded\t%d\ninputs_verified\t%d\nunknown_spawn\t%d\nunknown_network\t%d\nunknown_parts\t%d\ndispatcher_verified\t%d\nmodule_revision\t" AC8_FLIGHT_REVISION "\nselection_slots_copy_verified\t%d\nobservation_attempts\t%u\nobservation_failures\t%u\n",native_failure,model_report.error,model_report.native_calls,model_report.verified_scalars,model_report.models_seeded?1:0,model_report.inputs_verified?1:0,ledger.unknown_spawn?1:0,ledger.unknown_network?1:0,ledger.unknown_parts?1:0,dispatcher_verified?1:0,selection_slots_copy_verified?1:0,observation_attempts,observation_failures);
  int detail=std::fprintf(f,"component_detail\t%s\ncomponent_failure_index\t%d\ncomponent_failure_pointer\t0x%llx\ncomponent_setter_rva\t0x%llx\ncomponent_getter_rva\t0x%llx\ncomponent_base_tick\t%u\ncomponent_custom_d3\t%u\ncomponent_aux_registration\t0x%llx\ncomponent_aux_flags\t%u\ncomponents_verified\t%u\n",component_failure,component_failure_index,static_cast<unsigned long long>(component_failure_pointer),static_cast<unsigned long long>(component_failure_setter),static_cast<unsigned long long>(component_failure_getter),unsigned(component_failure_state.base_tick),unsigned(component_failure_state.custom_enabled),static_cast<unsigned long long>(component_failure_state.aux_registration),unsigned(component_failure_state.aux_flags),components_verified);
- bool ok=n>0&&extra>0&&detail>0&&std::fflush(f)==0;std::fclose(f);if(ok)MoveFileExW(tmp.c_str(),path.c_str(),MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH);
+ int vis=std::fprintf(f,"visibility_detail\t%s\nvisibility_called\t%d\nvisibility_verified\t%d\n",visibility_report.error,visibility_report.called?1:0,visibility_report.verified?1:0);
+ int lifetime=std::fprintf(f,"lifetime_ms\t%llu\n",static_cast<unsigned long long>(ledger.lifetime_ms));
+ bool ok=lifetime>0&&n>0&&extra>0&&detail>0&&vis>0&&std::fflush(f)==0;std::fclose(f);if(ok)MoveFileExW(tmp.c_str(),path.c_str(),MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH);
 }
 struct Request {
     std::string stamp;
@@ -120,6 +199,25 @@ struct Header {
     std::array<unsigned char,0x28> bytes{};
 };
 std::array<Header,5> headers;
+#ifdef AC8_BAXTER_ROLE_BRIDGE
+Header role_unit,role_npc;
+bool role_prepared=false;
+bool role_health_trial();
+bool role_health_restore();
+bool role_detach_trial();
+bool role_retire_npc();
+bool role_poll_retirement();
+bool role_visual_prepare();
+bool role_visual_finish();
+bool role_destroy_entered=false,role_npc_retired=false,role_activation_pending=false,role_display_active=false;
+#endif
+#ifdef AC8_BAXTER_INITIALIZATION
+Header guest_class,guest_cdo;
+bool verify_guest_class(bool);
+uintptr_t spawn_class(){return guest_class.pointer;}
+#else
+uintptr_t spawn_class(){return baseline.klass;}
+#endif
 
 bool parse_number(const std::string& s,uint64_t& out,int radix) {
     if(s.empty() || s.size()>20 || s[0]=='-' || s[0]=='+') return false;
@@ -171,8 +269,16 @@ bool capture_header(uintptr_t object,Header& h,bool require_serial) {
     uintptr_t item=0,actual=0;
     if(!pointer(object) || !guarded_read(object,h.bytes.data(),h.bytes.size())) return false;
     std::memcpy(&h.index,h.bytes.data()+0xc,4);
+#ifdef AC8_BAXTER_INITIALIZATION
+    constexpr bool stabilize=true;
+#else
+    constexpr bool stabilize=false;
+#endif
     if(!item_for(h.index,item) || !read(item,actual) || actual!=object || !read(item+0x10,h.serial) || h.serial<0 ||
-        (require_serial && h.serial==0)) return false;
+        (require_serial && h.serial==0 && !stabilize)) return false;
+#ifdef AC8_BAXTER_INITIALIZATION
+    if(!h.serial){using F=int32_t(__fastcall*)(uintptr_t,int32_t);auto serial=reinterpret_cast<F>(image_base+serial_rva)(image_base+array_rva,h.index);if(serial<=0||!read(item+0x10,h.serial)||h.serial!=serial)return false;}
+#endif
     h.pointer=object; return true;
 }
 bool same_header(const Header& old,bool strong) {
@@ -182,6 +288,21 @@ bool same_header(const Header& old,bool strong) {
     return std::memcmp(old.bytes.data(),now.bytes.data(),8)==0 &&
         std::memcmp(old.bytes.data()+12,now.bytes.data()+12,0x28-12)==0;
 }
+#ifdef AC8_BAXTER_INITIALIZATION
+bool verify_guest_class(bool capture){
+ if(capture){
+  std::string text;if(!read_file(L"guest-player-target.tsv",text))return false;
+  std::map<std::string,std::string> values;size_t at=0;
+  while(at<text.size()){auto end=text.find('\n',at);if(end==std::string::npos)return false;auto line=text.substr(at,end-at);at=end+1;if(!line.empty()&&line.back()=='\r')line.pop_back();auto tab=line.find('\t');if(tab==std::string::npos||!values.emplace(line.substr(0,tab),line.substr(tab+1)).second)return false;}
+  uint64_t created=0,cl=0,cdo=0;const auto now=static_cast<uint64_t>(std::time(nullptr));
+  if(values.size()!=5||values["format"]!="ac8-guest-f14-class-v1"||values["plane_type"]!="23010"||!parse_number(values["created_unix"],created,10)||created>now+1||(created<now&&now-created>3)||!parse_number(values["class"],cl,0)||!parse_number(values["cdo"],cdo,0))return false;
+  Header*dest[]={&guest_class,&guest_cdo};uintptr_t pointers[]={cl,cdo};
+  for(unsigned i=0;i<2;++i){if(!capture_header(pointers[i],*dest[i],false))return false;if(!dest[i]->serial){using F=int32_t(__fastcall*)(uintptr_t,int32_t);auto serial=reinterpret_cast<F>(image_base+serial_rva)(image_base+array_rva,dest[i]->index);if(serial<=0||!capture_header(pointers[i],*dest[i],true)||dest[i]->serial!=serial)return false;}}
+ }
+ uintptr_t cdo=0,cl=0,vt=0;uint32_t flags=0;
+ return same_header(guest_class,true)&&same_header(guest_cdo,true)&&read(guest_class.pointer+0x110,cdo)&&cdo==guest_cdo.pointer&&read(guest_cdo.pointer+0x10,cl)&&cl==guest_class.pointer&&read(guest_cdo.pointer,vt)&&vt==image_base+cdo_vtable&&read(guest_cdo.pointer+8,flags)&&(flags&0x10);
+}
+#endif
 bool verify_baseline(const Request& r,bool capture) {
     uintptr_t p=0,c=0,v=0,cdoclass=0,cdoptr=0;
     uint32_t flags=0; unsigned char world_type=0;
@@ -216,6 +337,16 @@ bool verify_baseline(const Request& r,bool capture) {
         if(!read(headers[i].pointer+8,object_flags) || (object_flags&0x40000000))return diagnostic_fail(flag_errors[i]);
     }
     return true;
+}
+bool visibility_fingerprints(){
+ // Extracted from SHA256 51510E2A...8829F, checked against the native contract.
+ const unsigned char setter[]={0x40,0x53,0x57,0x41,0x56,0x41,0x57,0x48,0x81,0xec,0x08,0x01,0x00,0x00,0x48,0x8b,0x05,0xdb,0xe5,0x95,0x09,0x48,0x33,0xc4,0x48,0x89,0x84,0x24,0xf0,0x00,0x00,0x00};
+ const unsigned char dirty[]={0xe9,0x2b,0x6c,0x90,0x01,0xcc,0xcc,0xcc,0xcc,0xcc,0xcc,0xcc,0xcc,0xcc,0xcc,0xcc};
+ const unsigned char update[]={0x40,0x56,0x48,0x83,0xec,0x20,0x48,0x8b,0xf1,0x0f,0xb6,0x89,0x88,0x00,0x00,0x00};
+ unsigned char got[32];
+ return guarded_read(image_base+plane_main_visibility::setter_rva,got,sizeof setter)&&!std::memcmp(got,setter,sizeof setter)&&
+  guarded_read(image_base+0x28d95b0,got,sizeof dirty)&&!std::memcmp(got,dirty,sizeof dirty)&&
+  guarded_read(image_base+0x41e01e0,got,sizeof update)&&!std::memcmp(got,update,sizeof update);
 }
 bool fingerprints(){
  const uintptr_t rvas[]={0x465a120,0x3fe0160,0x1aae560,0x4263b80,0x7d6ed30,0x7d4ad20,0x3fdc360,0x3fc34c0,0x41df200,0x4d344f0,0x74d8c00,0x4d32580,0x4d318a0,0x3fdebc0,0x7d6f0c0,0x42dfa90,0x7d2c180,0x7d2c120,0x41df3e0};
@@ -272,7 +403,7 @@ struct SourceConfig {
 SourceConfig source_config;
 constexpr uint64_t owned_net_id=0x434f4f5000000001ULL;
 constexpr int32_t dx=30000,dy=10000,dz=2000;
-uint64_t last_motion_ms=0;
+uint64_t last_motion_us=0,last_callback_us=0;
 std::vector<Header> owned_components;
 bool integer_array(uintptr_t address,unsigned cap,std::vector<int32_t>& values) {
  uintptr_t data=0;int32_t count=0,capacity=0;
@@ -395,6 +526,21 @@ bool append_observation(const wchar_t* filename,ObservationJson& j){
  HANDLE f=CreateFileW(path.c_str(),FILE_APPEND_DATA,FILE_SHARE_READ,nullptr,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,nullptr);
  if(f==INVALID_HANDLE_VALUE)return false;DWORD written=0;bool ok=WriteFile(f,j.text.data(),static_cast<DWORD>(j.text.size()),&written,nullptr)&&written==j.text.size();CloseHandle(f);return ok;
 }
+bool emit_visibility_report(const char* phase){
+   ObservationJson j;j.add("{\"schema\":\"ac8-main-visibility-r5\",\"module_revision\":\"" AC8_FLIGHT_REVISION "\",\"phase\":\"%s\",\"called\":%s,\"verified\":%s,\"detail\":\"%s\",\"before_valid\":%s,\"after_valid\":%s",phase,boolean(visibility_report.called),boolean(visibility_report.verified),visibility_report.error,boolean(visibility_report.before_valid),boolean(visibility_report.after_valid));
+   const plane_main_visibility::Snapshot* snapshots[]={&visibility_report.before,&visibility_report.after};const char* names[]={"before","after"};
+   for(unsigned i=0;i<2;++i){const auto& s=*snapshots[i];j.add(",\"%s\":{\"source_actor\":",names[i]);observation_identity(j,s.source);j.add(",\"owned_actor\":");observation_identity(j,s.owned);j.add(",\"main\":");observation_scene(j,s.main);j.add(",\"secondary\":");observation_scene(j,s.secondary);j.add(",\"source_main\":");observation_scene(j,s.source_main);j.add(",\"source_secondary\":");observation_scene(j,s.source_secondary);j.add(",\"gate_a0\":\"0x%llx\",\"gate_byte1\":%u,\"active3f4\":%u,\"barriers\":%s}",static_cast<unsigned long long>(s.gate),unsigned(s.gate_byte),unsigned(s.active),boolean(s.barriers));}
+   j.add("}");return append_observation(L"plane-flight-visibility-r5.jsonl",j);
+}
+bool emit_motion_trace(){
+ if(motion_trace.emitted)return true;motion_trace.emitted=true;
+ ObservationJson j;j.add("{\"schema\":\"ac8-flight-cadence-r6\",\"revision\":\"" AC8_FLIGHT_REVISION "\",\"time_units\":\"microseconds\",\"position_units\":\"UE_centimeters\",\"clock\":\"QPC\",\"count\":%u,\"dropped\":%u,\"samples\":[",motion_trace.count,motion_trace.dropped);
+ const auto origin=motion_trace.count?motion_trace.samples[0].begin_us:0;
+ for(unsigned i=0;i<motion_trace.count;++i){const auto& s=motion_trace.samples[i];if(i)j.add(",");
+  j.add("{\"elapsed_us\":%llu,\"interval_us\":%llu,\"state_us\":%llu,\"model_us\":%llu,\"pose_us\":%llu,\"total_us\":%llu,\"source_timestamp\":%llu,\"dt\":%.9g,\"dt_clamped\":%s,\"moved\":%s,\"success\":%s,\"requested\":",static_cast<unsigned long long>(s.begin_us-origin),static_cast<unsigned long long>(s.interval_us),static_cast<unsigned long long>(s.state_us),static_cast<unsigned long long>(s.model_us),static_cast<unsigned long long>(s.pose_us),static_cast<unsigned long long>(s.total_us),static_cast<unsigned long long>(s.source_timestamp),static_cast<double>(s.dt),boolean(s.dt_clamped),boolean(s.moved),boolean(s.success));
+  j.vec(s.requested,s.moved);j.add(",\"rotation_degrees\":");j.vec(s.rotation,s.moved);j.add(",\"actual\":");j.vec(s.actual,s.actual_valid);j.add("}");
+ }j.add("]}");return append_observation(L"plane-flight-cadence-r6.json",j);
+}
 struct ObservationComponent {int32_t index=-1;observation::Scene scene{};bool tick_valid=false;uint8_t tick3a=0,tick3b=0;};
 struct ObservationComponents {bool valid=false;int32_t slots=0;unsigned skipped_scene_gate=0;std::vector<ObservationComponent> entries;};
 bool capture_observation_components(ObservationReader& r,uintptr_t actor,ObservationComponents& result){
@@ -418,7 +564,7 @@ bool capture_observation_components(ObservationReader& r,uintptr_t actor,Observa
 }
 bool emit_observation_components(observation::Stage stage,uint64_t elapsed,bool eligible){
  ObservationReader r;ObservationComponents c;if(eligible)capture_observation_components(r,ledger.raw_owned,c);
- ObservationJson j;j.add("{\"schema\":\"ac8-flight-components-r4\",\"stage\":\"%s\",\"elapsed_ms\":%llu,\"units\":\"UE_centimeters\",\"set_valid\":%s,\"allocation_slots\":%d,\"scene_count\":%u,\"skipped_non_scene_or_unverified\":%u,\"registration_status\":\"not_decoded\",\"components\":[",observation::name(stage),static_cast<unsigned long long>(elapsed),boolean(c.valid),c.slots,static_cast<unsigned>(c.entries.size()),c.skipped_scene_gate);
+ ObservationJson j;j.add("{\"schema\":\"ac8-flight-components-r4\",\"module_revision\":\"" AC8_FLIGHT_REVISION "\",\"stage\":\"%s\",\"elapsed_ms\":%llu,\"units\":\"UE_centimeters\",\"set_valid\":%s,\"allocation_slots\":%d,\"scene_count\":%u,\"skipped_non_scene_or_unverified\":%u,\"registration_status\":\"not_decoded\",\"components\":[",observation::name(stage),static_cast<unsigned long long>(elapsed),boolean(c.valid),c.slots,static_cast<unsigned>(c.entries.size()),c.skipped_scene_gate);
  bool first=true;for(const auto& x:c.entries){if(!first)j.add(",");first=false;j.add("{\"index\":%d,\"tick_valid\":%s,\"raw3a\":%u,\"raw3b\":%u,\"scene\":",x.index,boolean(x.tick_valid),unsigned(x.tick3a),unsigned(x.tick3b));observation_scene(j,x.scene);j.add("}");}j.add("]}");
  bool written=append_observation(L"plane-flight-components-r4.jsonl",j);return written&&c.valid;
 }
@@ -429,7 +575,7 @@ uint64_t pending_observation_elapsed=0;
 bool pending_observation_moved=false;
 bool emit_observation_frame(observation::Stage stage,uint64_t elapsed,const ObservationFrame& f,bool attempted,bool moved){
  auto m=observation::metrics(f.owned_before,f.owned_after,f.source_after,f.requested,f.requested_valid);
- ObservationJson j;j.add("{\"schema\":\"ac8-flight-observation-r4\",\"contract\":\"flight-r4-observation-contract.json\",\"stage\":\"%s\",\"elapsed_ms\":%llu,\"units\":\"UE_centimeters\",\"layout\":{\"root_raw_offset\":\"0x200\",\"root_raw_size\":96,\"xyz_offset\":\"0x220\",\"xyz_type\":\"double[3]\",\"scene_flags_offset\":\"0x188\",\"scene_flags_size\":9},\"pose_attempted\":%s,\"move_returned\":%s,\"requested_origin\":\"%s\",\"requested_world\":",observation::name(stage),static_cast<unsigned long long>(elapsed),boolean(attempted),boolean(moved),attempted?"pose_argument":"model_at_cleanup");j.vec(f.requested,f.requested_valid);
+ ObservationJson j;j.add("{\"schema\":\"ac8-flight-observation-r4\",\"module_revision\":\"" AC8_FLIGHT_REVISION "\",\"contract\":\"flight-r4-observation-contract.json\",\"stage\":\"%s\",\"elapsed_ms\":%llu,\"units\":\"UE_centimeters\",\"layout\":{\"root_raw_offset\":\"0x200\",\"root_raw_size\":96,\"xyz_offset\":\"0x220\",\"xyz_type\":\"double[3]\",\"scene_flags_offset\":\"0x188\",\"scene_flags_size\":9},\"pose_attempted\":%s,\"move_returned\":%s,\"requested_origin\":\"%s\",\"requested_world\":",observation::name(stage),static_cast<unsigned long long>(elapsed),boolean(attempted),boolean(moved),attempted?"pose_argument":"model_at_cleanup");j.vec(f.requested,f.requested_valid);
  j.add(",\"source_before\":");observation_actor(j,f.source_before);j.add(",\"owned_before\":");observation_actor(j,f.owned_before);
  j.add(",\"source_after\":");observation_actor(j,f.source_after);j.add(",\"owned_after\":");observation_actor(j,f.owned_after);
  j.add(",\"metrics\":{\"actual_step\":");observation_delta(j,m.actual_step);j.add(",\"request_error\":");observation_delta(j,m.request_error);j.add(",\"source_delta\":");observation_delta(j,m.source_delta);j.add("}}");
@@ -440,6 +586,73 @@ struct Backend {
  bool qpc(uint64_t& v){LARGE_INTEGER n{};if(!QueryPerformanceCounter(&n)||n.QuadPart<0)return false;v=static_cast<uint64_t>(n.QuadPart);return true;}
  void event(const char* text){::event(text);}
  uint64_t now(){return GetTickCount64();}
+#ifdef AC8_ENABLE_COOP
+ bool begin_coop(const plane_initial_state::Snapshot& source){
+  wchar_t role[16];if(!environment(L"AC8_CONNECTION_ROLE",role,16)||(std::wcscmp(role,L"host")&&std::wcscmp(role,L"guest")))return diagnostic_fail("coop_role_missing");
+  uint64_t generation=0;if(BCryptGenRandom(nullptr,reinterpret_cast<PUCHAR>(&generation),sizeof generation,BCRYPT_USE_SYSTEM_PREFERRED_RNG)!=0||!generation)return diagnostic_fail("coop_generation_random_failed");
+  coop={};ac8flight::Config c;c.parts_count=static_cast<uint32_t>(source_config.part_ids.size());c.row=source_config.row;
+  const unsigned offsets[]={0xf9c,0xfa4,0xfac,0xfb0,0xfb4,0xfc8,0xfcc,0xfd0,0xfd4,0xfdc};
+  for(unsigned i=0;i<10;++i)std::memcpy(&c.values[i],source_config.scalars.data()+offsets[i]-0xf98,4);
+  const unsigned bytes[]={0xfa0,0xfa1,0xfa2,0xfd8};for(unsigned i=0;i<4;++i)c.switches[i]=source_config.scalars[bytes[i]-0xf98];
+  std::copy(source_config.part_ids.begin(),source_config.part_ids.end(),c.parts.begin());c.slots=source_config.selection_ids.values;
+  std::memcpy(&c.model_flags,source.main.data()+0x44,4);coop.gate.reset(!std::wcscmp(role,L"host"),generation,c);
+  coop.local.config=c;coop.local.state=source;coop.local.scale=source.scale;coop.local.generation=generation;coop.born_us=performance_us();coop.configured=true;coop.detail="waiting_transport";
+  ac8flight_transport::start();coop_status(true);return true;
+ }
+ void record_coop_config(const ac8flight::Frame& peer){
+  observation::best_effort([&](){
+   ObservationJson j;j.add("{\"schema\":\"ac8-coop-config-r7\",\"same\":%s,\"configs\":[",boolean(ac8flight::same(coop.local.config,peer.config)));
+   const ac8flight::Config* configs[]={&coop.local.config,&peer.config};for(unsigned i=0;i<2;++i){if(i)j.add(",");const auto& c=*configs[i];j.add("{\"model\":%d,\"row\":%d,\"model_flags\":%u,\"parts_count\":%u,\"values\":[",c.model,c.row,c.model_flags,c.parts_count);
+    for(unsigned n=0;n<10;++n)j.add(n?",%d":"%d",c.values[n]);j.add("],\"switches\":[");for(unsigned n=0;n<4;++n)j.add(n?",%u":"%u",unsigned(c.switches[n]));j.add("],\"parts\":[");for(unsigned n=0;n<c.parts_count;++n)j.add(n?",%d":"%d",c.parts[n]);j.add("],\"slots\":[");for(unsigned n=0;n<8;++n)j.add(n?",%d":"%d",c.slots[n]);j.add("]}");}j.add("]}");return append_observation(L"coop-config-r7.json",j);
+  },observation_failures);
+ }
+ void stop_coop(const char* why){
+  if(!coop.stopped){coop.local.flags=ac8flight::stop_flag;coop.local.epoch=coop.gate.epoch;coop.local.echo_generation=coop.gate.peer_generation;
+   if(ac8flight_transport::ready())ac8flight_transport::send(coop.local,true);ac8flight_transport::stop();}
+  coop.stopped=true;coop.armed=false;coop.detail=why;ready=false;coop_status(true);
+  if(ledger.attempted)ledger.cleanup(*this);else {ledger.status="error";ledger.reason=why;}
+ }
+ void try_coop_start(){
+  if(!coop.armed||coop.stopped||ledger.attempted)return;
+  if(now()-coop.armed_ms>20000||now()-ready_tick>ttl*1000ULL){stop_coop("coop_arm_wait_expired");return;}
+  if(!ac8flight_transport::ready()||!coop.gate.armed(now()))return;
+  if(!verify_baseline(baseline,false)||!source_configuration(false)){stop_coop("coop_baseline_changed_before_spawn");return;}
+  ready=false;ledger.run(*this);
+  if(!ledger.running)stop_coop("coop_spawn_or_seed_failed");else {coop.detail="peer_state_flight_active";coop_status(true);}
+  status(ledger.status,ledger.reason);
+ }
+ void poll_coop(){
+  if(!coop.configured||coop.stopped)return;
+  if(ledger.attempted&&(!ledger.running||ledger.quarantined||ledger.cleanup_requested)){stop_coop("coop_owned_trial_stopped");status(ledger.status,ledger.reason);return;}
+  ac8flight_transport::poll();
+  if(!ac8flight_transport::ready()){
+   if(coop.had_transport){stop_coop("coop_transport_lost");status(ledger.status,ledger.reason);return;}
+   try_coop_start();coop_status();return;
+  }
+  coop.had_transport=true;ac8flight::Frame frame;
+  if(ac8flight_transport::take(frame)){
+   if(!coop.gate.have_peer)record_coop_config(frame);
+   if(coop.gate.accept(frame,now())){++coop.accepted;coop.detail=coop.gate.ready(now())?"peer_ready":"waiting_generation_echo";}
+   else {++coop.rejected;coop.detail="peer_frame_rejected";}
+  }
+  if(coop.gate.stale(now())){stop_coop("coop_peer_state_stale_or_generation_ended");status(ledger.status,ledger.reason);return;}
+  if(now()-coop.last_send_ms>=50){
+   plane_initial_state::Snapshot local;const char* error=nullptr;
+   if(!verify_baseline(baseline,false)||!source_configuration(false)||!plane_initial_state::capture(*this,baseline.pawn,image_base,1,local,error)){
+    stop_coop("coop_local_mission_or_state_changed");status(ledger.status,ledger.reason);return;
+   }
+   uint32_t flags=0;std::memcpy(&flags,local.main.data()+0x44,4);
+   if(local.scale!=coop.local.scale){stop_coop("coop_runtime_scale_changed");status(ledger.status,ledger.reason);return;}
+   if(flags!=coop.local.config.model_flags){stop_coop("coop_local_model_flags_changed");status(ledger.status,ledger.reason);return;}
+   coop.local.state=local;coop.local.epoch=coop.gate.epoch;coop.local.echo_generation=coop.gate.peer_generation;
+   coop.local.source_us=performance_us()-coop.born_us;coop.local.flags=ac8flight::ready_flag|(coop.armed?ac8flight::armed_flag:0)|(ledger.running?ac8flight::started_flag:0);
+   if(!ac8flight_transport::send(coop.local,!coop.gate.ready(now())||(coop.armed&&!ledger.running))){
+    stop_coop("coop_state_send_or_validation_failed");status(ledger.status,ledger.reason);return;
+   }++coop.sent;coop.last_send_ms=now();
+  }
+  try_coop_start();coop_status();
+ }
+#endif
  void capture_observation_phase(ObservationFrame& frame,bool after) noexcept {
   observation::best_effort([&](){
    ObservationReader r;auto& source=after?frame.source_after:frame.source_before;auto& owned=after?frame.owned_after:frame.owned_before;
@@ -465,6 +678,7 @@ struct Backend {
   uint64_t elapsed=ledger.start_ms?now()-ledger.start_ms:0;
   observation::best_effort([&](){return emit_observation_frame(stage,elapsed,frame,false,false);},observation_failures);
   observation::best_effort([&](){return emit_observation_components(stage,elapsed,resolve(ledger.owned)==plane_flight::Seen::safe);},observation_failures);
+  observation::best_effort([](){return emit_motion_trace();},observation_failures);
  }
  plane_flight::Seen resolve(const plane_flight::Identity& id){
   uintptr_t item=0,object=0;int32_t serial=0;
@@ -475,7 +689,7 @@ struct Backend {
  bool acquire(uintptr_t object,plane_flight::Identity& id,int kind){
   Header h;uintptr_t vt=0,cl=0,outer=0,level=0;uint32_t flags=0;
   if(!capture_header(object,h,false)||!::read(object,vt)||!::read(object+0x10,cl)||!::read(object+0x20,outer)||!::read(object+8,flags)||(flags&(0x10|0x20|0x40000000)))return false;
-  if(kind==0){if(vt!=image_base+player_vtable||cl!=baseline.klass||!::read(baseline.world+0x30,level)||outer!=level||object==baseline.pawn||object==baseline.cdo)return false;}
+  if(kind==0){if(vt!=image_base+player_vtable||cl!=spawn_class()||!::read(baseline.world+0x30,level)||outer!=level||object==baseline.pawn||object==baseline.cdo)return false;}
   else if(kind==1){if(vt!=image_base+0xc88a868||outer!=ledger.raw_owned)return false;}
   else {uintptr_t expected=0;std::memcpy(&expected,source_config.parts.bytes.data()+0x10,8);if(cl!=expected||outer!=ledger.raw_owned)return false;}
   using Fn=int32_t(__fastcall*)(uintptr_t,int32_t);int32_t serial=reinterpret_cast<Fn>(image_base+serial_rva)(image_base+array_rva,h.index);
@@ -493,14 +707,25 @@ struct Backend {
  }
  bool barrier_ok(){
   RawFlags f;unsigned char auto_player=0,auto_ai=0;
-  return ledger.identified&&resolve(ledger.owned)==plane_flight::Seen::safe&&flag_snapshot(ledger.raw_owned,f)&&!f.active&&!f.state&&
+  return ledger.identified&&resolve(ledger.owned)==plane_flight::Seen::safe&&flag_snapshot(ledger.raw_owned,f)&&
+#ifdef AC8_BAXTER_ROLE_BRIDGE
+   (role_activation_pending||f.active==uint8_t(role_display_active))&&
+#else
+   !f.active&&
+#endif
+   !f.state&&
    ::read(ledger.raw_owned+0x2a0,auto_player)&&!auto_player&&::read(ledger.raw_owned+0x2a1,auto_ai)&&!auto_ai&&
    (ledger.finish_entered||(!(f.start&4)&&!(f.allow&1)));
  }
  void close_actor_barrier(){
   if(resolve(ledger.owned)!=plane_flight::Seen::safe)return;
   uintptr_t fn=0;if(!::read(image_base+player_vtable+0x480,fn)||fn!=image_base+0x3fc34c0)return;
-  *reinterpret_cast<unsigned char*>(ledger.raw_owned+0x3f4)=0;
+  *reinterpret_cast<unsigned char*>(ledger.raw_owned+0x3f4)=
+#ifdef AC8_BAXTER_ROLE_BRIDGE
+   uint8_t(role_display_active);
+#else
+   0;
+#endif
   using Fn=void(__fastcall*)(uintptr_t,bool);reinterpret_cast<Fn>(fn)(ledger.raw_owned,false);
  }
  uintptr_t spawn(plane_flight::Ledger& receipt){
@@ -508,12 +733,12 @@ struct Backend {
   alignas(16) unsigned char params[0x80]{};params[0x30]=1;params[0x31]=1;params[0x32]=4;uint32_t flags=8;std::memcpy(params+0x34,&flags,4);
   BridgeContext context;context.backend=this;context.ledger=&receipt;BridgeStorage storage{bridge_vtable,&context};
   uintptr_t invoke=reinterpret_cast<uintptr_t>(&bridge_invoke),capture=reinterpret_cast<uintptr_t>(&storage);std::memcpy(params+0x40,&invoke,8);std::memcpy(params+0x50,&capture,8);
-  using Fn=uintptr_t(__fastcall*)(uintptr_t,uintptr_t,const void*,const void*);return reinterpret_cast<Fn>(image_base+spawn_rva)(baseline.world,baseline.klass,transform,params);
+  using Fn=uintptr_t(__fastcall*)(uintptr_t,uintptr_t,const void*,const void*);return reinterpret_cast<Fn>(image_base+spawn_rva)(baseline.world,spawn_class(),transform,params);
  }
  bool pending(){unsigned char state=0;uint32_t flags=0;return ::read(ledger.raw_owned+0x5d,state)&&::read(ledger.raw_owned+8,flags)&&((state&1)||(flags&0x40000000));}
  bool own_actor(){
   uintptr_t cls=0,controller=0,playerstate=0,net=0,parts=0;
-  return resolve(ledger.owned)==plane_flight::Seen::safe&&same_header(headers[0],true)&&::read(ledger.raw_owned+0x10,cls)&&cls==baseline.klass&&
+  return resolve(ledger.owned)==plane_flight::Seen::safe&&same_header(headers[0],true)&&::read(ledger.raw_owned+0x10,cls)&&cls==spawn_class()&&
    ::read(ledger.raw_owned+baseline.pawn_offset,controller)&&!controller&&::read(ledger.raw_owned+0x2b0,playerstate)&&!playerstate&&
    ::read(ledger.raw_owned+0xed0,net)&&net==ledger.raw_network&&::read(ledger.raw_owned+0x1328,parts)&&parts==ledger.raw_parts;
  }
@@ -525,6 +750,10 @@ struct Backend {
   uintptr_t existing=0,activator=0;
   if(!own_actor()||!barrier_ok()||!::read(ledger.raw_owned+0x16a8,activator)||!matching_owned(activator,source_config.activator,ledger.raw_owned))return false;
   if(!::read(ledger.raw_owned+0x1328,existing)||existing)return false;
+  #ifdef AC8_BAXTER_INITIALIZATION
+  if(!verify_guest_class(false))return false;
+  *reinterpret_cast<int32_t*>(ledger.raw_owned+0xf98)=23010;
+#endif
   struct IntArray{const int32_t*data;int32_t count,capacity;};
   IntArray selected{source_config.part_ids.data(),static_cast<int32_t>(source_config.part_ids.size()),static_cast<int32_t>(source_config.part_ids.size())},empty{};
   ledger.parts_entered=true;ledger.unknown_parts=true;
@@ -538,9 +767,18 @@ struct Backend {
   ledger.network_identified=acquire(ledger.raw_network,ledger.network,1);if(!ledger.network_identified)return false;ledger.unknown_network=false;
   if(!registry_absent()||!own_actor()||!barrier_ok())return false;
   // Only numeric selected configuration. No pointers, strings, arrays, model or component copies.
+  #ifdef AC8_BAXTER_INITIALIZATION
+  if(!verify_guest_class(false))return false;
+  // Reflected fields: PlaneTypeID, PlaneSWP, PlaneSpWeaponID1/2. No host loadout copy.
+  *reinterpret_cast<int32_t*>(ledger.raw_owned+0xf98)=23010;
+  *reinterpret_cast<int32_t*>(ledger.raw_owned+0xf9c)=0;
+  *reinterpret_cast<unsigned char*>(ledger.raw_owned+0xfa0)=16;
+  *reinterpret_cast<unsigned char*>(ledger.raw_owned+0xfa1)=11;
+#else
   const unsigned ints[]={0xf9c,0xfa4,0xfac,0xfb0,0xfb4,0xfc8,0xfcc,0xfd0,0xfd4,0xfdc};
   for(auto off:ints)std::memcpy(reinterpret_cast<void*>(ledger.raw_owned+off),source_config.scalars.data()+off-0xf98,4);
   for(unsigned off:{0xfa0u,0xfa1u,0xfa2u,0xfd8u})*reinterpret_cast<unsigned char*>(ledger.raw_owned+off)=source_config.scalars[off-0xf98];
+#endif
   *reinterpret_cast<int32_t*>(ledger.raw_owned+0x3ab8)=source_config.row;
   *reinterpret_cast<unsigned char*>(ledger.raw_owned+0xed8)=2;
   *reinterpret_cast<uint64_t*>(ledger.raw_network+0x28)=owned_net_id;
@@ -572,7 +810,11 @@ struct Backend {
   }
   bool set_false(uintptr_t rva){
    if(setter!=image_base+rva||!guard())return false;
-   using Fn=void(__fastcall*)(uintptr_t,bool);reinterpret_cast<Fn>(setter)(identity.pointer,false);return true;
+   using Fn=void(__fastcall*)(uintptr_t,bool);reinterpret_cast<Fn>(setter)(identity.pointer,false);
+#ifdef AC8_BAXTER_ROLE_BRIDGE
+   if(rva==0x7d2c180){uint8_t base=0;if(!::read(identity.pointer+0x3b,base)||!guard())return false;if(base)reinterpret_cast<Fn>(image_base+0x41df200)(identity.pointer,false);}
+#endif
+   return true;
   }
   bool read_state(plane_component_ticks::Kind kind,plane_component_ticks::State& state){
    if(!guard()||!::read(identity.pointer+0x3b,state.base_tick))return false;
@@ -646,6 +888,11 @@ struct Backend {
   if(!verify_baseline(baseline,false)||!source_configuration(false))return false;
   const char* error=nullptr;
   if(!plane_initial_state::capture(*this,baseline.pawn,image_base,1,snapshot,error)){native_failure=error?error:"source_state_capture_failed";return false;}
+#ifdef AC8_ENABLE_COOP
+  if(!coop.configured||coop.stopped||!ac8flight_transport::ready()||!coop.gate.have_peer||coop.gate.stale(now()))return diagnostic_fail("coop_remote_state_not_usable");
+  if(snapshot.scale!=coop.local.scale)return diagnostic_fail("coop_runtime_scale_changed");
+  {const auto local=snapshot;if(!ac8flight::materialize_remote(coop,local,snapshot))return diagnostic_fail("coop_remote_clock_mapping_failed");}
+#endif
   if(!plane_flight_state::translate(snapshot,dx,dy,dz)){native_failure="translation_failed";return false;}
   capture_timestamp=snapshot.timestamp;capture_scale=snapshot.scale;
   auto c=caches();bool ok=plane_initial_state::stage(*this,snapshot,c,stage_result);
@@ -663,11 +910,159 @@ struct Backend {
   auto c=caches();if(inputs!=c.data[4]+8||(model!=ledger.raw_owned+0x2268&&model!=ledger.raw_owned+0x3c60)||!guard(1,baseline.pawn,ledger.raw_owned,ledger.raw_network))return false;
   using Fn=void(__fastcall*)(uintptr_t,uintptr_t);reinterpret_cast<Fn>(image_base+0x4d32580)(model,inputs);return true;
  }
+#ifdef AC8_BAXTER_MODEL_TRIAL
+ bool model_pose(ac8player::Pose& pose){
+  const auto m=ledger.raw_owned+0x2268;
+  return finished_graph()&&guarded_read(m+0x8e0,pose.position.data(),sizeof(double)*3)&&
+   guarded_read(m+0x8d0,pose.rotation.data(),sizeof(float)*4)&&ac8player::finite(pose);
+ }
+ bool host_model_bytes(std::array<unsigned char,0x1648>& out){
+  // Keep each guarded read within its existing 4096-byte limit.
+  return guarded_read(baseline.pawn+0x2268,out.data(),0x1000)&&
+   guarded_read(baseline.pawn+0x3268,out.data()+0x1000,out.size()-0x1000);
+ }
+ bool role_text(uintptr_t at,const wchar_t* expected){
+  uintptr_t data=0;int32_t count=0,capacity=0;wchar_t text[128]{};
+  const auto length=std::wcslen(expected)+1;
+  return length<=128&&::read(at,data)&&::read(at+8,count)&&count==static_cast<int32_t>(length)&&::read(at+12,capacity)&&capacity>=count&&capacity<=4096&&
+   guarded_read(data,text,length*sizeof(wchar_t))&&std::memcmp(text,expected,length*sizeof(wchar_t))==0;
+ }
+ bool role_preparation(){
+  std::string text;if(!read_file(L"guest-role-request.tsv",text))return diagnostic_fail("role_request_absent");
+  std::map<std::string,std::string> values;size_t at=0;
+  while(at<text.size()){auto end=text.find('\n',at);if(end==std::string::npos)return diagnostic_fail("role_request_incomplete");auto line=text.substr(at,end-at);at=end+1;if(!line.empty()&&line.back()=='\r')line.pop_back();auto tab=line.find('\t');if(tab==std::string::npos||!values.emplace(line.substr(0,tab),line.substr(tab+1)).second)return diagnostic_fail("role_request_schema_invalid");}
+  uint64_t created=0,pointers[6]{};const auto current=static_cast<uint64_t>(std::time(nullptr));
+  const char* fields[]={"npc","unit","component","other0","other1","hidden_property"};
+  if(values.size()!=8||values["format"]!="ac8-baxter-role-v1"||!parse_number(values["created_unix"],created,10)||created>current+1||(created<current&&current-created>3))return diagnostic_fail("role_request_expired");
+  for(unsigned i=0;i<6;++i)if(!parse_number(values[fields[i]],pointers[i],0))return diagnostic_fail("role_pointer_invalid");
+  Header h[5];for(unsigned i=0;i<5;++i)if(!capture_header(pointers[i],h[i],true))return diagnostic_fail("role_identity_invalid");
+  auto identity=[](const Header&v){return ac8role::Object{v.pointer,v.index,v.serial};};
+  uintptr_t unit=0,component=0,owner=0,level=0;
+  if(!::read(pointers[0]+0xfa0,unit)||unit!=pointers[1]||!::read(pointers[0]+0x2808,component)||component!=pointers[2]||!::read(component+0x20,owner)||owner!=pointers[0]||!::read(baseline.pawn+0x20,level))return diagnostic_fail("role_ownership_mismatch");
+  for(unsigned i:{0u,1u,3u,4u}){uintptr_t outer=0;if(!::read(pointers[i]+0x20,outer)||outer!=level)return diagnostic_fail("role_level_mismatch");}
+  if(!role_text(pointers[0]+0x428,L"ContainerAllyCallsign_Name_Joker2")||!role_text(pointers[0]+0x438,L"ContainerAllyCallsign_Name_Professor")||
+   !role_text(pointers[3]+0x428,L"ContainerAllyCallsign_Name_Joker3")||!role_text(pointers[4]+0x428,L"ContainerAllyCallsign_Name_Joker4"))return diagnostic_fail("role_callsign_mismatch");
+  for(unsigned offset:{0x2c0u,0x2d0u,0x2e0u,0x310u}){
+   uintptr_t data=0;int32_t count=0,capacity=0,weak[2]{};
+   if(!::read(unit+offset,data)||!::read(unit+offset+8,count)||!::read(unit+offset+12,capacity)||count!=1||capacity<1||capacity>16||!guarded_read(data,weak,sizeof weak)||weak[0]!=h[0].index||weak[1]!=h[0].serial)return diagnostic_fail("role_ai_array_changed");
+  }
+  // bHidden layout is supplied by current reflected FBoolProperty, checked
+  // against FProperty/FBoolProperty offsets in this runtime's UE4SS.log.
+  int32_t offset=0;uint8_t bits[4]{},hidden=0,active=1;uintptr_t controller=1;
+  if(!::read(pointers[5]+0x44,offset)||offset!=0x58||!guarded_read(pointers[5]+0x70,bits,sizeof bits)||bits[0]!=1||bits[1]!=0||!bits[3]||(bits[3]&(bits[3]-1))||!::read(ledger.raw_owned+0x58,hidden)||!(hidden&bits[3])||!::read(ledger.raw_owned+0x3f4,active)||active||!::read(ledger.raw_owned+baseline.pawn_offset,controller)||controller)return diagnostic_fail("role_owned_player_barrier_failed");
+  for(unsigned i:{0u,3u,4u}){uint8_t value=0;if(!::read(pointers[i]+0x3f4,value)||value!=1)return diagnostic_fail("role_wingman_inactive");}
+  ac8role::Readback r;auto&c=r.context;
+  c.world=identity(headers[0]);c.controller=identity(headers[1]);c.host=identity(headers[2]);c.npc=identity(h[0]);c.unit=identity(h[1]);c.player={ledger.owned.pointer,ledger.owned.index,ledger.owned.serial};c.other_wingmen={identity(h[3]),identity(h[4])};c.generation=ready_tick;c.revision=1;
+  // No authenticated guest in this diagnostic session. Leave all nonces/peer
+  // and all unimplemented engine routes false; preparation cannot grant input.
+  r.host_controller_preserved=r.host_plane_preserved=verify_baseline(baseline,false);r.other_wingmen_preserved=true;
+  r.player_class=own_actor();r.player_physics=model_report.models_seeded&&model_report.inputs_verified;r.own_configuration=finished_graph();
+  r.player_hidden=true;r.player_inactive=true;r.all_player_updates_fenced=barrier_ok()&&finished_graph();r.npc_active=true;
+  r.active_planes=4;r.active_wingmen_ai=3;r.active_player_planes=1;
+  ac8role::Adapter adapter;const bool prepared=adapter.prepare(r);ac8input::Assignment grant;const bool input_allowed=adapter.assignment(r,grant);const auto why=adapter.detail;
+#ifdef AC8_BAXTER_ROLE_BRIDGE
+  if(prepared&&!input_allowed){role_unit=h[1];role_npc=h[0];role_prepared=true;}
+#endif
+  const auto path=directory+L"\\guest-role-preparation-"+AC8_GUEST_REV_W+L".tsv";FILE* f=nullptr;if(_wfopen_s(&f,path.c_str(),L"wb")||!f)return diagnostic_fail("role_preparation_log_failed");
+  std::fprintf(f,"prepared\t%d\ninput_allowed\t%d\nreason\t%s\nslot\t1\nrole\tJoker2\ncallsign\tProfessor\nplayer\t0x%llx\nunit\t0x%llx\nnpc\t0x%llx\nnpc_mutated\t0\nplayer_inserted_into_ai_arrays\t0\nengine_role_routes_verified\t0\n",prepared?1:0,input_allowed?1:0,why,static_cast<unsigned long long>(ledger.raw_owned),static_cast<unsigned long long>(unit),static_cast<unsigned long long>(pointers[0]));std::fclose(f);
+  return prepared&&!input_allowed;
+ }
+ bool independent_models(){
+  // Development proof only. No actor update release, visibility, role binding,
+  // host pose recapture or per-frame baseline consumption in these trajectories.
+  if(!ledger.finished_ready||ledger.cleanup_requested||ledger.running||!finished_graph())return diagnostic_fail("model_trial_graph_unverified");
+  const unsigned char expected[]={0x48,0x8b,0xc4,0x48,0x89,0x58,0x08,0x48,0x89,0x70,0x10,0x48,0x89,0x78,0x18,0x55};
+  unsigned char actual[16];if(!guarded_read(image_base+0x4d326e0,actual,16)||std::memcmp(expected,actual,16))return diagnostic_fail("model_step_fingerprint_mismatch");
+  if(!stage_current())return false;
+  const auto initial=snapshot;
+  std::array<unsigned char,0x1648> host_before{},host_after{};
+  if(!host_model_bytes(host_before))return diagnostic_fail("host_model_snapshot_failed");
+  const auto path=directory+L"\\guest-player-model-trial-"+AC8_GUEST_REV_W+L".tsv";FILE* log=nullptr;
+  if(_wfopen_s(&log,path.c_str(),L"wb")||!log)return diagnostic_fail("model_trial_log_failed");
+  std::fprintf(log,"phase\tstep\tx\ty\tz\tqx\tqy\tqz\tqw\tinput_pitch\tinput_yaw\tinput_roll\n");std::fflush(log);
+  ac8player::Pose end[2];bool ok=true;
+  for(unsigned phase=0;phase<2&&ok;++phase){
+   snapshot=initial;ac8input::Frame f;f.sender=1;f.session=2;f.echo=3;f.sequence=1;f.generation=1;f.revision=1;f.slot=1;f.aircraft=23;
+   // Same starting state, neutral versus a moderate stock roll input.
+   f.axes={0,int16_t(phase?16384:0),0,0,0};std::array<float,6> controls{};
+   ok=ac8player::controls(f,controls);
+   for(unsigned i=0;i<6;++i)plane_initial_state::put(snapshot.aux170,8+4*i,controls[i]);
+   plane_initial_state::put(snapshot.aux170,0x20,uint8_t{0});
+   auto c=caches();plane_initial_state::Result result;
+   ok=ok&&plane_initial_state::stage(*this,snapshot,c,result)&&plane_flight_state::finalize(*this,snapshot,c,model_report);
+   if(!ok){native_failure="independent_model_seed_failed";break;}
+   const auto m=ledger.raw_owned+0x2268;
+   for(unsigned step=0;step<=60&&ok;++step){
+    if(step){
+     ok=finished_graph()&&guard(1,baseline.pawn,ledger.raw_owned,ledger.raw_network)&&input(m,c.data[4]+8);
+     if(!ok){native_failure="model_step_guard_failed";break;}
+     event("owned_model_step_enter");
+     using Step=void(__fastcall*)(uintptr_t,float);reinterpret_cast<Step>(image_base+0x4d326e0)(m,1.0f/60.0f);
+     event("owned_model_step_return");
+    }
+    ac8player::Pose p;std::array<float,3> axes{};
+    ok=model_pose(p)&&guarded_read(m,axes.data(),sizeof(float)*3);
+    if(!ok){native_failure="nonfinite_model_step_or_barrier_lost";break;}
+    std::fprintf(log,"%u\t%u\t%.17g\t%.17g\t%.17g\t%.9g\t%.9g\t%.9g\t%.9g\t%.9g\t%.9g\t%.9g\n",phase,step,p.position[0],p.position[1],p.position[2],p.rotation[0],p.rotation[1],p.rotation[2],p.rotation[3],axes[0],axes[1],axes[2]);std::fflush(log);end[phase]=p;
+   }
+  }
+  bool host_same=host_model_bytes(host_after)&&host_before==host_after;
+  const auto delta=ok?ac8player::orientation_delta(end[0],end[1]):-1;
+  std::fprintf(log,"host_model_unchanged\t%d\norientation_delta\t%.17g\n",host_same?1:0,delta);std::fclose(log);
+  if(!host_same)return diagnostic_fail("host_model_changed_during_owned_trial");
+  if(!ok)return false;
+  if(delta<1e-4)return diagnostic_fail("independent_roll_response_not_proven");
+  native_failure="independent_stock_roll_verified_barrier_held";return true;
+ }
+#endif
  bool seed(){
   if(!stage_current())return false;auto c=caches();
   if(!plane_flight_state::finalize(*this,snapshot,c,model_report)){native_failure="model_finalize_failed";return false;}
+  if(!enable_main_visibility())return false;
   native_failure="models_seeded_pose_pending";
-  last_motion_ms=now();return pose_and_final_barrier();
+  if(!pose_and_final_barrier())return false;
+  last_motion_us=performance_us();last_callback_us=0;
+  return last_motion_us?true:diagnostic_fail("motion_clock_unavailable");
+ }
+ struct VisibilityAccess {
+  Backend& parent;
+  bool capture(plane_main_visibility::Snapshot& s){
+   s={};ObservationReader r;uintptr_t sm=0,ss=0,om=0,os=0;
+   if(!ledger.finished_ready||!model_report.models_seeded||!verify_baseline(baseline,false)||!parent.finished_graph()||
+    !r.identify(baseline.pawn,s.source)||!r.identify(ledger.raw_owned,s.owned)||
+    !::read(baseline.pawn+0x15a0,sm)||!::read(baseline.pawn+0x1af8,ss)||
+    !::read(ledger.raw_owned+0x15a0,om)||!::read(ledger.raw_owned+0x1af8,os)||
+    !observation::capture_scene(r,sm,baseline.pawn,s.source_main)||!observation::capture_scene(r,ss,baseline.pawn,s.source_secondary)||
+    !observation::capture_scene(r,om,ledger.raw_owned,s.main)||!observation::capture_scene(r,os,ledger.raw_owned,s.secondary)||
+    !::read(om+0xa0,s.gate)||(s.gate&&(!pointer(s.gate)||!::read(s.gate+1,s.gate_byte)))||
+    !::read(ledger.raw_owned+0x3f4,s.active))return false;
+   uintptr_t a=0,b=0,c=0,d=0;
+   s.barriers=parent.barrier_ok()&&parent.finished_graph();
+   return s.barriers&&r.unchanged(s.source)&&r.unchanged(s.owned)&&
+    r.unchanged(s.source_main.identity)&&r.unchanged(s.source_secondary.identity)&&r.unchanged(s.main.identity)&&r.unchanged(s.secondary.identity)&&
+    ::read(baseline.pawn+0x15a0,a)&&a==sm&&::read(baseline.pawn+0x1af8,b)&&b==ss&&
+    ::read(ledger.raw_owned+0x15a0,c)&&c==om&&::read(ledger.raw_owned+0x1af8,d)&&d==os;
+  }
+  bool setter_ready(const plane_main_visibility::Snapshot& s){
+   ObservationReader r;uintptr_t main=0,secondary=0,callback=0;
+   return visibility_fingerprints()&&verify_baseline(baseline,false)&&parent.finished_graph()&&
+    r.unchanged(s.main.identity)&&r.unchanged(s.secondary.identity)&&r.unchanged(s.source_main.identity)&&r.unchanged(s.source_secondary.identity)&&
+    ::read(ledger.raw_owned+0x15a0,main)&&main==s.main.identity.pointer&&
+    ::read(ledger.raw_owned+0x1af8,secondary)&&secondary==s.secondary.identity.pointer&&
+    ::read(s.main.identity.vtable+0x518,callback)&&callback==image_base+0x28d95b0&&emit_visibility_report("before");
+  }
+  void set_main(uintptr_t component){
+   parent.event("main_visibility_setter_enter");
+   using Fn=void(__fastcall*)(uintptr_t,bool,uint8_t);
+   reinterpret_cast<Fn>(image_base+plane_main_visibility::setter_rva)(component,true,0);
+   parent.event("main_visibility_setter_return");
+  }
+ };
+ bool enable_main_visibility(){
+  if(!disable_components()||!finished_graph())return diagnostic_fail("visibility_graph_unverified");
+  VisibilityAccess access{*this};bool ok=plane_main_visibility::enable(access,image_base,visibility_report);
+  observation::best_effort([&](){return emit_visibility_report("after");},observation_failures);
+  return ok?true:diagnostic_fail(visibility_report.error);
  }
  bool pose_and_final_barrier(){
   if(!disable_components()||!finished_graph())return false;
@@ -691,18 +1086,36 @@ struct Backend {
   }
   using Move=bool(__fastcall*)(uintptr_t,const double*,const double*,bool,void*,unsigned char);
   bool moved=reinterpret_cast<Move>(image_base+0x3fdebc0)(ledger.raw_owned,world,rotation,false,nullptr,0);
+  if(motion_recording){
+   motion_sample.requested={world[0],world[1],world[2]};motion_sample.rotation={rotation[0],rotation[1],rotation[2]};motion_sample.moved=moved;
+   ObservationReader r;observation::Actor actual;
+   motion_sample.actual_valid=resolve(ledger.owned)==plane_flight::Seen::safe&&observation::capture_actor(r,ledger.raw_owned,actual);
+   if(motion_sample.actual_valid)motion_sample.actual=actual.root.world;
+  }
   if(stage!=observation::Stage::none)pending_observation_moved=moved;return moved;
  }
  bool motion(){
+  motion_sample={};motion_sample.begin_us=performance_us();
+  if(!motion_sample.begin_us)return diagnostic_fail("motion_clock_unavailable");
+  motion_sample.interval_us=last_callback_us&&motion_sample.begin_us>=last_callback_us?motion_sample.begin_us-last_callback_us:0;last_callback_us=motion_sample.begin_us;
   if(!finished_graph()||!stage_current())return false;
-  uint64_t current=now();float dt=static_cast<float>(current-last_motion_ms)/1000.f;last_motion_ms=current;
-  if(dt<0.001f)return true;if(dt>0.1f)dt=0.1f;
-  using Update=void(__fastcall*)(uintptr_t,float);reinterpret_cast<Update>(image_base+0x7d6f0c0)(ledger.raw_owned,dt);
-  close_actor_barrier();return pose_and_final_barrier();
+  const auto staged=performance_us();motion_sample.state_us=staged-motion_sample.begin_us;motion_sample.source_timestamp=snapshot.timestamp;
+  if(!plane_flight_cadence::delta(last_motion_us,staged,motion_sample.dt,motion_sample.dt_clamped))return diagnostic_fail("motion_clock_not_monotonic");last_motion_us=staged;
+  using Update=void(__fastcall*)(uintptr_t,float);reinterpret_cast<Update>(image_base+0x7d6f0c0)(ledger.raw_owned,motion_sample.dt);
+  const auto modeled=performance_us();motion_sample.model_us=modeled-staged;
+  close_actor_barrier();motion_recording=true;bool ok=pose_and_final_barrier();motion_recording=false;
+  const auto done=performance_us();motion_sample.pose_us=done-modeled;motion_sample.total_us=done-motion_sample.begin_us;motion_sample.success=ok;motion_trace.append(motion_sample);
+  return ok;
  }
 
  bool destroy(uintptr_t p){observe_before_destroy();using Fn=bool(__fastcall*)(uintptr_t,bool);return reinterpret_cast<Fn>(image_base+destroy_rva)(p,false);}
 };
+
+#ifdef AC8_BAXTER_ROLE_BRIDGE
+#include "guest_role_health_bridge.inl"
+#include "guest_role_detach.inl"
+#include "guest_role_retirement.inl"
+#endif
 
 void __fastcall bridge_invoke(void* p,uintptr_t* actor) {
     auto* context=static_cast<BridgeContext*>(p);
@@ -712,10 +1125,22 @@ void __fastcall bridge_invoke(void* p,uintptr_t* actor) {
 }
 
 bool setup(void* module_address) {
+#ifdef AC8_BAXTER_INITIALIZATION
+    wchar_t marker[32]{},out[32768]{},source[32768]{},expected[32768]{},actual[32768]{};
+    if(!environment(L"AC8_LOCAL_ADAPTER_DEV",marker,32)||std::wcscmp(marker,L"25201480")||!environment(L"AC8_COOP_RECON_OUTPUT",out,32768)||!environment(L"AC8_LOCAL_SCRIPTS",source,32768))return false;
+    HMODULE own=nullptr;if(!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_PIN,reinterpret_cast<LPCWSTR>(module_address),&own)||!GetModuleFileNameW(own,actual,32768))return false;
+    std::wstring requested=std::wstring(source)+L"\\..\\..\\..\\"+AC8_GUEST_DLL_W;
+    if(!GetFullPathNameW(requested.c_str(),32768,expected,nullptr)||_wcsicmp(actual,expected))return false;
+    if(!GetModuleFileNameW(nullptr,actual,32768))return false;const auto file=std::wcsrchr(actual,L'\\');if(!file||_wcsicmp(file+1,L"AceCombat8.exe"))return false;
+    directory=out;image_base=reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+    if(journal==INVALID_HANDLE_VALUE){const std::wstring path=directory+L"\\guest-player-init-events-"+AC8_GUEST_REV_W+L".tsv";journal=CreateFileW(path.c_str(),FILE_APPEND_DATA,FILE_SHARE_READ,nullptr,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,nullptr);}
+    return journal!=INVALID_HANDLE_VALUE;
+#else
     wchar_t marker[32],out[32768],expected[32768],actual[32768];
     if(!environment(L"AC8_COOP_RECON",marker,32)||std::wcscmp(marker,L"1")||
        !environment(L"AC8_COOP_RECON_OUTPUT",out,32768))return false;
-    wcscpy_s(expected,32768,L"D:\\projects\\unreal-mod-tools\\profiles\\ac8-build25201480\\runtime\\ac8_plane_flight_probe_r4.dll");
+    if(!environment(L"AC8_COOP_PLANE_FLIGHT",marker,32)||std::wcscmp(marker,L"25201480")||
+       !environment(L"AC8_COOP_PLANE_FLIGHT_DLL",expected,32768))return false;
     HMODULE own=nullptr;
     if(!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_PIN,
        reinterpret_cast<LPCWSTR>(module_address),&own)) return false;
@@ -726,11 +1151,16 @@ bool setup(void* module_address) {
     if(!name || _wcsicmp(name+1,L"AceCombat8.exe")) return false;
     directory=out; image_base=reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
     if(journal==INVALID_HANDLE_VALUE) {
-        const std::wstring path=directory+L"\\plane-flight-lifecycle-events-r4.tsv";
+        #ifdef AC8_ENABLE_COOP
+        const std::wstring path=directory+L"\\plane-flight-lifecycle-events-r7.tsv";
+#else
+        const std::wstring path=directory+L"\\plane-flight-lifecycle-events-r6.tsv";
+#endif
         journal=CreateFileW(path.c_str(),FILE_APPEND_DATA,FILE_SHARE_READ,nullptr,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,nullptr);
         if(journal==INVALID_HANDLE_VALUE) return false;
     }
     return true;
+#endif
 }
 void dispatch(unsigned action,void* module_address){
  if(!setup(module_address))return;
@@ -738,16 +1168,78 @@ void dispatch(unsigned action,void* module_address){
  if(thread_id!=GetCurrentThreadId()){status("error","wrong_game_callback_thread");return;}
  if(!fingerprints()){status("error","native_entry_fingerprint_mismatch");return;}
  Backend b;
+#ifdef AC8_BAXTER_ROLE_BRIDGE
+ if(action==6){role_health_trial();status("prepared",native_failure);return;}
+ if(action==7){role_detach_trial();status("prepared",native_failure);return;}
+ if(action==8){role_retire_npc();status(role_destroy_entered?"replacement_pending":"prepared",native_failure);return;}
+ if(action==9){role_poll_retirement();status(role_npc_retired?"replacement_reserved":"replacement_pending",native_failure);return;}
+ if(action==10){role_visual_prepare();status("replacement_reserved",native_failure);return;}
+ if(action==11){role_visual_finish();status(role_display_active?"replacement_visible":"replacement_reserved",native_failure);return;}
+ if(action==3&&role_destroy_entered){status("replacement_reserved","committed_role_requires_mission_lifecycle_cleanup");return;}
+ if(action==3&&!role_detach_restore()){status("quarantine","npc_detachment_restore_unverified");return;}
+ if(action==3&&!role_health_restore()){status("quarantine","unit_interface_restore_unverified");return;}
+#endif
+#ifdef AC8_BAXTER_MODEL_TRIAL
+ if(action==4){
+  static bool consumed=false;
+  if(consumed){status("error","model_trial_already_consumed");return;}consumed=true;
+  // Diagnostic failure never enables motion. Cleanup uses the completed graph.
+  if(b.independent_models()){
+   if(!b.role_preparation()){status("prepared",native_failure);return;}
+   native_failure="independent_model_and_role_preparation_verified_no_commit";
+  }
+  status("prepared",native_failure);return;
+ }
+#endif
+#ifdef AC8_BAXTER_INITIALIZATION
+ if(action==2){status("prepared","motion_disabled_until_role_adapter_commit");return;}
+#endif
+#ifdef AC8_ENABLE_COOP_MENU
+ if(action==5){
+  wchar_t menu_marker[32]{};std::string text;ac8menu::Settings settings;
+  if(!environment(L"AC8_COOP_MENU",menu_marker,32)||std::wcscmp(menu_marker,L"25201480")||ledger.attempted||coop.configured||
+     !read_file(L"coop-menu-settings.tsv",text)||!ac8menu::parse(text,settings)){
+   status("error","menu_configuration_refused");return;
+  }
+  const std::wstring role(settings.role.begin(),settings.role.end()),peer(settings.peer.begin(),settings.peer.end());
+  if(!SetEnvironmentVariableW(L"AC8_CONNECTION_ROLE",role.c_str())||!SetEnvironmentVariableW(L"AC8_CONNECTION_PEER",peer.c_str())){
+   status("error","menu_configuration_environment_failed");return;
+  }
+  status("menu_configured","menu_configuration_validated");return;
+ }
+#endif
+#ifdef AC8_ENABLE_COOP
+ if(action==4){b.poll_coop();return;}
+ if(action==3){b.stop_coop("coop_local_stop");status(ledger.status,ledger.reason);return;}
+ if(action==2){
+  if(!ledger.attempted){b.try_coop_start();return;}
+  if(!coop.stopped&&(!ac8flight_transport::ready()||coop.gate.stale(b.now())))b.stop_coop("coop_peer_or_transport_lost");
+  else ledger.tick(b);
+  if(!ledger.running&&!coop.stopped)b.stop_coop("coop_motion_window_ended");
+  status(ledger.status,ledger.reason);return;
+ }
+#endif
  if(action==3){ledger.cleanup(b);status(ledger.status,ledger.reason);return;}
  if(action==2){ledger.tick(b);status(ledger.status,ledger.reason);return;}
  if(ledger.attempted){status("error","attempt_consumed_use_cleanup");return;}
  Request r;if(!request(r)){status("error","invalid_or_expired_request");return;}
  if(action==0){
   ready=false;baseline=r;ready_stamp=r.stamp;native_failure="preflight_started";
+  if(!visibility_fingerprints()){status("error","visibility_entry_fingerprint_mismatch");return;}
+  #ifdef AC8_BAXTER_INITIALIZATION
+  if(!verify_guest_class(true)){status("error","guest_class_preflight_refused");return;}
+#endif
   if(!verify_baseline(r,true)||!source_configuration(true)||!bridge_selfcheck()){status("error",native_failure);return;}
   const char* error=nullptr;if(!plane_initial_state::capture(b,r.pawn,image_base,1,snapshot,error)){status("error",error?error:"initial_capture_failed");return;}
+#ifdef AC8_ENABLE_COOP
+  if(!b.begin_coop(snapshot)){status("error",native_failure);return;}
+#endif
   ready_stamp=r.stamp;ready_tick=GetTickCount64();ready=true;native_failure="preflight_verified";status("ready","one_owned_remote_flight_trial_preflight");return;
  }
+#ifdef AC8_BAXTER_INITIALIZATION
+ if(!ready||GetTickCount64()-ready_tick>3000||r.stamp!=ready_stamp||!verify_baseline(r,false)||!source_configuration(false)||!verify_guest_class(false)){status("error","guest_preparation_stale");return;}
+ ready=false;baseline=r;ledger.prepare(b);status(ledger.status,ledger.reason);return;
+#endif
  std::string armed;
  if(!ready||GetTickCount64()-ready_tick>ttl*1000ULL||r.stamp!=ready_stamp||r.pc_offset!=baseline.pc_offset||r.pawn_offset!=baseline.pawn_offset||!read_file(L"plane-flight-armed.txt",armed)){
   status("error","missing_or_expired_arming");return;
@@ -755,14 +1247,37 @@ void dispatch(unsigned action,void* module_address){
  while(!armed.empty()&&(armed.back()=='\n'||armed.back()=='\r'))armed.pop_back();
  if(armed!=ready_stamp){status("error","arming_stamp_mismatch");return;}
  if(!verify_baseline(r,false)||!source_configuration(false)){status("error",native_failure);return;}
+#ifdef AC8_ENABLE_COOP
+ if(!coop.configured||coop.stopped||!coop.gate.ready(b.now())||!ac8flight_transport::ready()){status("error","coop_peer_not_ready");return;}
+ baseline=r;coop.armed=true;coop.armed_ms=b.now();coop.detail="waiting_peer_arm";coop_status(true);
+ status("waiting_peer","coop_waiting_peer_arm");b.try_coop_start();
+#else
  ready=false;baseline=r;ledger.run(b);status(ledger.status,ledger.reason);
+#endif
 }
+#ifdef AC8_BAXTER_INITIALIZATION
+static bool dump_armed=false;static LONG dumped=0;
+LONG CALLBACK capture_native_failure(EXCEPTION_POINTERS* info){
+ if(!dump_armed||!info||!info->ExceptionRecord||GetCurrentThreadId()!=thread_id||info->ExceptionRecord->ExceptionCode!=EXCEPTION_ACCESS_VIOLATION)return EXCEPTION_CONTINUE_SEARCH;
+ const auto at=reinterpret_cast<uintptr_t>(info->ExceptionRecord->ExceptionAddress);
+ if(at<image_base||at-image_base>0x10000000||InterlockedCompareExchange(&dumped,1,0))return EXCEPTION_CONTINUE_SEARCH;
+ const auto path=directory+L"\\guest-player-init-"+AC8_GUEST_REV_W+L"-fault.dmp";HANDLE file=CreateFileW(path.c_str(),GENERIC_WRITE,FILE_SHARE_READ,nullptr,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,nullptr);
+ if(file!=INVALID_HANDLE_VALUE){MINIDUMP_EXCEPTION_INFORMATION e{GetCurrentThreadId(),info,FALSE};MiniDumpWriteDump(GetCurrentProcess(),GetCurrentProcessId(),file,MiniDumpNormal,&e,nullptr,nullptr);CloseHandle(file);}
+ return EXCEPTION_CONTINUE_SEARCH;
+}
+#endif
 int boundary(unsigned action,void* address){
  if(!TryAcquireSRWLockExclusive(&lock))return 0;
+#ifdef AC8_BAXTER_INITIALIZATION
+ auto handler=AddVectoredExceptionHandler(1,capture_native_failure);dump_armed=action==1||action==4||action==6||action==7||(action>=8&&action<=11);
+#endif
  // Only guarded reads use SEH. Native mutations and their faults are never swallowed.
  try{dispatch(action,address);}catch(...){
   if(!directory.empty()){Backend b;if(ledger.attempted)ledger.quarantine(b,"cpp_exception_state_retained_needs_game_close");status(ledger.attempted?"quarantine":"error","cpp_exception_state_retained");}
  }
+ #ifdef AC8_BAXTER_INITIALIZATION
+ dump_armed=false;if(handler)RemoveVectoredExceptionHandler(handler);
+#endif
  ReleaseSRWLockExclusive(&lock);return 0;
 }
 
@@ -773,3 +1288,20 @@ extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_flight_preflight(void*)
 extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_flight_run(void*) {return boundary(1,reinterpret_cast<void*>(&luaopen_ac8_flight_preflight));}
 extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_flight_tick(void*) {return boundary(2,reinterpret_cast<void*>(&luaopen_ac8_flight_preflight));}
 extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_flight_cleanup(void*) {return boundary(3,reinterpret_cast<void*>(&luaopen_ac8_flight_preflight));}
+#ifdef AC8_BAXTER_MODEL_TRIAL
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_guest_model_trial(void*) {return boundary(4,reinterpret_cast<void*>(&luaopen_ac8_flight_preflight));}
+#endif
+#ifdef AC8_BAXTER_ROLE_BRIDGE
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_guest_role_trial(void*) {return boundary(6,reinterpret_cast<void*>(&luaopen_ac8_flight_preflight));}
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_guest_role_detach_trial(void*) {return boundary(7,reinterpret_cast<void*>(&luaopen_ac8_flight_preflight));}
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_guest_role_retire(void*) {return boundary(8,reinterpret_cast<void*>(&luaopen_ac8_flight_preflight));}
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_guest_role_poll(void*) {return boundary(9,reinterpret_cast<void*>(&luaopen_ac8_flight_preflight));}
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_guest_role_visual_prepare(void*) {return boundary(10,reinterpret_cast<void*>(&luaopen_ac8_flight_preflight));}
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_guest_role_visual_finish(void*) {return boundary(11,reinterpret_cast<void*>(&luaopen_ac8_flight_preflight));}
+#endif
+#ifdef AC8_ENABLE_COOP
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_coop_poll(void*) {return boundary(4,reinterpret_cast<void*>(&luaopen_ac8_flight_preflight));}
+#endif
+#ifdef AC8_ENABLE_COOP_MENU
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_coop_menu_configure(void*) {return boundary(5,reinterpret_cast<void*>(&luaopen_ac8_flight_preflight));}
+#endif

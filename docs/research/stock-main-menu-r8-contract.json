@@ -1,0 +1,32 @@
+{
+  "build": 25201480,
+  "game_sha256": "51510E2A520565DBE81FB0D569E95CD4393077ACAAA859371489B80B8128829F",
+  "evidence_session": "profiles/ac8-build25201480-menu-dev/evidence/session-20261020-170106",
+  "main_native_class": "/Script/Live.LiveMenuMainTopWidget",
+  "main_blueprint_class": "/Game/Blueprints/UI/Menu/Main/WBP_Menu_MainTop_000.WBP_Menu_MainTop_000_C",
+  "hierarchy": ["MainTop.WidgetTree.RootPanel", "Mosaic_In", "RetainerRoot", "CommandList.WidgetTree.CanvasPanel_0", "CanvasPanel_74", "CanvasPanel_120", "GridPanelMain"],
+  "entry": {
+    "label": "СОВМЕСТНАЯ ИГРА",
+    "class": "/Script/UMG.Button",
+    "outer": "MainTop.WidgetTree",
+    "parent": "GridPanelMain",
+    "row": 7,
+    "column": 0,
+    "requires_original_exit_row": "WBP_Menu_Text_Focus_000_06",
+    "requires_reserved_row_hidden": "WBP_Menu_Text_Focus_000_07.Visibility == 1",
+    "original_commands_replaced": false
+  },
+  "page": {
+    "class": "/Script/UMG.VerticalBox",
+    "outer": "MainTop.WidgetTree",
+    "parent": "GridPanelMain.GetParent() == CanvasPanel_120",
+    "hides_only": "GridPanelMain",
+    "top_spacing_source": "GridPanelMain.GetChildAt(0).Size.Y == 300 in captured menu",
+    "add_to_viewport": false,
+    "external_window": false,
+    "input": "UIOnly while page is open; GameAndUI and previous cursor visibility restored on Back",
+    "clicks": "UE4SS left mouse latch + hover, or non-hovered keyboard/gamepad press edge; no frame-length dependency for mouse clicks"
+  },
+  "live_observed": ["entry visible below Exit in the stock main menu", "entry opens the settings page", "page fits below the original main-menu header", "SteamID text entry", "empty SteamID rejected", "Back restores original command list"],
+  "not_established": ["native gamepad command-index navigation into the added entry", "automatic mission travel or hangar aircraft selection", "two-peer mission flight through the new UI", "initial startup crash cause"]
+}
