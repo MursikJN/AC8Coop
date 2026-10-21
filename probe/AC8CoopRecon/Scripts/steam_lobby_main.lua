@@ -2,28 +2,40 @@ assert(os.getenv('AC8_STEAM_LOBBY')=='25201480','Steam lobby profile required')
 local source=assert(os.getenv('AC8_LOBBY_SCRIPTS'))
 local output=assert(os.getenv('AC8_COOP_RECON_OUTPUT'))
 local dll=assert(os.getenv('AC8_LOBBY_DLL'))
+local diagnostic
+if os.getenv('AC8_SESSION_DIAGNOSTICS')=='1'then
+ local ok,result=pcall(function()return assert(loadfile(source..'/session_diagnostics.lua'))().new(output,{session_id=os.getenv('AC8_SESSION_ID'),role=os.getenv('AC8_LOBBY_ROLE'),package=os.getenv('AC8_PACKAGE_REVISION')})end)
+ if ok then diagnostic=result else print('AC8 diagnostics unavailable: '..tostring(result))end
+end
+local function native_call(path,name)
+ local fn,why=package.loadlib(path,name)
+ if not fn and diagnostic then diagnostic.event('native_load_error',{symbol=name,error=tostring(why)})end
+ return assert(fn,why)
+end
 local native={}
 local coop=os.getenv('AC8_STEAM_COOP')=='25201480'
 local cinema_sync=os.getenv('AC8_CINEMA_SYNC')=='25201480'
 local policy=os.getenv('AC8_SESSION_POLICY')=='25201480'
 local launch_role=os.getenv('AC8_LOBBY_ROLE')
 if policy then assert(os.getenv('AC8_SAVE_POLICY')==(launch_role=='host'and'host-persistent'or'guest-discarded'),'Изолированный профиль роли не подтверждён лаунчером.')end
-for _,name in ipairs({'start','stop','tick'})do native[name]=assert(package.loadlib(dll,'luaopen_ac8_lobby24_'..name))end
+for _,name in ipairs({'start','stop','tick'})do native[name]=native_call(dll,'luaopen_ac8_lobby24_'..name)end
 if os.getenv('AC8_STEAM_INVITES')=='25201480'then
- native.invites_tick=assert(package.loadlib(dll,'luaopen_ac8_invites25_tick'))
- native.invites_open=assert(package.loadlib(dll,'luaopen_ac8_invites25_open'))
+ native.invites_tick=native_call(dll,'luaopen_ac8_invites25_tick')
+ native.invites_open=native_call(dll,'luaopen_ac8_invites25_open')
 end
 if coop then
- for _,name in ipairs({'start','tick','stop','loaded','capture_input'})do native['pilot_'..name]=assert(package.loadlib(dll,'luaopen_ac8_pilot_'..name))end
- native.capture_vote=assert(package.loadlib(dll,'luaopen_ac8_coop27_capture_vote'))
+ for _,name in ipairs({'start','tick','stop','loaded','capture_input'})do native['pilot_'..name]=native_call(dll,'luaopen_ac8_pilot_'..name)end
+ native.capture_vote=native_call(dll,'luaopen_ac8_coop27_capture_vote')
 end
 local function log(event,detail)
+ if diagnostic and diagnostic.log(event,detail)==false then return end
  local f=io.open(output..'/steam-menu.log','a');if f then f:write(os.date('%Y-%m-%d %H:%M:%S'),'\t',event,'\t',tostring(detail or''):gsub('[\r\n]',' '),'\n');f:close()end
 end
 local menu=assert(loadfile(source..'/coop_main_menu.lua'))()
 local catalog=assert(loadfile(source..'/coop_menu_catalog.lua'))()
 if coop then _G.AC8LocalMenuDll=source..'/../../../ac8_menu_route_r13.dll'end
-local controller=assert(loadfile(source..'/steam_lobby_services.lua'))().new(output,native,nil,{mission_sync=coop,cinema_sync=cinema_sync,session_policy=policy,launch_role=launch_role})
+local controller=assert(loadfile(source..'/steam_lobby_services.lua'))().new(output,native,nil,{mission_sync=coop,cinema_sync=cinema_sync,session_policy=policy,launch_role=launch_role,trace=diagnostic and diagnostic.event})
+if diagnostic then diagnostic.context(controller)end
 local options={compact=true,source=source,catalog=catalog,is_host=os.getenv('AC8_LOBBY_ROLE')~='guest',
  view=controller.view,status=controller.status,create=controller.create,join=controller.join,leave=controller.leave,
  select=controller.select,ready=controller.ready,loadout=controller.loadout,open_hangar=coop and controller.open_hangar or nil,log=log,error=function(e)log('ui_error',e)end}
@@ -34,7 +46,7 @@ options.input_blocked=function()return controller.invite_status.overlay_active==
 local ui;local shown_invite=0
 local adapter,pilot,role,scene,client,room_token,last_scene= nil,nil,nil,nil,nil,nil,0
 local function tick()
- local ok,err=pcall(function()
+ local ok,err=xpcall(function()
   if not ui then ui=menu.attach(options)end
   local visible=false;if ui then local valid,result=pcall(function()return ui.main:IsVisible()end);visible=valid and result==true end
   controller.set_menu_available(visible);controller.poll()
@@ -84,8 +96,12 @@ local function tick()
   end
   if ui and not ui.refresh()then ui=menu.attach(options)end
   if ui and visible and controller.join_notice>shown_invite then ui.ui_error=nil;ui.show();shown_invite=controller.join_notice;log('invite_room_opened')end
- end)
- if not ok then log('tick_error',err);if policy then controller.fault(tostring(err))end end
+ end,debug.traceback)
+ if not ok then log('tick_error',err);if policy then local sent,why=pcall(controller.fault,tostring(err));if not sent then log('fault_dispatch_error',why)end end end
+ if diagnostic then
+  local sampled,why=pcall(diagnostic.observe,controller,{adapter=adapter,pilot=pilot,role=role,scene=scene,client=client,cinema=controller.cinema,lifecycle=controller.lifecycle})
+  if not sampled then diagnostic.log('diagnostic_sample_error',why)end
+ end
  ExecuteInGameThreadWithDelay(coop and 16 or 100,tick)
 end
 log(policy and'r29_loaded'or cinema_sync and'r28_loaded'or coop and'r27_loaded'or native.invites_tick and'r25_loaded'or'r24_loaded',coop and'Steam room, mission barriers and session-bound pilot; isolated guest world required'or'Steam lobby only; transport starts on Create/Join/accepted invite')

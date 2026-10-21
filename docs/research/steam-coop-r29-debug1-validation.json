@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-22",
+  "revision": "r29-debug1-development",
+  "game_launched": false,
+  "game_interaction": false,
+  "friend_involved": false,
+  "python_lua_tests_passed": 239,
+  "powershell_diagnostic_checks_passed": 24,
+  "powershell_policy_regression_checks_passed": 19,
+  "end_to_end_pipeline": "Lua recorder -> PowerShell ZIP -> Python paired report analysis; synthetic sessions only",
+  "end_to_end_reports": 2,
+  "lua_syntax_checked": 37,
+  "archive_files": 59,
+  "archive_sha256": "1C8D77E433248E33BEEF4DF0FE9C4659C51C8C33B88E8CA50801CE85F8186B43",
+  "all_dlls_identical_to_r29": true,
+  "native_recompiled": false,
+  "protocol": 7,
+  "manifest_integrity": "all profile/ZIP files and CRC verified",
+  "event_ring": {
+    "files": 4,
+    "max_bytes_each": 4194304
+  },
+  "telemetry_ring": {
+    "files": 4,
+    "max_bytes_each": 4194304
+  },
+  "sampling_interval_ms_approx": 1000,
+  "commands_traced_at_source": true,
+  "raw_packet_trace": false,
+  "automatic_memory_dumps": false,
+  "shared_flight_verified": false,
+  "runtime_validation": "deferred; performance, real crash paths, cameras and two-PC flow unverified",
+  "r29_archive_unchanged": true
+}

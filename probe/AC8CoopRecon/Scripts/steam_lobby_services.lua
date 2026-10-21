@@ -4,6 +4,8 @@ function M.new(output,native,clock,options)
  options=options or{};local mission_sync=options.mission_sync==true;local cinema_sync=options.cinema_sync==true;local policy=options.session_policy==true
  local now=clock or os.time
  local c={snapshot={},session_policy=policy,active=false,closing=false,sequence=0,serial=0,invite_seen=0,invite_sequence=0,join_notice=0,menu_available=not native.invites_tick,invite_status={}}
+ local function trace(event,detail)if options.trace then pcall(options.trace,event,detail)end end
+ c.trace=trace
  local function read(name,format,unscoped)
   local f=io.open(output..'/'..name,'rb');if not f then return end
   local text=f:read(8193);f:close();if not text or #text>8192 then return end
@@ -19,6 +21,7 @@ function M.new(output,native,clock,options)
   c.sequence=c.sequence+1
   write('shared-session-command.tsv',string.format('request\t%d\nepoch\t%s\nrevision\t%s\nop\t%d\narg0\t%d\narg1\t%d\n',c.sequence,s.epoch,s.revision,op,a,b or 0))
   c.pending={request=c.sequence,since=now()};c.error=nil
+  trace('command_sent',{request=c.sequence,op=op,arg0=a,arg1=b or 0,epoch=s.epoch,revision=s.revision,generation=s.generation})
  end
  local function begin(role,peer,mission,difficulty)
   assert(not c.active and not c.closing,'Сначала выйдите из текущего лобби.')
@@ -30,13 +33,14 @@ function M.new(output,native,clock,options)
   c.role=role;c.peer=peer;c.snapshot={};c.sequence=0;c.error=nil;c.info=nil;c.pending=nil;c.started=now();c.last_status=nil;c.initial=role=='host'and{mission,difficulty}or nil;c.local_failure=nil;c.cancel_requested=nil;c.faulted_attempt=nil
   os.remove(output..'/shared-session-status.tsv');os.remove(output..'/shared-session-command.tsv')
   write('shared-session-config.tsv',role..'\n'..(peer or'0')..'\n'..c.token..'\n')
+  trace('room_begin',{role=role,peer=peer,config_token=c.token,mission=mission,difficulty=difficulty})
   native.start();c.active=true;return true
  end
  function c.create(m,d)return begin('host',nil,m,d)end
  function c.join(peer)return begin('guest',peer)end
  function c.leave(preserve_invite)
   if not preserve_invite then c.auto_target=nil;c.info=nil end
-  if c.active then native.stop();c.closing=true;c.pending=nil;c.initial=nil;c.error=nil end
+  if c.active then trace('room_leave',{request=c.pending and c.pending.request});native.stop();c.closing=true;c.pending=nil;c.initial=nil;c.error=nil end
   return true
  end
  function c.set_menu_available(available)c.menu_available=available==true end
@@ -54,6 +58,7 @@ function M.new(output,native,clock,options)
   end
   local sequence=tonumber(s.join_sequence)or 0
   if sequence>c.invite_seen then
+   trace('invite_received',{sequence=sequence,host=s.join_host,state=s.state})
    c.invite_seen=sequence;local target=s.join_host
    if type(target)=='string'and #target==17 and target:match('^[1-9]%d+$')then
     if policy and(options.launch_role~='guest'or c.used_world or(tonumber(c.snapshot.phase)or 0)~=0)then
@@ -74,6 +79,7 @@ function M.new(output,native,clock,options)
   c.invite_sequence=c.invite_sequence+1;c.invite_request=c.invite_sequence
   write('steam-invite-command.tsv',string.format('request\t%d\nconfig_token\t%s\n',c.invite_sequence,c.token))
   native.invites_open();c.info='Открытие списка друзей Steam…'
+  trace('invite_open',{request=c.invite_sequence})
  end
  function c.poll()
   native.tick();poll_invites()
@@ -100,6 +106,7 @@ function M.new(output,native,clock,options)
    if mission_sync then c.now=tonumber(s.host_tick)or 0 end
    if s.connected=='1'then c.info=nil end
    if c.pending and(tonumber(s.request_confirmed)or 0)>=c.pending.request then
+    trace('command_confirmed',{request=c.pending.request,confirmed=s.request_confirmed,reject=s.reject,epoch=s.epoch,revision=s.revision,generation=s.generation})
     c.pending=nil;c.error=(tonumber(s.reject)or 0)>0 and'Хост отклонил действие. Повторите выбор или готовность.'or nil
    end
    if c.initial and s.have_snapshot=='1'and not c.pending then
@@ -189,6 +196,7 @@ function M.new(output,native,clock,options)
   assert(policy and c.active and c.snapshot.have_snapshot=='1','Нет активной попытки.')
   c.sequence=c.sequence+1;local s=c.snapshot
   write('session-emergency.tsv',string.format('request\t%d\nconfig_token\t%s\nepoch\t%s\nrevision\t%s\nop\t%d\ngeneration\t%s\n',c.sequence,c.token,s.epoch,s.revision,op,s.generation))
+  trace('emergency_sent',{request=c.sequence,op=op,epoch=s.epoch,revision=s.revision,generation=s.generation,supersedes=c.pending and c.pending.request})
   c.pending={request=c.sequence,since=now()};return true
  end
  function c.cancel()

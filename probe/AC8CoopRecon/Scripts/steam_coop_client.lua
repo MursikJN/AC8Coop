@@ -7,6 +7,17 @@ function M.new(c,output,source,native,log,provider)
  local view=assert(loadfile(source..'/guest_pilot_view.lua'))()
  local pilot=assert(loadfile(source..'/steam_coop_pilot.lua'))().new(c,output,source,native,log)
  local s={ready=false,isolated_world_verified=false,stream=view.stream(),loaded_epochs={}}
+ local function count(t)local n=0;for _ in pairs(t or{})do n=n+1 end;return n end
+ function s.diagnostics()
+  local e=s.engine;local core=e and e.core;local cam=s.camera;local pose=e and e.guest_pose
+  return {provider_phase=provider and provider.phase,provider_checks=provider and provider.checks,provider_reason=provider and provider.reason,
+   pilot_active=pilot.active,pilot_loaded=pilot.loaded,pilot_reason=pilot.reason,
+   scene_sequence=core and core.sequence,scene_source_ms=core and core.current and core.current.source_ms,scene_received_host_ms=core and core.received,
+   scene_age_ms=core and core.received and c.now-core.received,events_applied=core and core.events_applied,event_cursor=core and core.event_cursor,needs_baseline=core and core.needs_baseline,
+   entities=e and count(e.entities),models=e and count(e.nodes),pending_models=e and count(e.pending),assets_ready=e and e.assets_ready,
+   camera_active=cam and cam.active,camera_updates=cam and cam.updates,camera_reason=cam and cam.reason,
+   guest_x=pose and pose.position[1],guest_y=pose and pose.position[2],guest_z=pose and pose.position[3],last_frame_reason=s.last_frame_reason}
+ end
  local function read(name,limit)
   local f=io.open(output..'/'..name,'rb');if not f then return end;local data=f:read(limit+1);f:close();if #data>limit then return end;return data
  end
@@ -38,8 +49,15 @@ function M.new(c,output,source,native,log,provider)
   local data=read('scene-client.ac8w',codec.MAX_BYTES)
   if data then
    local frame=codec.decode(data)
-   if frame.session.mission==6 and frame.revision==tonumber(c.snapshot.revision)and frame.session.stage==phase and frame.world==context.world:GetFullName()and frame.visual_complete and frame.sequence>s.engine.core.sequence then
+   local frame_reason=frame.session.mission~=6 and'wrong_mission'or frame.revision~=tonumber(c.snapshot.revision)and'wrong_revision'or frame.session.stage~=phase and'wrong_stage'or frame.world~=context.world:GetFullName()and'wrong_world'or not frame.visual_complete and'incomplete_visuals'or frame.sequence<=s.engine.core.sequence and'old_sequence'or'candidate'
+   if frame.sequence~=s.last_observed_sequence then
+    s.last_observed_sequence=frame.sequence
+    s.last_frame_reason=frame_reason
+    if s.last_frame_reason~='candidate'and c.trace then c.trace('scene_frame_ignored',{sequence=frame.sequence,reason=s.last_frame_reason})end
+   end
+   if frame_reason=='candidate'then
     local ok,why=s.engine.accept(data,c.now,s.engine.core.sequence==0);assert(ok,why)
+    s.last_frame_reason='accepted'
    end
   end
   s.engine.pump(2)

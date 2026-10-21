@@ -66,6 +66,7 @@ function M.new(c,output,source,log,engine)
   assert(c.now-(r.began or c.now)<120000 or r.started,'Истекло ожидание локальной катсцены; переход заблокирован.')
   if not r.handle then c.info='Ожидание данных катсцены от хоста';return end
   local sample=r.terminal and {ready=true,remaining_ms=0,ended=true}or engine.sample(r.handle)
+  r.sample_status={ready=sample.ready,remaining_ms=sample.remaining_ms,ended=sample.ended,error=sample.error}
   assert(not sample.error,sample.error)
   r.ready=sample.ready==true
   if not r.ready then return end
@@ -103,6 +104,7 @@ function M.new(c,output,source,log,engine)
   if r.handle and engine.status then pcall(engine.status,r.handle,r.error and'Ошибка катсцены: '..r.error or r.waiting and r.terminal and'Ожидание второго игрока' or c.status())end
   save()
  end
+ function r.diagnostics()return {key=r.key,started=r.started,playing=r.playing,terminal=r.terminal,waiting=r.waiting,finish_released=r.finish_released,asset=r.descriptor and r.descriptor.asset,viewer=r.descriptor and r.descriptor.viewer,options=r.descriptor and r.descriptor.options,sample=r.sample_status}end
  return r
 end
 return M

@@ -97,6 +97,8 @@ function M.new(output,source,controller,api)
   s.sequence=s.sequence+1
   local source_ms=api.clock and api.clock()or(valid(world)and math.floor(clock.milliseconds(world,gameplay))or 0)
   local frame={sequence=s.sequence,generation=s.generation,revision=tonumber(current.revision)or 1,source_ms=source_ms,world=world_name,complete=complete,paused=paused,session=session,entities=entities,events=s.events,event_cursor=s.next_event,visuals=parts,visual_complete=visual_complete}
+  s.diagnostic_frame={sequence=s.sequence,source_ms=source_ms,world=world_name,entities=#entities,visuals=#parts,event_cursor=s.next_event,complete=complete,visual_complete=visual_complete,paused=paused}
+  for _,e in ipairs(entities)do if e.role==0 or e.role==1 then local prefix=e.role==0 and'host_'or'guest_';s.diagnostic_frame[prefix..'id']=e.id;s.diagnostic_frame[prefix..'x']=e.position[1];s.diagnostic_frame[prefix..'y']=e.position[2];s.diagnostic_frame[prefix..'z']=e.position[3]end end
   return codec.encode(frame)
  end
  function s.update()
@@ -111,6 +113,7 @@ function M.new(output,source,controller,api)
   else s.error=data end
   local f=io.open(output..'/scene-host-status.tsv','w');if f then f:write('sequence\t',s.sequence,'\ngeneration\t',s.generation,'\nerror\t',(s.error or''):gsub('[\r\n\t]',' '),'\nvisual_error\t',(s.visual_error or''):gsub('[\r\n\t]',' '),'\nfull_mission_replication\t0\n');f:close()end
  end
+ function s.diagnostics()return s.diagnostic_frame end
  return s
 end
 return M

@@ -10,6 +10,16 @@ $ErrorActionPreference='Stop'
 $root=$PSScriptRoot
 $manifest=Get-Content -LiteralPath (Join-Path $root 'lobby-manifest.json') -Raw|ConvertFrom-Json
 $revision=$manifest.revision
+$diagnostics=$manifest.PSObject.Properties['session_diagnostics'] -and $manifest.session_diagnostics
+trap {
+ if($diagnostics){
+  try{
+   $reportRoot=Join-Path $root 'reports';New-Item -ItemType Directory -Force -Path $reportRoot|Out-Null
+   [ordered]@{format='ac8-launch-failure-v1';utc=[DateTime]::UtcNow.ToString('o');revision=$revision;role=$Role;error=$_.Exception.Message;stack=$_.ScriptStackTrace}|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $reportRoot ('launch-failure-'+[DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss-fff')+'.json')) -Encoding UTF8
+  }catch{}
+ }
+ throw
+}
 if($ResumeHost -and !$manifest.session_policy){throw 'Resume requires the session policy profile.'}
 if(!$GameDirectory){
  $candidates=@('D:\Programs\Steam\steamapps\common\ACE COMBAT 8\Game\Binaries\Win64')
@@ -34,6 +44,7 @@ foreach($file in $manifest.files){
 if((Get-FileHash -LiteralPath $game).Hash -ne $manifest.game_sha256){throw 'Game build mismatch; build 25201480 is required.'}
 if((Get-FileHash -LiteralPath $steamDll).Hash -ne $manifest.steam_sha256){throw 'Steam runtime mismatch.'}
 if($ValidateOnly){Write-Output ($revision+' package, game and Steam runtime verified: '+$root);return}
+if($diagnostics){. (Join-Path $root 'Session-Diagnostics.ps1')}
 if($manifest.session_policy){. (Join-Path $root 'Session-Policy.ps1')}
 if(Get-Process AceCombat8,start_protected_game,EasyAntiCheat_EOS -ErrorAction SilentlyContinue){throw 'Close the previous game normally before starting the new profile.'}
 if(Test-Path -LiteralPath $proxy){throw 'An existing loader belongs to another launcher. Let that launcher clean up first.'}
@@ -54,6 +65,15 @@ foreach($name in @('SaveGames','Config')){
  }
 }
 $record=[ordered]@{format='ac8-steam-lobby-run-v1';revision=$revision;role=$Role;started=(Get-Date -Format o);pid=$null;exit_code=$null;proxy_removed=$false;full_mission_replication=$false;save_policy=$(if($manifest.session_policy){if($Role -eq 'host'){'host-persistent'}else{'guest-discarded'}}else{'legacy'});user_directory=$userDir}
+if($diagnostics){
+ $record.session_id=[Guid]::NewGuid().ToString('N');$record.started_utc=[DateTime]::UtcNow.ToString('o');$record.diagnostics=$true
+ $record.restart_budget=$RestartBudget;$record.resume_requested=[bool]$ResumeHost
+ $record.package_manifest_sha256=(Get-FileHash -LiteralPath (Join-Path $root 'lobby-manifest.json')).Hash
+ $record.native_sha256=(Get-FileHash -LiteralPath (Join-Path $root $manifest.native_file)).Hash
+ $record.game_sha256=$manifest.game_sha256;$record.steam_sha256=$manifest.steam_sha256
+ Copy-Item -LiteralPath (Join-Path $root 'lobby-manifest.json') -Destination (Join-Path $session 'package-manifest.json')
+ Get-CoopDiagnosticEnvironment|ConvertTo-Json -Depth 5|Set-Content -LiteralPath (Join-Path $session 'environment.json') -Encoding UTF8
+}
 $recordPath=Join-Path $session 'session.json'
 function Save-Record{$record|ConvertTo-Json -Depth 4|Set-Content -LiteralPath $recordPath -Encoding UTF8}
 Save-Record
@@ -87,6 +107,11 @@ try{
  $info.EnvironmentVariables['AC8_LOBBY_ROLE']=$Role
  $info.EnvironmentVariables['AC8_LOBBY_SCRIPTS']=Join-Path $root 'runtime\Mods\AC8CoopRecon\Scripts'
  $info.EnvironmentVariables['AC8_LOBBY_DLL']=Join-Path $root $manifest.native_file
+ if($diagnostics){
+  $info.EnvironmentVariables['AC8_SESSION_DIAGNOSTICS']='1'
+  $info.EnvironmentVariables['AC8_SESSION_ID']=$record.session_id
+  $info.EnvironmentVariables['AC8_PACKAGE_REVISION']=$revision
+ }
  $process=[Diagnostics.Process]::Start($info);$record.pid=$process.Id;Save-Record
  Write-Output ($revision+' '+$Role+' PID '+$process.Id+'. Logs: '+$session)
  # Keep loader ownership until this game exits normally, including after Codex yields.
@@ -105,12 +130,14 @@ finally{
  $gameLogs=Join-Path $userSaved 'Logs'
  if(Test-Path -LiteralPath $gameLogs){Get-ChildItem -LiteralPath $gameLogs -File -Filter '*.log'|Where-Object {$_.Length -lt 64MB -and $_.LastWriteTime -ge [DateTime]::Parse($record.started)}|ForEach-Object {Copy-Item -LiteralPath $_.FullName -Destination $output}}
  $record.finished=Get-Date -Format o;Save-Record
+ if($diagnostics){try{Copy-CoopDiagnosticLogs -UserSaved $userSaved -Output $output -Since ([DateTime]::Parse($record.started)) -RuntimeLog (Join-Path $root 'runtime/UE4SS.log') -FallbackSaved $saved}catch{Write-Warning ('Diagnostic game log copy failed: '+$_.Exception.Message)}}
  try{& (Join-Path $root 'Collect-CoopLogs.ps1') -SessionDirectory $session -ReportsDirectory (Join-Path $root 'reports')}catch{Write-Warning ('Report collection failed: '+$_.Exception.Message)}
 }
 if($manifest.session_policy -and $process -and $process.HasExited -and $record.proxy_removed -and $RestartBudget -gt 0){
- try{$plan=Get-CoopRestartPlan -Root $root -Session $session -Role $Role -ExitCode $process.ExitCode}catch{$plan=$null;$record.restart_rejected=$_.Exception.Message;Save-Record}
+ try{$plan=Get-CoopRestartPlan -Root $root -Session $session -Role $Role -ExitCode $process.ExitCode}catch{$plan=$null;$record.restart_rejected=$_.Exception.Message;Save-Record;if($diagnostics){try{& (Join-Path $root 'Collect-CoopLogs.ps1') -SessionDirectory $session -ReportsDirectory (Join-Path $root 'reports')}catch{Write-Warning ('Restart failure report: '+$_.Exception.Message)}}}
  if($plan){
   $record.shared_restart=$plan.RestartId;Save-Record
+  if($diagnostics){try{& (Join-Path $root 'Collect-CoopLogs.ps1') -SessionDirectory $session -ReportsDirectory (Join-Path $root 'reports')}catch{Write-Warning ('Restart decision report: '+$_.Exception.Message)}}
   # A fresh process is the supported lifecycle boundary for the pinned r19 DLL.
   # The new game returns to a lobby and still needs normal title/profile input.
   & $PSCommandPath -Role $Role -GameDirectory $GameDirectory -RestartBudget ($RestartBudget-1) -ResumeHost $plan.HostId
