@@ -11,6 +11,7 @@ $root=$PSScriptRoot
 $manifest=Get-Content -LiteralPath (Join-Path $root 'lobby-manifest.json') -Raw|ConvertFrom-Json
 $revision=$manifest.revision
 $diagnostics=$manifest.PSObject.Properties['session_diagnostics'] -and $manifest.session_diagnostics
+$automaticReports=$diagnostics -and $manifest.PSObject.Properties['automatic_reports'] -and $manifest.automatic_reports
 trap {
  if($diagnostics){
   try{
@@ -45,6 +46,7 @@ if((Get-FileHash -LiteralPath $game).Hash -ne $manifest.game_sha256){throw 'Game
 if((Get-FileHash -LiteralPath $steamDll).Hash -ne $manifest.steam_sha256){throw 'Steam runtime mismatch.'}
 if($ValidateOnly){Write-Output ($revision+' package, game and Steam runtime verified: '+$root);return}
 if($diagnostics){. (Join-Path $root 'Session-Diagnostics.ps1')}
+if($automaticReports){. (Join-Path $root 'Auto-Reports.ps1')}
 if($manifest.session_policy){. (Join-Path $root 'Session-Policy.ps1')}
 if(Get-Process AceCombat8,start_protected_game,EasyAntiCheat_EOS -ErrorAction SilentlyContinue){throw 'Close the previous game normally before starting the new profile.'}
 if(Test-Path -LiteralPath $proxy){throw 'An existing loader belongs to another launcher. Let that launcher clean up first.'}
@@ -77,7 +79,7 @@ if($diagnostics){
 $recordPath=Join-Path $session 'session.json'
 function Save-Record{$record|ConvertTo-Json -Depth 4|Set-Content -LiteralPath $recordPath -Encoding UTF8}
 Save-Record
-$owned=$false;$process=$null
+$owned=$false;$process=$null;$autoReportState=$null;$autoReportClock=$null
 try{
  [IO.File]::Copy($proxySource,$proxy,$false);$owned=$true
  $info=New-Object Diagnostics.ProcessStartInfo
@@ -113,9 +115,15 @@ try{
   $info.EnvironmentVariables['AC8_PACKAGE_REVISION']=$revision
  }
  $process=[Diagnostics.Process]::Start($info);$record.pid=$process.Id;Save-Record
+ if($automaticReports){
+  try{$autoReportClock=[Diagnostics.Stopwatch]::StartNew();$autoReportState=New-CoopAutoReportState -Root $root -Session $session -UserSaved $userSaved -FallbackSaved $saved -NowMs 0;$record.automatic_reports=$true;Save-Record}catch{$record.auto_report_error=$_.Exception.Message;Save-Record}
+ }
  Write-Output ($revision+' '+$Role+' PID '+$process.Id+'. Logs: '+$session)
  # Keep loader ownership until this game exits normally, including after Codex yields.
- while(!$process.HasExited){Start-Sleep -Seconds 1}
+ while(!$process.HasExited){
+  if($autoReportState){try{Update-CoopAutoReports -State $autoReportState -NowMs $autoReportClock.ElapsedMilliseconds}catch{Write-Warning ('Automatic report observer: '+$_.Exception.Message)}}
+  Start-Sleep -Seconds 1
+ }
  $record.exit_code=$process.ExitCode
 }catch{$record.error=$_.Exception.Message;throw}
 finally{

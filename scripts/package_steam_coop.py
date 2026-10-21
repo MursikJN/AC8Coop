@@ -9,9 +9,9 @@ LUA=('steam_lobby_main','steam_lobby_services','steam_coop_role','steam_coop_pil
  'scene_codec','scene_client','scene_host','scene_visual_host','scene_engine','scene_clock','scene_transform','scene_visibility')
 def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest().upper()
 def prepare(revision='r27'):
- assert revision in ('r27','r28','r29','r29-debug1')
- diagnostic=revision=='r29-debug1';native_revision='r29'if diagnostic else revision
- cinema=revision!='r27';policy=revision in ('r29','r29-debug1');PROFILE=ROOT/('profiles/ac8-steam-coop-'+revision)
+ assert revision in ('r27','r28','r29','r29-debug1','r29-debug2')
+ automatic=revision=='r29-debug2';diagnostic=revision in ('r29-debug1','r29-debug2');native_revision='r29'if diagnostic else revision
+ cinema=revision!='r27';policy=revision in ('r29','r29-debug1','r29-debug2');PROFILE=ROOT/('profiles/ac8-steam-coop-'+revision)
  if(PROFILE/'evidence').exists():raise ValueError('Do not replace a used profile')
  base=ROOT/'profiles/ac8-build25201480-r8';accepted=json.loads((base/'trial-manifest.json').read_text(encoding='utf-8-sig'));pinned={v['path'].replace('\\','/'):v['sha256']for v in accepted['files']}
  selected=('runtime/LICENSE','runtime/UE4SS.dll','runtime/UE4SS-settings.ini','runtime/Mods/mods.json','runtime/Mods/mods.txt','runtime/Mods/shared/UEHelpers/UEHelpers.lua','Collect-CoopLogs.ps1')
@@ -36,6 +36,7 @@ def prepare(revision='r27'):
   sources['Session-Diagnostics.ps1']=ROOT/'scripts/Session-Diagnostics.ps1'
   sources['Collect-CoopLogs.ps1']=ROOT/'coop/Collect-CoopLogs.ps1'
   sources['Collect-DebugLogs.ps1']=ROOT/'coop/Collect-DebugLogs.ps1'
+ if automatic:sources['Auto-Reports.ps1']=ROOT/'scripts/Auto-Reports.ps1'
  sources['Start-SteamLobby.ps1']=ROOT/'scripts/Start-SteamLobby.ps1'
  sources['README-RU.md']=ROOT/('coop/README-STEAM-COOP-'+revision.upper()+'-RU.md')
  sources['loader/dwmapi.dll']=ROOT/'packages/ue4ss-3.0.1-1181-g83330635/dwmapi.dll'
@@ -53,6 +54,7 @@ def prepare(revision='r27'):
   game_tested=False,client_world_loader_implemented=True,client_world_loader_game_verified=False,guest_cinematic_visuals_implemented=False,guest_cinematic_adapter_implemented=cinema,guest_cinematic_visuals_game_verified=False,first_shared_flight_ready=False,full_mission_replication=False,
   host_progress_only=policy,lobby_only_entry=policy,shared_restart_mode='fresh_process_return_to_lobby'if policy else None,in_process_mission_restart_supported=False,
   session_diagnostics=diagnostic,diagnostics_schema=1 if diagnostic else 0,
+  automatic_reports=automatic,
   scope='Steam room + mission barriers + input/pose transport + paused replica terrain loader candidate'+(' + local cinematic player candidates and per-clip two-peer completion barriers'if cinema else'')+'; not game validated',
   files=[dict(path=p.relative_to(PROFILE).as_posix(),sha256=digest(p))for p in sorted(files)])
  path=PROFILE/'lobby-manifest.json';path.write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8');files.append(path)
@@ -63,4 +65,4 @@ def prepare(revision='r27'):
  print(json.dumps(dict(profile=str(PROFILE),archive=str(archive),sha256=digest(archive),files=len(files),game_launched=False,first_shared_flight_ready=False),ensure_ascii=False))
  return manifest
 if __name__=='__main__':
- parser=argparse.ArgumentParser();parser.add_argument('--revision',choices=('r27','r28','r29','r29-debug1'),default='r27');prepare(parser.parse_args().revision)
+ parser=argparse.ArgumentParser();parser.add_argument('--revision',choices=('r27','r28','r29','r29-debug1','r29-debug2'),default='r27');prepare(parser.parse_args().revision)
