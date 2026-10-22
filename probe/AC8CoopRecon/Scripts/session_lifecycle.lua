@@ -43,15 +43,30 @@ function M.new(c,output,source,log,engine)
   f:write('format\tac8-restart-r29\nconfig_token\t',c.token,'\nrole\t',c.role,'\nhost_id\t',host,'\nmission\t',s.mission,'\ndifficulty\t',s.difficulty,'\nrestart_id\t',s.restart_id,'\nepoch\t',s.epoch,'\nrevision\t',s.revision,'\nsealed\t1\ncreated_unix\t',os.time(),'\n');f:close()
   os.remove(output..'/session-restart.tsv');assert(os.rename(output..'/session-restart.tsv.tmp',output..'/session-restart.tsv'))
  end
+ local function finish_quit()
+  if r.quit_cleanup then
+   local ok,result=pcall(quiesce,r.parts)
+   if ok and result==false then save();return false end
+   if not ok then log('quit_quiesce_error',result)end
+   r.quit_cleanup=false
+  end
+  if c.shutdown and not c.shutdown()then save();return false end
+  r.quitting=true
+  local ok,err=pcall(E.quit)
+  if not ok then r.quitting=false;r.quit_pending=false;error(err)end
+  r.quit_pending=false;log(r.restart_exit and'shared_restart_quit'or'session_user_quit_requested',r.restart_exit and c.snapshot.restart_id or nil)
+  save();return true
+ end
  function r.quit()
   -- This explicit user action is not a shared restart and writes no ticket.
-  if r.quitting then return end
-  if r.parts and tonumber(c.snapshot.phase or'0')>0 then local ok,err=pcall(quiesce,r.parts);if not ok then log('quit_quiesce_error',err)end end
-  r.quitting=true;local ok,err=pcall(E.quit);if not ok then r.quitting=false;error(err)end;log('session_user_quit_requested')
+  if r.quitting or r.quit_pending then return end
+  if r.parts and tonumber(c.snapshot.phase or'0')>0 then r.quit_cleanup=true end
+  r.quit_pending=true;log('session_quit_pending');finish_quit()
  end
  function r.update(parts)
   r.parts=parts
   if r.quitting then return true end
+  if r.quit_pending then finish_quit();return true end
   if r.hold_failure then r.halted=true;save();return true end
   local ok,err=xpcall(function()
    local s=c.snapshot;local phase=tonumber(s.phase)or 0
@@ -72,7 +87,7 @@ function M.new(c,output,source,log,engine)
     if s.restart_ack=='2'and not c.pending then
      r.sealed_at=r.sealed_at or c.now
      -- Give the guest's confirmation snapshot time to drain before the host exits.
-     if c.role=='guest'or c.now-r.sealed_at>=2000 then ticket();r.quitting=true;E.quit();log('shared_restart_quit',s.restart_id)end
+     if c.role=='guest'or c.now-r.sealed_at>=2000 then ticket();r.restart_exit=true;r.quit_pending=true;finish_quit()end
     end
    end
   end,debug.traceback)

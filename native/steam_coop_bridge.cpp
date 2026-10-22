@@ -9,6 +9,9 @@
 #include "steam_coop_channels.inl"
 #define AC8_R24_BASE_INCLUDED
 #include "steam_lobby_bridge.cpp"
+#ifdef AC8_OWNER_NATIVE_R31
+#include "steam_shutdown.inl"
+#endif
 #define AC8_R27_EMBEDDED_PILOT
 #ifdef AC8_OWNER_NATIVE_R31
 #define AC8_PILOT_REV r31

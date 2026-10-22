@@ -44,6 +44,23 @@ function M.new(output,native,clock,options)
   return true
  end
  function c.set_menu_available(available)c.menu_available=available==true end
+ function c.shutdown()
+  if not options.owner_native then return true end
+  assert(native.shutdown_begin and native.shutdown_poll,'Native shutdown API unavailable')
+  if not c.shutting_down then
+   c.shutting_down=true;c.shutdown_started=now();c.pending=nil;c.auto_target=nil
+   os.remove(output..'/native-shutdown.tsv');native.shutdown_begin();trace('shutdown_requested',{})
+  end
+  native.shutdown_poll()
+  local s=read('native-shutdown.tsv','ac8-native-shutdown-v1',true)
+  if s and s.config_token==(c.token or'0')and s.requested=='1'and s.failed=='0'and s.worker_running=='0'and s.callbacks_registered=='0'and s.complete=='1'then
+   if not c.shutdown_complete then c.shutdown_complete=true;trace('shutdown_complete',{})end
+   return true
+  end
+  if s and s.failed=='1'then c.error='Ошибка остановки сетевого модуля; выход заблокирован.';return false end
+  if now()-c.shutdown_started>=10 then c.error='Остановка сетевого потока не подтверждена. Выход ожидает завершения; сохраните журнал.'end
+  return false
+ end
  local function poll_invites()
   if not native.invites_tick then return end
   native.invites_tick()
@@ -82,6 +99,7 @@ function M.new(output,native,clock,options)
   trace('invite_open',{request=c.invite_sequence})
  end
  function c.poll()
+  if c.shutting_down then return end
   native.tick();poll_invites()
   local control=read('shared-session-control.tsv','ac8-steam-control-v1')
   if c.closing then

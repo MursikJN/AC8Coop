@@ -41,4 +41,9 @@ class SteamMainHandoffTests(unittest.TestCase):
  def test_first_available_snapshot_already_in_transition(self):
   self.l.execute("C.snapshot.phase='1';DEAD=true");self.start();self.l.execute("TICK();TICK();assert(CLOSES==0 and VISIBLE_CALLS==0 and ATTACHES==0)")
   self.assertNotIn('tick_error',(Path(self.temp.name)/'steam-menu.log').read_text())
+ def test_no_menu_refresh_or_reschedule_after_quitgame(self):
+  self.l.execute('SCHEDULES=0;ExecuteInGameThreadWithDelay=function(_,fn)TICK=fn;SCHEDULES=SCHEDULES+1 end')
+  self.start()
+  self.l.execute("C.lifecycle={quitting=false};C.recovery_ui={update=function()C.lifecycle.quitting=true;DEAD=true end};TICK();local calls=VISIBLE_CALLS;TICK();assert(SCHEDULES==1 and VISIBLE_CALLS==calls)")
+  self.assertNotIn('tick_error',(Path(self.temp.name)/'steam-menu.log').read_text())
 if __name__=='__main__':unittest.main()

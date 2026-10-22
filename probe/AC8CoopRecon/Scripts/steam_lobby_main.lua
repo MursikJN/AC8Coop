@@ -21,6 +21,7 @@ local owner_native=os.getenv('AC8_OWNER_NATIVE')=='25201480'
 local launch_role=os.getenv('AC8_LOBBY_ROLE')
 if policy then assert(os.getenv('AC8_SAVE_POLICY')==(launch_role=='host'and'host-persistent'or'guest-discarded'),'Изолированный профиль роли не подтверждён лаунчером.')end
 for _,name in ipairs({'start','stop','tick'})do native[name]=native_call(dll,'luaopen_ac8_lobby24_'..name)end
+if owner_native then for _,name in ipairs({'begin','poll'})do native['shutdown_'..name]=native_call(dll,'luaopen_ac8_shutdown_'..name)end end
 if os.getenv('AC8_STEAM_INVITES')=='25201480'then
  native.invites_tick=native_call(dll,'luaopen_ac8_invites25_tick')
  native.invites_open=native_call(dll,'luaopen_ac8_invites25_open')
@@ -52,6 +53,7 @@ local menu_lifetime=assert(loadfile(source..'/lobby_menu_lifetime.lua'))().new(m
 local shown_invite=0
 local adapter,pilot,role,scene,client,room_token,last_scene= nil,nil,nil,nil,nil,nil,0
 local function tick()
+ if controller.lifecycle and controller.lifecycle.quitting then return end
  local ok,err=xpcall(function()
   engine_trace.run('menu.handoff',menu_lifetime.handoff,controller)
   local visible=engine_trace.run('menu.visibility',menu_lifetime.poll)
@@ -87,6 +89,7 @@ local function tick()
   end
   if coop and controller.active then
    local halted=policy and engine_trace.run('lifecycle.update',controller.lifecycle.update,{adapter=adapter,pilot=pilot,role=role,client=client})
+   if controller.lifecycle and controller.lifecycle.quitting then return end
    if halted then
     -- No campaign routing, scene export or input is allowed after quiescence.
    elseif adapter then
@@ -101,6 +104,7 @@ local function tick()
    elseif client then engine_trace.run('client.update',client.update)end
    if controller.recovery_ui then local ok,e=pcall(engine_trace.run,'recovery.update',controller.recovery_ui.update);if not ok then log('recovery_ui_error',e)end end
   end
+  if controller.lifecycle and controller.lifecycle.quitting then return end
   engine_trace.run('menu.refresh',menu_lifetime.refresh)
   local ui=menu_lifetime.ui
   if ui and visible and controller.join_notice>shown_invite then ui.ui_error=nil;engine_trace.run('menu.invite',ui.show);shown_invite=controller.join_notice;log('invite_room_opened')end
@@ -110,7 +114,7 @@ local function tick()
   local sampled,why=pcall(diagnostic.observe,controller,{adapter=adapter,pilot=pilot,role=role,scene=scene,client=client,cinema=controller.cinema,lifecycle=controller.lifecycle})
   if not sampled then diagnostic.log('diagnostic_sample_error',why)end
  end
- ExecuteInGameThreadWithDelay(coop and 16 or 100,tick)
+ if not(controller.lifecycle and controller.lifecycle.quitting)then ExecuteInGameThreadWithDelay(coop and 16 or 100,tick)end
 end
 log(owner_native and'r31_loaded'or policy and'r29_loaded'or cinema_sync and'r28_loaded'or coop and'r27_loaded'or native.invites_tick and'r25_loaded'or'r24_loaded',coop and'Steam room, mission barriers and session-bound pilot; isolated guest world required'or'Steam lobby only; transport starts on Create/Join/accepted invite')
 ExecuteInGameThreadWithDelay(1000,tick)

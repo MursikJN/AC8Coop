@@ -1,0 +1,69 @@
+{
+  "format": "ac8-r31-cinema2-validation-v1",
+  "date": "2026-10-22",
+  "kit_update": "cinema-2",
+  "evidence": {
+    "previous_invite_and_readiness_confirmed": true,
+    "host_briefing_duration_validation_failed": true,
+    "guest_exit_code": "0xC0000005",
+    "guest_minidump_available": false,
+    "exact_guest_crash_cause_proven": false,
+    "converter_confirmed_in_offline_binary": true
+  },
+  "offline_tests": {
+    "python_lua_run": 615,
+    "passed": 614,
+    "optional_legacy_skipped": 1,
+    "native_invite_shutdown_checks": 47,
+    "powershell5_kit_checks": 28,
+    "powershell5_diagnostic_checks": 27,
+    "native_r31_build_and_contract_tests_passed": true,
+    "game_thread_calls_stop_after_quit": true,
+    "worker_exit_and_callback_removal_required": true
+  },
+  "package": {
+    "archive_sha256": "7b8870637fdf895b97a3e9efeb58c4cb60c951cf4d6c7cdca03338d744d4c3f2",
+    "files": 78,
+    "lua_syntax_checked": 41,
+    "text_secret_path_checks": 67,
+    "manifest_hashes": true,
+    "zip_crc": true,
+    "pe_exports_and_ps5_preflight": true,
+    "game_files_included": false,
+    "game_launched": false,
+    "originals_written": false,
+    "shared_flight_verified": false,
+    "archive_bytes": 10344850,
+    "native_sha256": "61cc05f0bb59f1c68409f0259b5e826ca2f40874c5193385ca3ac2ba02fc6979"
+  },
+  "lab": {
+    "format": "ac8-real-cinema-verification",
+    "copied_bytes": 4931037992,
+    "shared_bytes": 145648837787,
+    "archive_count": 26,
+    "archive_layout": "paks-junction-v1",
+    "source_inventory_unchanged": true,
+    "source_metadata_acl_unchanged": true,
+    "nonarchive_source_hashes_unchanged": true,
+    "ordinary_lab_files_unchanged": true,
+    "userdata_hashes_unchanged": true,
+    "full_archive_hashes_recomputed": false,
+    "host_preflight": true,
+    "guest_preflight": true,
+    "game_launched": false,
+    "steam_opened": false
+  },
+  "native_dlls_changed": true,
+  "room_protocol": 8,
+  "pilot_protocol": 3,
+  "game_launched": false,
+  "steam_session_started": false,
+  "first_shared_flight_verified": false,
+  "limitations": [
+    "Prior GetDuration return value/type not recorded; raw Ticks access replaced with reflected conversion and metadata wait.",
+    "Shutdown race is a confirmed lifecycle gap, not a proven attribution of the captured guest access violation.",
+    "External OS/game exit paths are not covered by the mod QuitGame barrier.",
+    "Windows fault event may be absent or inaccessible; raw memory dumps are not collected.",
+    "Real guest audio/video, skip/completion, clean exit, hangar and shared flight require paired runtime validation."
+  ]
+}

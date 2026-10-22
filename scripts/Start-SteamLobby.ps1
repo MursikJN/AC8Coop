@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
  [ValidateSet('host','guest')][string]$Role='host',
  [string]$GameDirectory,
@@ -164,6 +164,7 @@ finally{
  $gameLogs=Join-Path $userSaved 'Logs'
  if(Test-Path -LiteralPath $gameLogs){Get-ChildItem -LiteralPath $gameLogs -File -Filter '*.log'|Where-Object {$_.Length -lt 64MB -and $_.LastWriteTime -ge [DateTime]::Parse($record.started)}|ForEach-Object {Copy-Item -LiteralPath $_.FullName -Destination $output}}
  $record.finished=Get-Date -Format o;Save-Record
+ if($diagnostics -and $process){try{Save-CoopExitEvidence -Output $output -Since ([DateTime]::Parse($record.started)) -ProcessId $process.Id -ExePath $process.StartInfo.FileName -ExitCode $process.ExitCode}catch{Write-Warning ('Exit evidence unavailable: '+$_.Exception.Message)}}
  if($labPeer -and !$labPeer.HasExited){$labPeer.Kill();$labPeer.WaitForExit(3000)|Out-Null}
  if($diagnostics){try{Copy-CoopDiagnosticLogs -UserSaved $userSaved -Output $output -Since ([DateTime]::Parse($record.started)) -RuntimeLog (Join-Path $root 'runtime/UE4SS.log') -FallbackSaved $saved}catch{Write-Warning ('Diagnostic game log copy failed: '+$_.Exception.Message)}}
  try{& (Join-Path $root 'Collect-CoopLogs.ps1') -SessionDirectory $session -ReportsDirectory (Join-Path $root 'reports')}catch{Write-Warning ('Report collection failed: '+$_.Exception.Message)}

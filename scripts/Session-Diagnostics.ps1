@@ -1,4 +1,25 @@
-# Passive launcher evidence helpers. Dot-sourcing never starts a process.
+﻿# Passive launcher evidence helpers. Dot-sourcing never starts a process.
+function Convert-CoopFaultEvent {
+    param([string]$Xml,[int]$ProcessId,[string]$ExePath)
+    $doc=[xml]$Xml;$fields=@{}
+    foreach($item in $doc.Event.EventData.Data){$fields[[string]$item.Name]=[string]$item.InnerText}
+    if($fields.AppName -ine 'AceCombat8.exe' -or !$fields.ProcessId -or !$fields.AppPath){return}
+    try{$id=if($fields.ProcessId -match '^0x'){[Convert]::ToInt64($fields.ProcessId.Substring(2),16)}else{[long]$fields.ProcessId}}catch{return}
+    if($id -ne $ProcessId -or [IO.Path]::GetFullPath($fields.AppPath) -ine [IO.Path]::GetFullPath($ExePath)){return}
+    # Whitelist crash metadata; do not export full event text, user IDs or memory.
+    return [ordered]@{utc=[string]$doc.Event.System.TimeCreated.SystemTime;pid=$id;app=$fields.AppName;app_version=$fields.AppVersion;module=$fields.ModuleName;module_version=$fields.ModuleVersion;exception_code=$fields.ExceptionCode;fault_offset=$fields.FaultingOffset;report_id=$fields.IntegratorReportId}
+}
+function Save-CoopExitEvidence {
+    param([string]$Output,[DateTime]$Since,[int]$ProcessId,[string]$ExePath,[int]$ExitCode)
+    $result=[ordered]@{format='ac8-exit-evidence-v1';pid=$ProcessId;exit_code=$ExitCode;faults=@();query_error=$null;memory_dump_created=$false}
+    if($ExitCode -ne 0){
+        try{
+            $items=@(Get-WinEvent -FilterHashtable @{LogName='Application';Id=1000;StartTime=$Since;EndTime=(Get-Date)} -MaxEvents 64 -ErrorAction Stop)
+            foreach($item in $items){$fault=Convert-CoopFaultEvent -Xml $item.ToXml() -ProcessId $ProcessId -ExePath $ExePath;if($fault -and $result.faults.Count -lt 8){$result.faults+=,$fault}}
+        }catch{$result.query_error=$_.Exception.Message}
+    }
+    $result|ConvertTo-Json -Depth 5|Set-Content -LiteralPath (Join-Path $Output 'exit-evidence.json') -Encoding UTF8
+}
 function Get-CoopDiagnosticEnvironment {
     $info=[ordered]@{format='ac8-diagnostic-environment-v1';utc=[DateTime]::UtcNow.ToString('o');os_version=[Environment]::OSVersion.VersionString;process_64bit=[Environment]::Is64BitProcess;powershell=$PSVersionTable.PSVersion.ToString();query_errors=@()}
     try {$info.gpu=@(Get-CimInstance Win32_VideoController -OperationTimeoutSec 3 -ErrorAction Stop|Select-Object Name,DriverVersion,CurrentHorizontalResolution,CurrentVerticalResolution)}catch{$info.query_errors+='gpu query unavailable'}

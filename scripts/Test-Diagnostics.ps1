@@ -1,4 +1,4 @@
-# Offline fixtures only: report archive, live files and crash metadata policy.
+﻿# Offline fixtures only: report archive, live files and crash metadata policy.
 $ErrorActionPreference='Stop'
 $repo=Split-Path $PSScriptRoot -Parent
 . (Join-Path $PSScriptRoot 'Session-Diagnostics.ps1')
@@ -8,6 +8,11 @@ $saved=Join-Path $session 'guest-userdata/Saved'
 foreach($dir in @($mod,(Join-Path $saved 'SaveGames'),(Join-Path $saved 'Logs'),(Join-Path $saved 'Crashes/one'))){New-Item -ItemType Directory -Path $dir -Force|Out-Null}
 $script:checks=0
 function Assert-Diagnostic([bool]$Condition,[string]$Message){$script:checks++;if(!$Condition){throw $Message}}
+$eventXml='<Event><System><TimeCreated SystemTime="2026-10-22T13:38:49Z"/></System><EventData><Data Name="AppName">AceCombat8.exe</Data><Data Name="ProcessId">0x1234</Data><Data Name="AppPath">C:\fixture\AceCombat8.exe</Data><Data Name="ModuleName">example.dll</Data><Data Name="ExceptionCode">c0000005</Data><Data Name="FaultingOffset">00000123</Data><Data Name="Private">do not export</Data></EventData></Event>'
+$fault=Convert-CoopFaultEvent -Xml $eventXml -ProcessId 4660 -ExePath 'C:\fixture\AceCombat8.exe'
+Assert-Diagnostic ($fault.module -eq 'example.dll' -and $fault.exception_code -eq 'c0000005' -and !$fault.Contains('Private')) 'Crash metadata whitelist failed'
+Assert-Diagnostic (!(Convert-CoopFaultEvent -Xml $eventXml -ProcessId 4661 -ExePath 'C:\fixture\AceCombat8.exe')) 'Unrelated PID accepted'
+Assert-Diagnostic (!(Convert-CoopFaultEvent -Xml $eventXml -ProcessId 4660 -ExePath 'C:\original\AceCombat8.exe')) 'Unrelated executable accepted'
 $record=[ordered]@{role='guest';revision='r29-debug1-development';started=(Get-Date).AddMinutes(-1).ToString('o');session_id='fixture';exit_code=0}
 $record|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $session 'session.json') -Encoding UTF8
 [IO.File]::WriteAllText((Join-Path $mod 'diagnostics-01.jsonl'),"{`"event`":`"fixture`"}`n")

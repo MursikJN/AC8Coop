@@ -34,7 +34,7 @@ $m.owner_world_readiness=0;$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $
 Reject-Kit {Test-CoopKit $fixture}
 $m.owner_world_readiness=1;$m.kit_update='old-r31';$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8
 Reject-Kit {Test-CoopKit $fixture}
-$m.kit_update='cinema-1'
+$m.kit_update='cinema-2'
 $m.owner_native=$false;$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8
 Reject-Kit {& (Join-Path $fixture 'Start-SteamLobby.ps1') -ValidateOnly -Role host}
 $m.owner_native=$true;$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8

@@ -9,6 +9,7 @@ struct Api {
  bool(__cdecl*overlay_enabled)(void*)=nullptr;
  void(__cdecl*open_dialog)(void*,const char*)=nullptr;
  void(__cdecl*register_callback)(ac8invite::Callback*,int)=nullptr;
+ void(__cdecl*unregister_callback)(ac8invite::Callback*)=nullptr;
 } api25;
 static SRWLOCK inbox_lock=SRWLOCK_INIT;
 static ac8invite::JoinRequested inbox[8]{};
@@ -30,6 +31,7 @@ public:
 static JoinCallback join_callback;
 static OverlayCallback overlay_callback;
 static bool registered=false,failed=false,overlay_available=false;
+static bool retired=false;
 static DWORD owner_thread=0;
 static uint64_t instance=0,join_sequence=0,join_host=0,open_seen=0,open_requested=0,last_accept=0,retry_at=0;
 static unsigned ignored=0;
@@ -56,7 +58,8 @@ static bool initialize(){
  Api candidate;candidate.self=identity(user);candidate.friends=friends_get();candidate.utils=utils;
  candidate.relationship=get<decltype(candidate.relationship)>(steam,"SteamAPI_ISteamFriends_GetFriendRelationship");candidate.overlay_enabled=get<decltype(candidate.overlay_enabled)>(steam,"SteamAPI_ISteamUtils_IsOverlayEnabled");
  candidate.open_dialog=get<decltype(candidate.open_dialog)>(steam,"SteamAPI_ISteamFriends_ActivateGameOverlayInviteDialogConnectString");candidate.register_callback=get<decltype(candidate.register_callback)>(steam,"SteamAPI_RegisterCallback");
- if(!ac8invite::individual(candidate.self)||!candidate.friends||!candidate.relationship||!candidate.overlay_enabled||!candidate.open_dialog||!candidate.register_callback){invite_state="ERROR_INVITE_EXPORTS";return false;}
+ candidate.unregister_callback=get<decltype(candidate.unregister_callback)>(steam,"SteamAPI_UnregisterCallback");
+ if(!ac8invite::individual(candidate.self)||!candidate.friends||!candidate.relationship||!candidate.overlay_enabled||!candidate.open_dialog||!candidate.register_callback||!candidate.unregister_callback){invite_state="ERROR_INVITE_EXPORTS";return false;}
  instance=fresh_nonce();if(!instance){invite_state="ERROR_RANDOM";return false;}
  HMODULE pinned=nullptr;
  if(!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_PIN,reinterpret_cast<LPCWSTR>(&initialize),&pinned)){invite_state="ERROR_MODULE_PIN";return false;}
@@ -91,10 +94,20 @@ static void publish(){
  fclose(f);MoveFileExW(temp,path,MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH);
 }
 static void tick(bool open){
+ if(retired)return;
  if(!owner_thread)owner_thread=GetCurrentThreadId();if(owner_thread!=GetCurrentThreadId()){failed=true;invite_state="ERROR_THREAD";return;}
  const auto now=GetTickCount64();if(!registered&&!failed&&now-retry_at>=1000){retry_at=now;initialize();}
  if(registered&&!failed){overlay_available=api25.overlay_enabled(api25.utils);consume_invites();if(open)read_open_request();}
  publish();
+}
+static void shutdown(){
+ if(retired)return;
+ if(owner_thread&&owner_thread!=GetCurrentThreadId()){failed=true;invite_state="ERROR_SHUTDOWN_THREAD";return;}
+ retired=true;
+ if(registered){api25.unregister_callback(&join_callback);api25.unregister_callback(&overlay_callback);registered=false;}
+ AcquireSRWLockExclusive(&inbox_lock);inbox_size=0;overlay_active=false;ReleaseSRWLockExclusive(&inbox_lock);
+ invite_state="STOPPED";record("callbacks_unregistered");publish();
+ if(events){fclose(events);events=nullptr;}
 }
 static int boundary25(bool open){
  __try{tick(open);}__except(EXCEPTION_EXECUTE_HANDLER){failed=true;invite_state="ERROR_NATIVE_EXCEPTION";record("native_exception",GetExceptionCode());publish();}return 0;

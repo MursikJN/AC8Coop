@@ -35,6 +35,11 @@ function M.new(c,source,log,api)
   assert(value~=nil,'Missing cinema enum entry '..entry);return value
  end
  local duration
+ local metadata_log={};local pending_movies={}
+ local function metadata(p,state,value)
+  local key=tostring(p:GetAddress());local message=state..' seconds='..tostring(value)
+  if metadata_log[key]~=message then metadata_log[key]=message;log('cinema_metadata',key..' '..message)end
+ end
  local function mana_sample(h)
   local p=h.object:GetManaPlayer()
   if not valid(p)and not h.was_ready then return {ready=false}end
@@ -47,15 +52,31 @@ function M.new(c,source,log,api)
   local video=enum('Video');local audio=enum('Audio')
   local videos=p:GetNumTracks(video);local audios=p:GetNumTracks(audio)
   local ready=valid(h.object.ManaTexture)and videos>0 and p:GetSelectedTrack(video)>=0 and(audios==0 or p:GetSelectedTrack(audio)>=0)
-  local local_duration=duration(p);assert(math.abs(local_duration-h.descriptor.duration_ms)<=100,'Local cinematic resource duration mismatch')
+  local local_duration=duration(p)
+  if not local_duration then assert(not h.was_ready,'Prepared movie duration disappeared');return {ready=false,reason='duration_pending'}end
+  assert(math.abs(local_duration-h.descriptor.duration_ms)<=100,'Local cinematic resource duration mismatch')
   if ready then h.was_ready=true end
   local time=h.object:GetTimeSeconds();assert(type(time)=='number'and time==time and time>=0,'Invalid movie time')
   return {ready=ready,remaining_ms=math.max(0,local_duration-time*1000),ended=time*1000>=local_duration-15}
  end
  duration=function(p)
-  -- CRI returns an FTimespan (100 ns ticks); this is not a guessed float.
-  local t=p:GetDuration();assert(t and type(t.Ticks)=='number'and t.Ticks>=5000000 and t.Ticks<=36000000000,'Invalid native movie duration')
-  return math.floor(t.Ticks/10000+.5)
+  -- FTimespan is an opaque reflected struct. Its C++ Ticks member is not a
+  -- supported Lua field. Pass the value unchanged to the game's UFunction.
+  local pathname='/Script/Engine.KismetMathLibrary:GetTotalSeconds'
+  check(pathname,'A:StructProperty,ReturnValue:FloatProperty')
+  local fn=api.static(pathname)
+  fn:ForEachProperty(function(prop)
+   if prop:GetFName():ToString()=='A'then assert(prop:GetStruct():GetFullName()=='ScriptStruct /Script/CoreUObject.Timespan','Changed Timespan conversion input')end
+  end)
+  local t=p:GetDuration();assert(t~=nil,'Native movie duration struct missing')
+  local library=api.static('/Script/Engine.Default__KismetMathLibrary');assert(valid(library),'Timespan converter unavailable')
+  local value=library:GetTotalSeconds(t)
+  local finite=type(value)=='number'and value==value and value~=math.huge and value~=-math.huge
+  if not finite or value<0 or value>3600 or(value>0 and value<.5)then
+   metadata(p,'invalid_'..type(value),value);error('Invalid native movie duration from GetTotalSeconds: '..tostring(value))
+  end
+  if value==0 then metadata(p,'pending',value);return nil end
+  metadata(p,'ready',value);return math.floor(value*1000+.5)
  end
  local function options_from(asset)
   local found
@@ -117,7 +138,14 @@ function M.new(c,source,log,api)
    mana_checks();local player=v:GetManaPlayer()
    if valid(player)and player:IsReady()and not player:IsPreparing()and(player:IsPlaying()or player:IsPaused())then
     assert(not result,'Multiple active cinematic sources');local id=tostring(v:GetAddress())..':'..path(v.PlayingManaSource)
-    result=observed[id]or{object=v,identity=id,descriptor={kind=1,asset=path(v.PlayingManaSource),viewer=path(v:GetClass(),true),options='',duration_ms=duration(player)}};observed[id]=result
+    assert(not player:HasError(),'Native movie open failed')
+    local length=duration(player)
+    if not length then
+     if not pending_movies[id]then v:PauseMovie();assert(player:IsPaused()or not player:IsPlaying(),'Pending movie did not pause');pending_movies[id]=true end
+     return nil -- No descriptor or prepared receipt until actual metadata exists.
+    end
+    pending_movies[id]=nil
+    result=observed[id]or{object=v,identity=id,descriptor={kind=1,asset=path(v.PlayingManaSource),viewer=path(v:GetClass(),true),options='',duration_ms=length}};observed[id]=result
     assert(result.descriptor.viewer,'Unverified movie viewer class')
    end
   end end

@@ -52,4 +52,10 @@ class SessionLifecycleTests(unittest.TestCase):
   self.l.execute("C.snapshot.phase='9';FAIL_HOLD=true;assert(R.update(P));local n=#EVENTS;assert(R.hold_failure and ACKS==0 and QUITS==0);assert(R.update(P));assert(#EVENTS==n and ACKS==0 and not R.quiesced)")
  def test_manual_quit_still_works_after_terminal_hold_failure(self):
   self.l.execute("C.snapshot.phase='8';FAIL_HOLD=true;R.update(P);local n=#EVENTS;R.quit();assert(QUITS==1 and #EVENTS==n+1 and not FILES['out/session-restart.tsv'])")
+ def test_quit_waits_for_network_worker_and_callbacks(self):
+  self.l.execute("C.shutdown=function()event('shutdown');return STOPPED end;R.quit();assert(R.quit_pending and QUITS==0);R.quit();R.update(P);assert(QUITS==0);STOPPED=true;R.update(P);assert(R.quitting and QUITS==1);R.update(P);R.quit();assert(QUITS==1)")
+ def test_restart_writes_ticket_but_waits_for_network_stop(self):
+  self.l.execute("C.role='guest';C.snapshot.phase='10';C.snapshot.restart_ack='2';C.shutdown=function()return STOPPED end;R.update(P);assert(FILES['out/session-restart.tsv'] and QUITS==0);STOPPED=true;R.update(P);assert(QUITS==1)")
+ def test_manual_quit_waits_for_actor_cleanup_before_network_stop(self):
+  self.l.execute("C.snapshot.phase='8';P.client.drain=function()return DRAINED end;C.shutdown=function()event('shutdown');return true end;R.update(P);R.quit();assert(QUITS==0 and not R.quitting);DRAINED=true;R.update(P);assert(QUITS==1 and EVENTS[#EVENTS-1]=='shutdown')")
 if __name__=='__main__':unittest.main()

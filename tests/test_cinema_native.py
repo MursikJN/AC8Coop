@@ -12,9 +12,9 @@ WORLD={IsValid=yes,GetAddress=function()return 1 end}
 TARGET={IsValid=yes,GetWorld=function()return WORLD end}
 PC={IsValid=yes,GetWorld=function()return WORLD end,GetViewTarget=function()return TARGET end,SetViewTargetWithBlend=function()RESTORED=true end}
 READY=true;PREPARING=false;ERR=false;SELECTED_AUDIO=0;VIDEOS=1;AUDIOS=1;TIME=0;PAUSED=true;ISPLAYING=false;PLAYS=0;STOPS=0;CLOSES=0
-PLAYER={IsValid=yes,HasError=function()return ERR end,IsReady=function()return READY end,IsPreparing=function()return PREPARING end,
+PLAYER={IsValid=yes,GetAddress=function()return 12 end,HasError=function()return ERR end,IsReady=function()return READY end,IsPreparing=function()return PREPARING end,
  GetNumTracks=function(_,type)return type==1 and VIDEOS or AUDIOS end,GetSelectedTrack=function(_,type)return type==1 and 0 or SELECTED_AUDIO end,
- IsPlaying=function()return ISPLAYING end,IsPaused=function()return PAUSED end,GetDuration=function()return {Ticks=100000000}end,
+ IsPlaying=function()return ISPLAYING end,IsPaused=function()return PAUSED end,GetDuration=function()return {opaque_seconds=DURATION or 10}end,
  Play=function()PLAYS=PLAYS+1;ISPLAYING=true;PAUSED=false;return true end}
 CLASS={IsValid=yes,GetFullName=function()return 'WidgetBlueprintGeneratedClass /Game/UI/Movie.Movie_C'end,IsChildOf=yes}
 VIEWER={IsValid=yes,GetAddress=function()return 11 end,GetWorld=function()return WORLD end,IsVisible=yes,GetClass=function()return CLASS end,
@@ -30,14 +30,14 @@ SURFACE={IsValid=yes,WidgetTree={IsValid=yes},RootPanel=ROOT,SetVisibility=funct
 TEXT_CLASS={IsValid=yes};LABEL={IsValid=yes,Font={},SetVisibility=function()end,SetText=function(_,s)STATUS_TEXT=s end}
 MAIN={IsValid=yes,IsVisible=yes,WidgetTree={IsValid=yes,RootWidget={IsValid=yes,IsA=yes,AddChildToCanvas=function()return SLOT end}}}
 ENUM={IsValid=yes,ForEachName=function(_,fn)fn(n('EManaPlayerTrack::Video'),1);fn(n('EManaPlayerTrack::Audio'),2)end}
-SPECS={PauseMovie='',StopMovie='',CloseMovie='',GetManaPlayer='ReturnValue:ObjectProperty',GetTimeSeconds='ReturnValue:FloatProperty',PlayMovie='IsLoop:BoolProperty,ReturnValue:BoolProperty',SetMediaSource='InSource:ObjectProperty,bIsPlayOnOpen:BoolProperty',
+SPECS={GetTotalSeconds='A:StructProperty,ReturnValue:FloatProperty',PauseMovie='',StopMovie='',CloseMovie='',GetManaPlayer='ReturnValue:ObjectProperty',GetTimeSeconds='ReturnValue:FloatProperty',PlayMovie='IsLoop:BoolProperty,ReturnValue:BoolProperty',SetMediaSource='InSource:ObjectProperty,bIsPlayOnOpen:BoolProperty',
  SetViewTargetWithBlend='NewViewTarget:ObjectProperty,BlendTime:FloatProperty,BlendFunc:ByteProperty,BlendExp:FloatProperty,bLockOutgoing:BoolProperty',
  PlayNotRegisteredSequence='WorldContextObject:ObjectProperty,SequenceAssetPath:StrProperty,Options:StructProperty,PlaybackSettings:StructProperty,OnFinished:DelegateProperty,ReturnValue:BoolProperty'}
 function fn(method)
  return {IsValid=yes,ForEachProperty=function(_,callback)
   local spec=SPECS[method];if BAD_SIGNATURE then spec='Wrong:IntProperty'end
   for key,kind in spec:gmatch('([%w_]+):([%w_]+)')do
-   local k,t=key,kind;callback({GetFName=function()return n(k)end,GetClass=function()return {GetFName=function()return n(t)end}end})
+   local k,t=key,kind;callback({GetStruct=function()return {GetFullName=function()return BAD_TIMESPAN and 'ScriptStruct Wrong'or'ScriptStruct /Script/CoreUObject.Timespan'end}end,GetFName=function()return n(k)end,GetClass=function()return {GetFName=function()return n(t)end}end})
   end
  end}
 end
@@ -51,7 +51,7 @@ Q={IsValid=yes,GetAddress=function()return 22 end,GetWorld=function()return WORL
  GetCurrentTime=function()return qt(FRAME or 0)end,GetStartTime=function()return qt(0)end,GetEndTime=function()return qt(300)end,
  GetActiveCameraComponent=function()return CAM_PRESENT~=false and CAM or nil end,Pause=function()PAUSED=true end,IsPaused=function()return PAUSED end,
  IsPlaying=function()return ISPLAYING end,Play=function()PLAYS=PLAYS+1 end,GoToEndAndStop=function()STOPS=STOPS+1 end,Stop=function()CLOSES=CLOSES+1 end}
-LIB={Create=function(_,pc,cls)if cls==SURFACE_CLASS then return SURFACE end;return VIEWER end,PlayNotRegisteredSequence=function(_,world,path,options,settings,delegate)
+LIB={IsValid=yes,GetTotalSeconds=function(_,t)return t.opaque_seconds end,Create=function(_,pc,cls)if cls==SURFACE_CLASS then return SURFACE end;return VIEWER end,PlayNotRegisteredSequence=function(_,world,path,options,settings,delegate)
  SETTINGS=settings;LOCAL_OPTIONS=options;CALLBACK=delegate;SEQ_NEW=true;return true
 end}
 API={player=function()return PC end,construct=function(cls)if cls==TEXT_CLASS then return LABEL end;return VIEWER end,
@@ -102,9 +102,20 @@ class CinemaNativeTests(unittest.TestCase):
  def test_another_native_movie_cannot_ack_this_resource(self):
   self.l.execute("VIEWER.PlayingManaSource=asset('/Game/Movies/Other.Other');assert(not E.sample(H).ready)")
  def test_same_path_with_incompatible_local_media_is_blocked(self):
-  self.l.execute('PLAYER.GetDuration=function()return {Ticks=120000000}end;assert(not pcall(E.sample,H))')
+  self.l.execute('PLAYER.GetDuration=function()return {opaque_seconds=12}end;assert(not pcall(E.sample,H))')
  def test_shared_skip_never_calls_destroyed_guest_player(self):
   self.l.execute("VIEWER.IsValid=function()return false end;assert(not pcall(E.skip,H,true));assert(STOPS==0)")
  def test_nested_engine_stage_preserves_native_adapter_behavior(self):
   self.l.execute("STAGES={};C.engine_call=function(name,fn,...)STAGES[#STAGES+1]=name;return fn(...)end;E=M.new(C,'source',function()end,API);H=E.open(DESC);assert(E.sample(H).ready);E.play(H);assert(STAGES[1]=='cinema.open'and STAGES[2]=='cinema.sample'and STAGES[3]=='cinema.play'and PLAYS==1)")
+ def test_opaque_timespan_has_no_ticks_member(self):
+  self.l.execute("PLAYER.GetDuration=function()return setmetatable({opaque_seconds=10},{__index=function()error('Opaque struct; do not read Ticks')end})end;assert(E.sample(H).ready)")
+ def test_zero_metadata_waits_without_descriptor_then_recovers(self):
+  self.l.execute('DISCOVER_MOVIE=true;DURATION=0;ISPLAYING=true;PAUSED=false;assert(not E.discover());assert(PAUSED);DURATION=10;local h=E.discover();assert(h.descriptor.duration_ms==10000)')
+ def test_guest_zero_metadata_cannot_ack(self):
+  self.l.execute('DURATION=0;assert(not E.sample(H).ready);DURATION=10;assert(E.sample(H).ready);DURATION=0;assert(not pcall(E.sample,H))')
+ def test_invalid_metadata_is_not_coerced_or_guessed(self):
+  for value in ['-1','0/0','math.huge','3601','0.1',"'10'"]:
+   self.l.execute(f"DURATION={value};assert(not pcall(E.sample,H))")
+ def test_timespan_struct_type_checked_before_call(self):
+  self.l.execute("BAD_TIMESPAN=true;LIB.GetTotalSeconds=function()error('must not call')end;local ok,why=pcall(E.sample,H);assert(not ok and tostring(why):find('Changed Timespan conversion input'))")
 if __name__=='__main__':unittest.main()

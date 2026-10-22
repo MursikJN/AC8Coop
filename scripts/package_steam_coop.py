@@ -68,7 +68,7 @@ def prepare(revision='r27'):
   session_diagnostics=diagnostic,diagnostics_schema=1 if diagnostic else 0,
   automatic_reports=automatic,
   owner_native=owner,isolated_lab_required=owner,local_model_test_implemented=owner,owner_runtime_tested=False,
-  owner_world_readiness=1 if owner else 0,kit_update='cinema-1'if owner else None,adapter_bootstrap=1 if owner else 0,menu_lifetime=1 if owner else 0,engine_call_trace=1 if owner else 0,
+  owner_world_readiness=1 if owner else 0,kit_update='cinema-2'if owner else None,adapter_bootstrap=1 if owner else 0,cinema_metadata=1 if owner else 0,native_shutdown=1 if owner else 0,menu_lifetime=1 if owner else 0,engine_call_trace=1 if owner else 0,
   lab_storage_policy=3 if owner else 0,lab_storage_default='compact'if owner else None,archive_layout='paks-junction-v1'if owner else None,shared_archives_read_locked=owner,
   scope=('Steam room + local stock F-14D simulation + owner-state transport + isolated client terrain/replicas + local cinematic barriers'if owner else'Steam room + mission barriers + input/pose transport + paused replica terrain loader candidate'+(' + local cinematic player candidates and per-clip two-peer completion barriers'if cinema else''))+'; not game validated',
   files=[dict(path=p.relative_to(PROFILE).as_posix(),sha256=digest(p))for p in sorted(files)])
@@ -77,6 +77,7 @@ def prepare(revision='r27'):
  archive.parent.mkdir(parents=True,exist_ok=True)
  with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED)as z:
   for p in sorted(files):z.write(p,PROFILE.name+'/'+p.relative_to(PROFILE).as_posix())
+ archive.with_suffix(archive.suffix+'.sha256').write_text(digest(archive).lower()+'  '+archive.name+'\n',encoding='ascii')
  print(json.dumps(dict(profile=str(PROFILE),archive=str(archive),sha256=digest(archive),files=len(files),game_launched=False,first_shared_flight_ready=False),ensure_ascii=False))
  return manifest
 if __name__=='__main__':

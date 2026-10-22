@@ -6,7 +6,9 @@
 #define AC8_R24_BASE_INCLUDED
 #define AC8_STEAM_INVITES_R25
 #include "steam_lobby_bridge.cpp"
-static unsigned checks25=0,dialogs25=0;
+#include "steam_shutdown.inl"
+static unsigned checks25=0,dialogs25=0,unsubscribed25=0;
+static void unsubscribe25(ac8invite::Callback*){++unsubscribed25;}
 static int relationship25=3;
 static bool available25=true;
 static std::string sent25;
@@ -52,6 +54,20 @@ int main(){
  lobby24::configured_host=true;available25=false;write25(4,123);invites25::read_open_request();verify25(dialogs25==1&&std::string(invites25::invite_state)=="OVERLAY_UNAVAILABLE");
  available25=true;write25(5,123);invites25::read_open_request();verify25(dialogs25==2&&invites25::open_requested==2);
  invites25::publish();wchar_t status_path[32768]{};swprintf_s(status_path,L"%ls\\steam-invite-status.tsv",invites25::folder);FILE*f=nullptr;_wfopen_s(&f,status_path,L"rb");verify25(f!=nullptr);char data[2048]{};fread(data,1,sizeof(data)-1,f);fclose(f);verify25(std::strstr(data,"join_sequence\t2")&&std::strstr(data,"open_requested\t2"));
+ // Same exported shutdown implementation as r31, fake Steam and a real thread.
+ invites25::api25.unregister_callback=unsubscribe25;
+ SetEnvironmentVariableW(L"AC8_COOP_RECON_OUTPUT",invites25::folder);
+ HANDLE shutdown_gate=CreateEventW(nullptr,TRUE,FALSE,nullptr);verify25(shutdown_gate!=nullptr);
+ CloseHandle(lobby24::worker);lobby24::worker=CreateThread(nullptr,0,[](void*gate)->DWORD{WaitForSingleObject(static_cast<HANDLE>(gate),INFINITE);return 0;},shutdown_gate,0,nullptr);
+ luaopen_ac8_shutdown_begin(nullptr);verify25(lobby24::stopping&&invites25::retired&&!invites25::registered&&unsubscribed25==2);
+ verify25(WaitForSingleObject(lobby24::worker,0)==WAIT_TIMEOUT);
+ luaopen_ac8_shutdown_begin(nullptr);verify25(unsubscribed25==2);
+ SetEvent(shutdown_gate);verify25(WaitForSingleObject(lobby24::worker,1000)==WAIT_OBJECT_0);CloseHandle(shutdown_gate);luaopen_ac8_shutdown_poll(nullptr);
+ wchar_t shutdown_path[32768]{};swprintf_s(shutdown_path,L"%ls\\native-shutdown.tsv",invites25::folder);
+ _wfopen_s(&f,shutdown_path,L"rb");verify25(f!=nullptr);char receipt[1024]{};fread(receipt,1,sizeof(receipt)-1,f);fclose(f);
+ verify25(std::strstr(receipt,"complete\t1")&&std::strstr(receipt,"worker_running\t0")&&std::strstr(receipt,"callbacks_registered\t0"));
+ invites25::tick(true);verify25(unsubscribed25==2);
+ DeleteFileW(shutdown_path);
  DeleteFileW(status_path);swprintf_s(status_path,L"%ls\\steam-invite-command.tsv",invites25::folder);DeleteFileW(status_path);verify25(RemoveDirectoryW(invites25::folder)!=0);CloseHandle(lobby24::worker);lobby24::worker=nullptr;
  printf("%u Steam invite checks passed\n",checks25);
 }
