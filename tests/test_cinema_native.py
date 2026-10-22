@@ -103,4 +103,8 @@ class CinemaNativeTests(unittest.TestCase):
   self.l.execute("VIEWER.PlayingManaSource=asset('/Game/Movies/Other.Other');assert(not E.sample(H).ready)")
  def test_same_path_with_incompatible_local_media_is_blocked(self):
   self.l.execute('PLAYER.GetDuration=function()return {Ticks=120000000}end;assert(not pcall(E.sample,H))')
+ def test_shared_skip_never_calls_destroyed_guest_player(self):
+  self.l.execute("VIEWER.IsValid=function()return false end;assert(not pcall(E.skip,H,true));assert(STOPS==0)")
+ def test_nested_engine_stage_preserves_native_adapter_behavior(self):
+  self.l.execute("STAGES={};C.engine_call=function(name,fn,...)STAGES[#STAGES+1]=name;return fn(...)end;E=M.new(C,'source',function()end,API);H=E.open(DESC);assert(E.sample(H).ready);E.play(H);assert(STAGES[1]=='cinema.open'and STAGES[2]=='cinema.sample'and STAGES[3]=='cinema.play'and PLAYS==1)")
 if __name__=='__main__':unittest.main()

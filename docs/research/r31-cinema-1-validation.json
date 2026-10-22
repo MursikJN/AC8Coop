@@ -1,0 +1,61 @@
+{
+  "format": "ac8-r31-cinema-validation-v1",
+  "date": "2026-10-22",
+  "kit_update": "cinema-1",
+  "crash_evidence": {
+    "captured_process_event_receiver_matches_previous_main_menu": true,
+    "invalid_virtual_target": true,
+    "exact_ufunction_name_available": false,
+    "same_runtime_crash_reproduced": false,
+    "raw_dump_published": false
+  },
+  "offline_tests": {
+    "full_python_lua_suite_run": 602,
+    "passed": 601,
+    "skipped_optional_legacy": 1,
+    "additional_report_collector_test_passed": true,
+    "trace_focused_suite_run": 5,
+    "trace_focused_suite_passed": 5,
+    "powershell5_kit_checks": 28,
+    "actual_lua_entry_point_with_destroyed_menu": true
+  },
+  "package": {
+    "archive_sha256": "4b73bbed64a55ae9857d1e112ceadb1614196d563ae15ab763067181cf81bd38",
+    "files": 78,
+    "lua_syntax_checked": 41,
+    "text_secret_path_checks": 67,
+    "manifest_hashes": true,
+    "zip_crc": true,
+    "pe_exports_and_ps5_preflight": true,
+    "game_files_included": false,
+    "archive_bytes": 10341063
+  },
+  "lab": {
+    "copied_bytes": 4931037992,
+    "shared_bytes": 145648837787,
+    "archive_count": 26,
+    "archive_layout": "paks-junction-v1",
+    "source_inventory_unchanged": true,
+    "source_metadata_acl_unchanged": true,
+    "nonarchive_source_hashes_unchanged": true,
+    "ordinary_lab_files_unchanged": true,
+    "userdata_hashes_unchanged": true,
+    "full_archive_hashes_recomputed": false,
+    "host_preflight": true,
+    "guest_preflight": true,
+    "game_launched": false,
+    "steam_opened": false
+  },
+  "native_dlls_changed": false,
+  "room_protocol": 8,
+  "pilot_protocol": 3,
+  "game_launched": false,
+  "steam_session_started": false,
+  "first_shared_flight_verified": false,
+  "limitations": [
+    "Exact UFunction name absent from dump; receiver identity and bad virtual dispatch are established.",
+    "Menu lifetime fix and destruction simulations do not substitute for a new in-game test.",
+    "Hangar, shared sortie, flight, camera and combat still need paired runtime validation.",
+    "Shared archive full hashes not recomputed; inventory/metadata/ACL and all nonarchive hashes compared."
+  ]
+}

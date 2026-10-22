@@ -3,7 +3,7 @@ from pathlib import Path
 import argparse,hashlib,json,shutil,zipfile
 ROOT=Path(__file__).resolve().parents[1]
 LUA=('steam_lobby_main','steam_lobby_services','steam_coop_role','steam_coop_pilot','steam_coop_client','steam_coop_client_world','guest_owner_preparation',
- 'coop_main_menu','coop_menu_catalog','coop_lobby_frontend','coop_lobby_layout',
+ 'coop_main_menu','coop_menu_catalog','coop_lobby_frontend','coop_lobby_layout','lobby_menu_lifetime','engine_call_trace',
  'mission_sync_adapter','mission_sync_pause','mission_sync_cinema_guard','mission_sync_status_ui','local_menu_native','local_hangar_ui',
  'guest_slot_resolver','guest_player_asset','guest_role_adapter','guest_role_runtime','guest_role_marker','guest_pilot_view','guest_pilot_camera',
  'scene_codec','scene_client','scene_host','scene_visual_host','scene_engine','scene_clock','scene_transform','scene_visibility')
@@ -68,7 +68,7 @@ def prepare(revision='r27'):
   session_diagnostics=diagnostic,diagnostics_schema=1 if diagnostic else 0,
   automatic_reports=automatic,
   owner_native=owner,isolated_lab_required=owner,local_model_test_implemented=owner,owner_runtime_tested=False,
-  owner_world_readiness=1 if owner else 0,kit_update='adapters-1'if owner else None,adapter_bootstrap=1 if owner else 0,
+  owner_world_readiness=1 if owner else 0,kit_update='cinema-1'if owner else None,adapter_bootstrap=1 if owner else 0,menu_lifetime=1 if owner else 0,engine_call_trace=1 if owner else 0,
   lab_storage_policy=3 if owner else 0,lab_storage_default='compact'if owner else None,archive_layout='paks-junction-v1'if owner else None,shared_archives_read_locked=owner,
   scope=('Steam room + local stock F-14D simulation + owner-state transport + isolated client terrain/replicas + local cinematic barriers'if owner else'Steam room + mission barriers + input/pose transport + paused replica terrain loader candidate'+(' + local cinematic player candidates and per-clip two-peer completion barriers'if cinema else''))+'; not game validated',
   files=[dict(path=p.relative_to(PROFILE).as_posix(),sha256=digest(p))for p in sorted(files)])

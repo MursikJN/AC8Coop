@@ -38,6 +38,8 @@ local menu=assert(loadfile(source..'/coop_main_menu.lua'))()
 local catalog=assert(loadfile(source..'/coop_menu_catalog.lua'))()
 if coop then _G.AC8LocalMenuDll=source..'/../../../ac8_menu_route_r13.dll'end
 local controller=assert(loadfile(source..'/steam_lobby_services.lua'))().new(output,native,nil,{mission_sync=coop,cinema_sync=cinema_sync,session_policy=policy,owner_native=owner_native,launch_role=launch_role,trace=diagnostic and diagnostic.event})
+local engine_trace=assert(loadfile(source..'/engine_call_trace.lua'))().new(output)
+controller.engine_call=engine_trace.run
 if diagnostic then diagnostic.context(controller)end
 local options={compact=true,source=source,catalog=catalog,is_host=os.getenv('AC8_LOBBY_ROLE')~='guest',
  view=controller.view,status=controller.status,create=controller.create,join=controller.join,leave=controller.leave,
@@ -46,13 +48,15 @@ options.invite=native.invites_open and controller.invite or nil
 options.fixed_role=policy and launch_role or nil
 options.cancel=policy and controller.cancel or nil;options.restart=policy and controller.restart or nil
 options.input_blocked=function()return controller.invite_status.overlay_active=='1'end
-local ui;local shown_invite=0
+local menu_lifetime=assert(loadfile(source..'/lobby_menu_lifetime.lua'))().new(menu,options,log)
+local shown_invite=0
 local adapter,pilot,role,scene,client,room_token,last_scene= nil,nil,nil,nil,nil,nil,0
 local function tick()
  local ok,err=xpcall(function()
-  if not ui then ui=menu.attach(options)end
-  local visible=false;if ui then local valid,result=pcall(function()return ui.main:IsVisible()end);visible=valid and result==true end
-  controller.set_menu_available(visible);controller.poll()
+  engine_trace.run('menu.handoff',menu_lifetime.handoff,controller)
+  local visible=engine_trace.run('menu.visibility',menu_lifetime.poll)
+  controller.set_menu_available(visible);engine_trace.run('session.poll',controller.poll)
+  engine_trace.run('menu.handoff',menu_lifetime.handoff,controller)
   if policy and visible and not controller.active and not controller.resume_checked and os.getenv('AC8_RESUME_HOST')then
    controller.resume_checked=true
    if launch_role=='host'then controller.create(6,1)else controller.join(os.getenv('AC8_RESUME_HOST'))end
@@ -82,23 +86,24 @@ local function tick()
    end
   end
   if coop and controller.active then
-   local halted=policy and controller.lifecycle.update({adapter=adapter,pilot=pilot,role=role,client=client})
+   local halted=policy and engine_trace.run('lifecycle.update',controller.lifecycle.update,{adapter=adapter,pilot=pilot,role=role,client=client})
    if halted then
     -- No campaign routing, scene export or input is allowed after quiescence.
    elseif adapter then
-    adapter.update()
+    engine_trace.run('mission.update',adapter.update)
     if controller.snapshot.phase=='6'and controller.view().connected and not adapter.error then
      role=role or assert(loadfile(source..'/steam_coop_role.lua'))().new(controller,output,source,log);role.update()
      if role.error then controller.error='Подготовка Бакстера: '..role.error end
      if role.ready and not pilot.active and not pilot.reason then pilot.try_start(role)end
     end
-    if pilot then pilot.update(role)end
-    if scene and(controller.now or 0)-last_scene>=200 then last_scene=controller.now;scene.update()end
-   elseif client then client.update()end
-   if controller.recovery_ui then local ok,e=pcall(controller.recovery_ui.update);if not ok then log('recovery_ui_error',e)end end
+    if pilot then engine_trace.run('pilot.update',pilot.update,role)end
+    if scene and(controller.now or 0)-last_scene>=200 then last_scene=controller.now;engine_trace.run('scene.update',scene.update)end
+   elseif client then engine_trace.run('client.update',client.update)end
+   if controller.recovery_ui then local ok,e=pcall(engine_trace.run,'recovery.update',controller.recovery_ui.update);if not ok then log('recovery_ui_error',e)end end
   end
-  if ui and not ui.refresh()then ui=menu.attach(options)end
-  if ui and visible and controller.join_notice>shown_invite then ui.ui_error=nil;ui.show();shown_invite=controller.join_notice;log('invite_room_opened')end
+  engine_trace.run('menu.refresh',menu_lifetime.refresh)
+  local ui=menu_lifetime.ui
+  if ui and visible and controller.join_notice>shown_invite then ui.ui_error=nil;engine_trace.run('menu.invite',ui.show);shown_invite=controller.join_notice;log('invite_room_opened')end
  end,debug.traceback)
  if not ok then log('tick_error',err);if policy then local sent,why=pcall(controller.fault,tostring(err));if not sent then log('fault_dispatch_error',why)end end end
  if diagnostic then

@@ -81,7 +81,9 @@ function M.new(c,source,log,api)
   error('No verified local LiveCinematics options asset for '..sequence)
  end
  local function same_world(o)
-  local pc=api.player();return valid(pc)and valid(o:GetWorld())and o:GetWorld():GetAddress()==pc:GetWorld():GetAddress()
+  local pc=api.player();if not valid(pc)or not valid(o)then return false end
+  local world=o:GetWorld();local player_world=pc:GetWorld()
+  return valid(world)and valid(player_world)and world:GetAddress()==player_world:GetAddress()
  end
  local function visible(o)
   local seen={}
@@ -197,6 +199,7 @@ function M.new(c,source,log,api)
  function E.skip(h,guest)
   -- The host's existing two-vote guard invokes its stock campaign skip once.
   if not guest then return end
+  assert(valid(h.object),'Cinematic player unavailable at shared skip')
   if h.descriptor.kind==1 then h.object:StopMovie()else h.object:GoToEndAndStop()end
  end
  function E.status(h,text)if valid(h.label)then h.label:SetText(FText(text))end end
@@ -213,6 +216,13 @@ function M.new(c,source,log,api)
  function E.abort()
   local all={};for h in pairs(owned)do all[#all+1]=h end
   for _,h in ipairs(all)do local ok,err=pcall(E.close,h,true);if not ok then log('cinema_cleanup_error',err)end end
+ end
+ -- Keep the innermost stage in the crash report if ProcessEvent cannot return.
+ if c.engine_call then
+  for _,name in ipairs({'discover','open','sample','pause','play','skip','status','close','abort'})do
+   local fn=E[name]
+   E[name]=function(...)return c.engine_call('cinema.'..name,fn,...)end
+  end
  end
  return E
 end
