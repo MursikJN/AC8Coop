@@ -21,7 +21,7 @@ function Test-CoopKit {
  param([string]$Root)
  $rootPath=[IO.Path]::GetFullPath($Root).TrimEnd([char[]]@('\','/'));Assert-CoopPlainPath $rootPath
  $m=Get-Content -LiteralPath (Join-Path $rootPath 'lobby-manifest.json') -Raw|ConvertFrom-Json
- if($m.revision -ne 'r31-development' -or $m.protocol -ne 8 -or $m.pilot_protocol -ne 3 -or !$m.owner_native -or !$m.isolated_lab_required -or !$m.automatic_reports -or $m.owner_world_readiness -ne 1 -or $m.kit_update -ne 'compact-1' -or $m.lab_storage_policy -ne 2){throw 'R31 manifest policy mismatch (compact-1 required)'}
+ if($m.revision -ne 'r31-development' -or $m.protocol -ne 8 -or $m.pilot_protocol -ne 3 -or !$m.owner_native -or !$m.isolated_lab_required -or !$m.automatic_reports -or $m.owner_world_readiness -ne 1 -or $m.kit_update -ne 'compact-2' -or $m.lab_storage_policy -ne 3){throw 'R31 manifest policy mismatch (compact-2 required)'}
  $seen=@{};foreach($f in $m.files){
   if(!$f.path -or [IO.Path]::IsPathRooted($f.path) -or $f.path -match '(^|[\\/])\.\.([\\/]|$)' -or $f.path.Contains(':')){throw 'Invalid manifest path'}
   $path=[IO.Path]::GetFullPath((Join-Path $rootPath $f.path));if(!$path.StartsWith($rootPath+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase) -or $seen.ContainsKey($f.path)){throw 'Duplicate or outside manifest path'}
@@ -30,6 +30,7 @@ function Test-CoopKit {
  }
  foreach($f in @('Start-Host.cmd','Start-Guest.cmd','Prepare-Lab.cmd','Validate-Kit.cmd','Start-SteamLobby.ps1','Coop-Kit.ps1','Coop-LabStorage.ps1','Prepare-CoopLab.ps1','Auto-Reports.ps1','Session-Diagnostics.ps1','Collect-CoopLogs.ps1','runtime/ac8_steam_coop_r31.dll','runtime/Mods/AC8CoopRecon/Scripts/main.lua','runtime/Mods/AC8CoopRecon/Scripts/guest_owner_preparation.lua','runtime/Mods/AC8CoopRecon/Scripts/owner_local_lab.lua','Owner-Lab-Peer.exe')){if(!$seen.ContainsKey($f)){throw ('Required manifest entry missing: '+$f)}}
  $exports=@(Get-CoopPeExports (Join-Path $rootPath $m.native_file))
+ foreach($f in @('Repair-Lab.cmd','Repair-CompactLab.ps1')){if(!$seen.ContainsKey($f)){throw ('Required manifest entry missing: '+$f)}}
  foreach($e in @('luaopen_ac8_pilot_prepare','luaopen_ac8_pilot_start','luaopen_ac8_pilot_tick','luaopen_ac8_pilot_stop','luaopen_ac8_pilot_loaded','luaopen_ac8_pilot_capture_input','luaopen_ac8_lobby24_start','luaopen_ac8_invites25_open')){if($e -notin $exports){throw ('Native export missing: '+$e)}}
  return $m
 }
@@ -43,7 +44,8 @@ function Test-CoopLab {
  if(!(Test-Path -LiteralPath $markerPath)){throw 'Lab is not prepared. Run Prepare-Lab.cmd, choose the original ACE COMBAT 8 folder, then Validate-Lab.cmd. Compact mode needs about 5 GB plus reserve.'}
  Assert-CoopPlainPath $markerPath
  $marker=Get-Content -LiteralPath $markerPath -Raw|ConvertFrom-Json
- if($marker.format -ne 'ac8-isolated-lab-v2' -or $marker.state -ne 'complete' -or $marker.storage_mode -notin @('compact','full') -or [IO.Path]::GetFullPath($marker.destination) -ne [IO.Path]::GetFullPath($lab) -or !$marker.source -or [IO.Path]::GetFullPath($marker.source) -eq [IO.Path]::GetFullPath($lab)){throw 'Unverified laboratory copy; preserve it and prepare a fresh compact kit.'}
+ if($marker.format -eq 'ac8-isolated-lab-v2' -and $marker.storage_mode -eq 'compact'){throw 'Old compact-1 file-link layout. Run Repair-Lab.cmd from the updated kit; no game files need recopying.'}
+ if($marker.format -ne 'ac8-isolated-lab-v3' -or $marker.state -ne 'complete' -or $marker.storage_mode -notin @('compact','full') -or ($marker.storage_mode -eq 'compact' -and $marker.archive_layout -ne 'paks-junction-v1') -or [IO.Path]::GetFullPath($marker.destination) -ne [IO.Path]::GetFullPath($lab) -or !$marker.source -or [IO.Path]::GetFullPath($marker.source) -eq [IO.Path]::GetFullPath($lab)){throw 'Unverified laboratory copy; preserve it and prepare a fresh compact kit.'}
  $source=[IO.Path]::GetFullPath($marker.source).TrimEnd([char[]]@('\','/'))
  if($source.StartsWith($lab+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase) -or $lab.StartsWith($source+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)){throw 'Source and lab trees overlap'}
  Assert-CoopPlainPath $source

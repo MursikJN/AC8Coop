@@ -94,6 +94,7 @@ try{
  if($ownerNative){
   $null=Test-CoopLab -Root $root -Manifest $manifest -GameDirectory $GameDirectory -ArchiveGuard ([ref]$archiveGuard)
   $record.lab_storage_mode=if($archiveGuard){'compact'}else{'full'}
+  $record.archive_layout=if($archiveGuard){$archiveGuard.Layout}else{'independent-copy'}
   $record.shared_archive_count=if($archiveGuard){$archiveGuard.ArchiveCount}else{0};Save-Record
  }
  [IO.File]::Copy($proxySource,$proxy,$false);$owned=$true

@@ -38,7 +38,7 @@ def prepare(revision='r27'):
   sources['Collect-DebugLogs.ps1']=ROOT/'coop/Collect-DebugLogs.ps1'
  if automatic:sources['Auto-Reports.ps1']=ROOT/'scripts/Auto-Reports.ps1'
  if owner:
-  for name in ('Coop-Kit','Coop-LabStorage','Prepare-CoopLab'):sources[name+'.ps1']=ROOT/'scripts'/(name+'.ps1')
+  for name in ('Coop-Kit','Coop-LabStorage','Prepare-CoopLab','Repair-CompactLab'):sources[name+'.ps1']=ROOT/'scripts'/(name+'.ps1')
   sources['Owner-Lab-Peer.exe']=ROOT/'build/steam-coop-r31/owner_lab_peer.exe'
   sources['runtime/Mods/AC8CoopRecon/Scripts/owner_local_lab.lua']=ROOT/'probe/AC8CoopRecon/Scripts/owner_local_lab.lua'
   sources['TEST-PLAN-RU.md']=ROOT/'coop/TEST-PLAN-R31-RU.md'
@@ -56,7 +56,7 @@ def prepare(revision='r27'):
  if diagnostic:
   target=PROFILE/'Collect-DebugLogs.cmd';target.write_bytes(b'@echo off\r\ncd /d "%~dp0"\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Collect-DebugLogs.ps1" %*\r\npause\r\n');files.append(target)
  if owner:
-  commands={'Prepare-Lab':('Prepare-CoopLab.ps1',''),'Validate-Kit':('Prepare-CoopLab.ps1','-ValidateOnly'),'Validate-Lab':('Start-SteamLobby.ps1','-ValidateOnly -Role host'),'Start-LocalModelTest':('Start-SteamLobby.ps1','-Role guest -LocalModelTest')}
+  commands={'Prepare-Lab':('Prepare-CoopLab.ps1',''),'Repair-Lab':('Prepare-CoopLab.ps1','-UpgradeCompact'),'Validate-Kit':('Prepare-CoopLab.ps1','-ValidateOnly'),'Validate-Lab':('Start-SteamLobby.ps1','-ValidateOnly -Role host'),'Start-LocalModelTest':('Start-SteamLobby.ps1','-Role guest -LocalModelTest')}
   for name,(script,args)in commands.items():
    target=PROFILE/(name+'.cmd');target.write_bytes((f'@echo off\r\ncd /d "%~dp0"\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0{script}" {args} %*\r\npause\r\n').encode('ascii'));files.append(target)
  manifest=dict(revision=revision+'-development',protocol=8 if owner else 7 if policy else 6 if cinema else 5,pilot_protocol=3 if owner else 2,steam_invites=True,steam_coop=True,cinema_sync=cinema,session_policy=policy,
@@ -67,8 +67,8 @@ def prepare(revision='r27'):
   session_diagnostics=diagnostic,diagnostics_schema=1 if diagnostic else 0,
   automatic_reports=automatic,
   owner_native=owner,isolated_lab_required=owner,local_model_test_implemented=owner,owner_runtime_tested=False,
-  owner_world_readiness=1 if owner else 0,kit_update='compact-1'if owner else None,
-  lab_storage_policy=2 if owner else 0,lab_storage_default='compact'if owner else None,shared_archives_read_locked=owner,
+  owner_world_readiness=1 if owner else 0,kit_update='compact-2'if owner else None,
+  lab_storage_policy=3 if owner else 0,lab_storage_default='compact'if owner else None,archive_layout='paks-junction-v1'if owner else None,shared_archives_read_locked=owner,
   scope=('Steam room + local stock F-14D simulation + owner-state transport + isolated client terrain/replicas + local cinematic barriers'if owner else'Steam room + mission barriers + input/pose transport + paused replica terrain loader candidate'+(' + local cinematic player candidates and per-clip two-peer completion barriers'if cinema else''))+'; not game validated',
   files=[dict(path=p.relative_to(PROFILE).as_posix(),sha256=digest(p))for p in sorted(files)])
  path=PROFILE/'lobby-manifest.json';path.write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8');files.append(path)
