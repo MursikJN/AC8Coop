@@ -10,7 +10,11 @@
 #define AC8_R24_BASE_INCLUDED
 #include "steam_lobby_bridge.cpp"
 #define AC8_R27_EMBEDDED_PILOT
-#ifdef AC8_SESSION_POLICY_R29
+#ifdef AC8_OWNER_NATIVE_R31
+#define AC8_PILOT_REV r31
+#elif defined(AC8_OWNER_SIM_R30)
+#define AC8_PILOT_REV r30
+#elif defined(AC8_SESSION_POLICY_R29)
 #define AC8_PILOT_REV r29
 #elif defined(AC8_CINEMA_SYNC_R28)
 #define AC8_PILOT_REV r28

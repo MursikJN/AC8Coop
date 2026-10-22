@@ -4,7 +4,11 @@
 namespace ac8session {
 #ifdef AC8_SESSION_POLICY_R29
 constexpr size_t packet_size=320;
+#ifdef AC8_OWNER_SIM_R30
+constexpr unsigned protocol_version=8;
+#else
 constexpr unsigned protocol_version=7;
+#endif
 #else
 constexpr size_t packet_size=256;
 #ifdef AC8_CINEMA_SYNC_R28

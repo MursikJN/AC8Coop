@@ -70,7 +70,9 @@ struct Api {
     int (__cdecl* receive)(void*,HSteamNetConnection,SteamNetworkingMessage_t**,int){};
 } api;
 
-#ifdef AC8_SESSION_POLICY_R29
+#ifdef AC8_OWNER_SIM_R30
+constexpr int virtual_port=392;
+#elif defined(AC8_SESSION_POLICY_R29)
 constexpr int virtual_port=391;
 #elif defined(AC8_CINEMA_SYNC_R28)
 constexpr int virtual_port=390;
@@ -457,7 +459,7 @@ static void pump() {
                 const bool valid=connection==handle&&message->m_conn==handle&&message->m_identityPeer.GetSteamID64()==peer_id&&
                     session.ready()&&ac8pilot::decode(message->m_pData,static_cast<size_t>(message->m_cbSize),frame)&&
                     frame.sender==peer_id&&frame.session==session.remote&&frame.echo==session.nonce&&
-                    (frame.kind==ac8pilot::Kind::stop||(role==Role::host?(frame.kind==ac8pilot::Kind::loaded||frame.kind==ac8pilot::Kind::input):frame.kind==ac8pilot::Kind::state));
+                    ac8pilot::outgoing_kind(role!=Role::host,frame.kind);
                 message->Release();
                 if(!valid){connection_ended("invalid_pilot_packet");continue;}
                 if(frame.sequence>pilot_rx){
@@ -582,7 +584,7 @@ bool ready(){return initialized&&!faulted&&connected&&session.ready()&&action_th
 ac8pilot::Context context(){return ready()?ac8pilot::Context{local_id,peer_id,session.nonce,session.remote,role==Role::host}:ac8pilot::Context{};}
 bool send(ac8pilot::Frame frame){
  if(!ready()||pilot_tx==UINT64_MAX)return false;
- if(frame.kind!=ac8pilot::Kind::stop&&(role==Role::host?(frame.kind!=ac8pilot::Kind::state):(frame.kind!=ac8pilot::Kind::loaded&&frame.kind!=ac8pilot::Kind::input)))return false;
+ if(!ac8pilot::outgoing_kind(role==Role::host,frame.kind))return false;
  frame.sender=local_id;frame.session=session.nonce;frame.echo=session.remote;frame.sequence=pilot_tx+1;
  if(!ac8pilot::valid(frame))return false;const auto bytes=ac8pilot::encode(frame);++pilot_tx;
  const bool reliable=frame.kind==ac8pilot::Kind::loaded||frame.kind==ac8pilot::Kind::stop;

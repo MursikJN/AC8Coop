@@ -11,6 +11,7 @@ function M.new(context,source,api)
  local codec=assert(loadfile(source..'/scene_codec.lua'))()
  local transform=assert(loadfile(source..'/scene_transform.lua'))()
  local client=assert(loadfile(source..'/scene_client.lua'))()
+ local pilot_view=assert(loadfile(source..'/guest_pilot_view.lua'))()
  api=api or{static=StaticFindObject}
  local gameplay=api.static('/Script/Engine.Default__GameplayStatics');local mathlib=api.static('/Script/Engine.Default__KismetMathLibrary')
  local s={nodes={},pending={},originals={},entities={},resources={},created=0,destroy_requested=0,ready=false,assets_ready=false,active=true,panels={}}
@@ -60,6 +61,7 @@ function M.new(context,source,api)
  end
  function adapter.create(e)s.entities[e.id]=e end
  function adapter.remove(id)
+  if s.entities[id]and s.entities[id].role==1 then s.owner_pose=nil;s.guest_pose=nil end
   local keys={};for k,n in pairs(s.nodes)do if n.descriptor.entity==id then keys[#keys+1]=k end end;for _,k in ipairs(keys)do destroy(k)end
   for k,n in pairs(s.pending)do if n.descriptor.entity==id then s.pending[k]=nil end end
   restore_original(id);s.entities[id]=nil
@@ -79,6 +81,13 @@ function M.new(context,source,api)
   if context.live_preview and s.ready then local objects={};for id,entry in pairs(s.originals)do objects[id]=entry.object end;context.visibility.set(objects)end
  end
  function adapter.update(e)
+  if e.role==1 and not e.alive then s.owner_pose=nil end
+  -- Only the verified local owner can override its own movement. Mission
+  -- state/health/alive and every other entity still come from the host.
+  if e.role==1 and e.alive and s.owner_pose then
+   local local_entity={};for k,v in pairs(e)do local_entity[k]=v end
+   local_entity.position=s.owner_pose.position;local_entity.rotation=s.owner_pose.rotation;local_entity.speed=s.owner_pose.speed;e=local_entity
+  end
   s.entities[e.id]=e;if e.role==1 and e.alive then s.guest_pose=e end
   for _,n in pairs(s.nodes)do if n.descriptor.entity==e.id then
    local p,q=transform.world(e,n.descriptor);local key=table.concat(p,':')..':'..table.concat(q,':')..':'..table.concat(n.descriptor.scale,':')
@@ -89,6 +98,15 @@ function M.new(context,source,api)
   end end
  end
  s.core=client.new(codec,adapter)
+ function s.set_owner_pose(frame)
+  guard()
+  if context.local_owner_verified~=true or context.preview or context.live_preview or not context.isolated_world_verified or not s.ready or frame.generation~=context.generation or frame.revision~=context.revision or frame.sequence<=(s.owner_sequence or 0)then return false end
+  local p=frame.pose;if not pilot_view.pose(p)or p.role~=1 or p.aircraft~=23 then return false end
+  local own;for _,e in pairs(s.entities)do if e.role==1 and e.alive then assert(not own,'Duplicate guest role');own=e end end
+  if not own then return false end
+  local copied={role=1,aircraft=23,position={table.unpack(p.position)},rotation={table.unpack(p.rotation)},speed=p.speed}
+  s.owner_pose=copied;s.owner_sequence=frame.sequence;adapter.update(own);return true
+ end
  function s.accept(data,now,baseline)return s.core.accept(data,now,baseline)end
  function s.pump(budget)
   guard();local count=0
@@ -122,7 +140,7 @@ function M.new(context,source,api)
   local ids={};for id in pairs(s.originals)do ids[#ids+1]=id end;for _,id in ipairs(ids)do restore_original(id)end
   for i=#s.panels,1,-1 do local entry=s.panels[i];if valid(entry.object)then
    if entry.attribute then entry.object[entry.attribute]=entry.value else entry.object:SetVisibility(entry.visibility)end
-  end end;s.panels={};s.pending={};s.plan={};s.resources={};s.prepared_originals={};s.entities={};s.guest_pose=nil;s.core.reset(reason)
+  end end;s.panels={};s.pending={};s.plan={};s.resources={};s.prepared_originals={};s.entities={};s.guest_pose=nil;s.owner_pose=nil;s.owner_sequence=nil;s.core.reset(reason)
  end
  return s
 end

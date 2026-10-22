@@ -28,7 +28,10 @@ function M.new(c,output,source,log,engine)
   if parts.role and parts.role.runtime then parts.role.runtime.stop('session_quiesce')end
   if parts.client then parts.client.stop('session_quiesce')end
   if c.cinema then c.cinema.stop('session_quiesce')end
+  if parts.client and parts.client.drain and not parts.client.drain()then return false end
+  if parts.pilot and parts.pilot.cleanup_pending then parts.pilot.update(parts.role);if parts.pilot.cleanup_pending then return false end end
   r.quiesced=true;log('session_quiesced',c.snapshot.generation)
+  return true
  end
  local function ticket()
   local s=c.snapshot;assert(s.phase=='10'and s.restart_ack=='2'and not c.pending,'Общий перезапуск ещё не подтверждён.')
@@ -57,7 +60,7 @@ function M.new(c,output,source,log,engine)
    end
    r.halted=phase==8 or phase==9 or phase==10 or c.local_failure~=nil or(phase>0 and not c.view().connected)
    if not r.halted then return end
-   r.reason=c.status();quiesce(parts)
+   r.reason=c.status();if quiesce(parts)==false then return end
    if phase==9 then
     local loaded=tonumber(s.loaded_mask)or 0;local own=c.role=='host'and loaded%2==1 or c.role=='guest'and loaded>=2
     if not own and not c.pending then c.loaded()end

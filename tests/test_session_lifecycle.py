@@ -46,4 +46,6 @@ class SessionLifecycleTests(unittest.TestCase):
   self.l.execute("R.quit();assert(QUITS==1 and not FILES['out/session-restart.tsv'])")
  def test_failed_quit_is_reported_and_can_be_retried(self):
   self.l.execute('FAIL_QUIT=true;assert(not pcall(R.quit));assert(not R.quitting);FAIL_QUIT=false;R.quit();assert(QUITS==1)')
+ def test_native_cleanup_waits_before_restart_loaded(self):
+  self.l.execute("C.snapshot.phase='9';P.client.drain=function()return false end;R.update(P);assert(ACKS==0 and not R.quiesced);P.client.drain=function()return true end;R.update(P);assert(ACKS==1 and R.quiesced)")
 if __name__=='__main__':unittest.main()

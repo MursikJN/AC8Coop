@@ -22,7 +22,7 @@ end
 M.encode=encode
 local fields={'connected','have_snapshot','transport','reason','protocol','epoch','revision','generation','phase','scene','scene_return','scene_exit','ready_mask','loaded_mask','vote_mask','commit_mask','release_at','cinema_prepared','cinema_finished','cinema_state','cinema_commit_mask','cinema_at','stop_reason','restart_id','restart_ack','host_aircraft','guest_aircraft','guest_weapon1','guest_weapon2','clock_ready','request_ack','request_confirmed','reject'}
 local files={'shared-session-status.tsv','shared-session-control.tsv','lobby-connection-status.txt','steam-invite-status.tsv','guest-pilot-status.tsv','client-world-status.tsv','cinema-playback-status.tsv','mission-pause-status.tsv','session-lifecycle.tsv','scene-host-status.tsv','plane-flight-status.tsv','guest-role-runtime-r19.tsv','guest-story-status-r19c.tsv'}
-local context_keys={'epoch','revision','generation','phase','scene','self','peer','clock_ready'}
+local context_keys={'epoch','revision','generation','phase','scene','self','peer','clock_ready','attempt_id','protocol'}
 function M.new(output,meta,options)
  options=options or{};meta=meta or{};local now=options.now or os.time
  local d={sequence=0,slot=1,bytes=0,health_slot=1,health_bytes=0,rotations=0,health_rotations=0,errors=0,suppressed=0,last={},counts={},meta=meta,files={}}

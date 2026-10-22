@@ -3,10 +3,16 @@
 #include <algorithm>
 #include <cmath>
 namespace ac8pilot {
+#ifdef AC8_OWNER_SIM_R30
+constexpr size_t packet_size=392;
+#else
 constexpr size_t packet_size=368;
-enum class Kind:uint32_t{state=1,loaded=2,input=3,stop=4};
+#endif
+enum class Kind:uint32_t{state=1,loaded=2,input=3,stop=4,owner_state=5};
 constexpr uint32_t paused=1,dead=2,flight_only=4;
-#ifdef AC8_STEAM_COOP_R27
+#ifdef AC8_OWNER_SIM_R30
+constexpr unsigned pilot_version=3;constexpr uint32_t loaded_ack=8,allowed_flags=15;
+#elif defined(AC8_STEAM_COOP_R27)
 constexpr unsigned pilot_version=2;constexpr uint32_t loaded_ack=8,allowed_flags=15;
 #else
 constexpr unsigned pilot_version=1;constexpr uint32_t allowed_flags=7;
@@ -19,6 +25,9 @@ struct Frame{
  Kind kind=Kind::state;uint64_t sender=0,session=0,echo=0,sequence=0,generation=0,source_us=0;
  uint32_t revision=1,mission=7,slot=1,aircraft=23,flags=0,count=0;
  std::array<int16_t,5> axes{};std::array<Pose,4> poses{};
+ // R30 owner snapshots only: root position units/second in the same world
+ // axes as Pose.position. Host snapshots and control barriers keep this zero.
+ std::array<double,3> velocity{};
 };
 inline bool finite(const Pose&p){
  if(p.role>3||!p.aircraft||p.aircraft>65535||p.flags>1)return false;
@@ -32,6 +41,20 @@ inline ac8input::Frame input(const Frame&f){
 }
 inline bool valid(const Frame&f){
  if(!f.sender||!f.session||!f.echo||!f.sequence||!f.generation||!f.revision||f.mission!=7||f.slot!=1||f.aircraft!=23)return false;
+#ifdef AC8_OWNER_SIM_R30
+ if(f.kind==Kind::owner_state){
+  if(f.count!=1||!f.source_us||f.flags)return false;
+  for(auto x:f.axes)if(x)return false;
+  const auto&p=f.poses[0];auto geometry=p;geometry.health=geometry.max_health=1;
+  if(p.role!=1||p.aircraft!=23||p.health||p.max_health||p.flags||!finite(geometry))return false;
+  for(auto x:f.velocity)if(!std::isfinite(x)||std::fabs(x)>1e8)return false;
+  for(unsigned i=1;i<4;++i){const auto&q=f.poses[i];if(q.role||q.aircraft||q.speed||q.health||q.max_health||q.flags)return false;for(auto x:q.position)if(x)return false;for(auto x:q.rotation)if(x)return false;}
+  return true;
+ }
+ // The host no longer accepts/simulates remote stick commands in this build.
+ if(f.kind==Kind::input)return false;
+#endif
+ for(auto x:f.velocity)if(x)return false;
  if(f.kind==Kind::state){
   if(f.count!=4||!f.source_us||(f.flags&~allowed_flags)||!(f.flags&flight_only))return false;
   for(unsigned i=0;i<4;++i)if(!finite(f.poses[i])||f.poses[i].role!=i)return false;
@@ -53,6 +76,10 @@ inline std::array<uint8_t,packet_size> encode(const Frame&f){
  for(auto x:{f.revision,f.mission,f.slot,f.aircraft,f.flags,f.count})put(x,4);
  for(auto x:f.axes)put(uint16_t(x),2);at=104;
  for(const auto&p:f.poses){put(p.role,4);put(p.aircraft,4);for(auto x:p.position)scalar(x);for(auto x:p.rotation)scalar(x);scalar(p.speed);scalar(p.health);scalar(p.max_health);put(p.flags,4);}
+#ifdef AC8_OWNER_SIM_R30
+ // Preserve the legacy 368-byte frame, including its 8 reserved tail bytes.
+ at=368;for(auto x:f.velocity)scalar(x);
+#endif
  return b;
 }
 inline bool decode(const void*raw,size_t size,Frame&f){
@@ -63,9 +90,20 @@ inline bool decode(const void*raw,size_t size,Frame&f){
  f.kind=Kind(get(4));for(auto*p:{&f.sender,&f.session,&f.echo,&f.sequence,&f.generation,&f.source_us})*p=get(8);
  for(auto*p:{&f.revision,&f.mission,&f.slot,&f.aircraft,&f.flags,&f.count})*p=uint32_t(get(4));for(auto&x:f.axes)x=int16_t(get(2));at=104;
  for(auto&p:f.poses){p.role=uint32_t(get(4));p.aircraft=uint32_t(get(4));for(auto&x:p.position)scalar(x);for(auto&x:p.rotation)scalar(x);scalar(p.speed);scalar(p.health);scalar(p.max_health);p.flags=uint32_t(get(4));}
+#ifdef AC8_OWNER_SIM_R30
+ at=368;for(auto&x:f.velocity)scalar(x);
+#endif
  if(!valid(f))return false;const auto canonical=encode(f);return memcmp(canonical.data(),b,packet_size)==0;
 }
 struct Context{uint64_t local=0,peer=0,nonce=0,remote=0;bool host=false;};
+inline bool outgoing_kind(bool host,Kind kind){
+ if(kind==Kind::stop)return true;
+#ifdef AC8_OWNER_SIM_R30
+ return host?kind==Kind::state:(kind==Kind::loaded||kind==Kind::owner_state);
+#else
+ return host?kind==Kind::state:(kind==Kind::loaded||kind==Kind::input);
+#endif
+}
 inline bool matches(const Frame&f,const Context&c){return f.sender==c.peer&&f.session==c.remote&&f.echo==c.nonce;}
 struct Gate{
  Context context{};uint64_t generation=0,last_sequence=0,loaded_ms=0;uint32_t revision=0;bool loaded=false,spectating=false;

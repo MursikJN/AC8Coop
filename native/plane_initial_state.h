@@ -168,8 +168,8 @@ inline std::array<Field,46> fields() {
     for(unsigned o=8;o<=0x1c;o+=4)out[n++]={4,o,4};out[n++]={4,0x20,1};
     out[n++]={0,8,8};out[n++]={5,0x3c38,8};return out;
 }
-template<class M> bool verify_owned(M& m, const Snapshot& s, const OwnedCaches& o) {
-    if(!s.complete||!o.plane||!o.network||o.plane==s.source||o.network==s.source||
+template<bool Self,class M> bool verify_owned_impl(M& m, const Snapshot& s, const OwnedCaches& o) {
+    if(!s.complete||!o.plane||!o.network||(Self?o.plane!=s.source:o.plane==s.source)||o.network==s.source||
        !m.guard(s.token,s.source,o.plane,o.network))return false;
     uintptr_t linked=0,outer=0;
     float scale=0;
@@ -190,12 +190,18 @@ template<class M> bool verify_owned(M& m, const Snapshot& s, const OwnedCaches& 
             if(o.data[i]<base+size&&base<o.data[i]+sizes[i])return false;
         }
     }
-    for(unsigned offset:{0x50u,0x60u,0x70u}) {uint64_t desc[2];if(!get(m,o.data[0]+offset,desc)||desc[0]||desc[1])return false;}
+    // Cross-actor diagnostics require empty descriptors. The self-only route
+    // preserves its own native descriptors byte-for-byte and never stages them.
+    if constexpr(!Self)for(unsigned offset:{0x50u,0x60u,0x70u}) {uint64_t desc[2];if(!get(m,o.data[0]+offset,desc)||desc[0]||desc[1])return false;}
     return true;
 }
-template<class M> bool stage(M& m, const Snapshot& s, const OwnedCaches& o, Result& result) {
+template<class M> bool verify_owned(M& m,const Snapshot&s,const OwnedCaches&o){return verify_owned_impl<false>(m,s,o);}
+// Explicit self-only route: cannot authorize a different source actor. The
+// backend guard must pin this same object's index/serial and own update fence.
+template<class M> bool verify_self_owned(M& m,const Snapshot&s,const OwnedCaches&o){return verify_owned_impl<true>(m,s,o);}
+template<bool Self,class M> bool stage_impl(M& m, const Snapshot& s, const OwnedCaches& o, Result& result) {
     result={};result.error="ownership_or_barrier_unverified";
-    if(!verify_owned(m,s,o))return false;
+    if(!verify_owned_impl<Self>(m,s,o))return false;
     const uint8_t* blocks[]={s.main.data(),s.aux140.data(),s.aux150.data(),s.aux160.data(),s.aux170.data()};
     const auto ff=fields();
     for(const auto& f:ff) {
@@ -205,14 +211,16 @@ template<class M> bool stage(M& m, const Snapshot& s, const OwnedCaches& o, Resu
         if(!m.write(target,value,f.size)){result.error="write_failed_partial_commit";return false;}
         ++result.scalar_writes;
     }
-    if(!verify_owned(m,s,o)){result.error="ownership_changed_after_commit";return false;}
+    if(!verify_owned_impl<Self>(m,s,o)){result.error="ownership_changed_after_commit";return false;}
     for(const auto& f:ff) {
         const uintptr_t target=(f.cache==5?o.plane:o.data[f.cache])+f.offset;
         const void* value=f.cache==5?static_cast<const void*>(&s.timestamp):blocks[f.cache]+f.offset;
         uint8_t actual[8]{};
         if(!m.read(target,actual,f.size)||std::memcmp(actual,value,f.size)){result.error="readback_mismatch";return false;}
     }
-    if(!verify_owned(m,s,o)){result.error="ownership_changed_after_readback";return false;}
+    if(!verify_owned_impl<Self>(m,s,o)){result.error="ownership_changed_after_readback";return false;}
     result.readback=true;result.error="cold_caches_verified_models_not_initialized";return true;
 }
+template<class M> bool stage(M&m,const Snapshot&s,const OwnedCaches&o,Result&r){return stage_impl<false>(m,s,o,r);}
+template<class M> bool stage_self(M&m,const Snapshot&s,const OwnedCaches&o,Result&r){return stage_impl<true>(m,s,o,r);}
 }

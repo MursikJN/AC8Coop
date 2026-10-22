@@ -2,6 +2,7 @@ assert(os.getenv('AC8_STEAM_LOBBY')=='25201480','Steam lobby profile required')
 local source=assert(os.getenv('AC8_LOBBY_SCRIPTS'))
 local output=assert(os.getenv('AC8_COOP_RECON_OUTPUT'))
 local dll=assert(os.getenv('AC8_LOBBY_DLL'))
+if os.getenv('AC8_OWNER_LOCAL_LAB')=='25201480'then return assert(loadfile(source..'/owner_local_lab.lua'))().run(source,output,dll)end
 local diagnostic
 if os.getenv('AC8_SESSION_DIAGNOSTICS')=='1'then
  local ok,result=pcall(function()return assert(loadfile(source..'/session_diagnostics.lua'))().new(output,{session_id=os.getenv('AC8_SESSION_ID'),role=os.getenv('AC8_LOBBY_ROLE'),package=os.getenv('AC8_PACKAGE_REVISION')})end)
@@ -16,6 +17,7 @@ local native={}
 local coop=os.getenv('AC8_STEAM_COOP')=='25201480'
 local cinema_sync=os.getenv('AC8_CINEMA_SYNC')=='25201480'
 local policy=os.getenv('AC8_SESSION_POLICY')=='25201480'
+local owner_native=os.getenv('AC8_OWNER_NATIVE')=='25201480'
 local launch_role=os.getenv('AC8_LOBBY_ROLE')
 if policy then assert(os.getenv('AC8_SAVE_POLICY')==(launch_role=='host'and'host-persistent'or'guest-discarded'),'Изолированный профиль роли не подтверждён лаунчером.')end
 for _,name in ipairs({'start','stop','tick'})do native[name]=native_call(dll,'luaopen_ac8_lobby24_'..name)end
@@ -26,6 +28,7 @@ end
 if coop then
  for _,name in ipairs({'start','tick','stop','loaded','capture_input'})do native['pilot_'..name]=native_call(dll,'luaopen_ac8_pilot_'..name)end
  native.capture_vote=native_call(dll,'luaopen_ac8_coop27_capture_vote')
+ if owner_native then native.pilot_prepare=native_call(dll,'luaopen_ac8_pilot_prepare')end
 end
 local function log(event,detail)
  if diagnostic and diagnostic.log(event,detail)==false then return end
@@ -34,7 +37,7 @@ end
 local menu=assert(loadfile(source..'/coop_main_menu.lua'))()
 local catalog=assert(loadfile(source..'/coop_menu_catalog.lua'))()
 if coop then _G.AC8LocalMenuDll=source..'/../../../ac8_menu_route_r13.dll'end
-local controller=assert(loadfile(source..'/steam_lobby_services.lua'))().new(output,native,nil,{mission_sync=coop,cinema_sync=cinema_sync,session_policy=policy,launch_role=launch_role,trace=diagnostic and diagnostic.event})
+local controller=assert(loadfile(source..'/steam_lobby_services.lua'))().new(output,native,nil,{mission_sync=coop,cinema_sync=cinema_sync,session_policy=policy,owner_native=owner_native,launch_role=launch_role,trace=diagnostic and diagnostic.event})
 if diagnostic then diagnostic.context(controller)end
 local options={compact=true,source=source,catalog=catalog,is_host=os.getenv('AC8_LOBBY_ROLE')~='guest',
  view=controller.view,status=controller.status,create=controller.create,join=controller.join,leave=controller.leave,
@@ -104,5 +107,5 @@ local function tick()
  end
  ExecuteInGameThreadWithDelay(coop and 16 or 100,tick)
 end
-log(policy and'r29_loaded'or cinema_sync and'r28_loaded'or coop and'r27_loaded'or native.invites_tick and'r25_loaded'or'r24_loaded',coop and'Steam room, mission barriers and session-bound pilot; isolated guest world required'or'Steam lobby only; transport starts on Create/Join/accepted invite')
+log(owner_native and'r31_loaded'or policy and'r29_loaded'or cinema_sync and'r28_loaded'or coop and'r27_loaded'or native.invites_tick and'r25_loaded'or'r24_loaded',coop and'Steam room, mission barriers and session-bound pilot; isolated guest world required'or'Steam lobby only; transport starts on Create/Join/accepted invite')
 ExecuteInGameThreadWithDelay(1000,tick)

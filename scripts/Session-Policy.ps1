@@ -17,7 +17,7 @@ function ConvertFrom-CoopPolicyTsv {
  return $result
 }
 function Get-CoopRestartPlan {
- param([string]$Root,[string]$Session,[string]$Role,[int]$ExitCode)
+ param([string]$Root,[string]$Session,[string]$Role,[int]$ExitCode,[ValidateSet(7,8)][int]$ExpectedProtocol=7)
  if($ExitCode -ne 0){return $null}
  $rootPath=[IO.Path]::GetFullPath($Root).TrimEnd([char[]]@([char]92,[char]47))
  $sessionPath=[IO.Path]::GetFullPath($Session)
@@ -34,7 +34,7 @@ function Get-CoopRestartPlan {
  if([Math]::Abs([DateTimeOffset]::UtcNow.ToUnixTimeSeconds()-[long]$t.created_unix) -gt 120){throw 'Expired restart ticket'}
  $status=Join-Path $sessionPath 'mod/shared-session-status.tsv';if((Get-Item -LiteralPath $status).Length -gt 8192){throw 'Oversized status'}
  $s=ConvertFrom-CoopPolicyTsv ([IO.File]::ReadAllText($status))
- if($s.format -ne 'ac8-session-status-v3' -or $s.protocol -ne '7' -or $s.session_policy -ne '1' -or $s.phase -ne '10' -or $s.restart_ack -ne '2' -or $s.role -ne $Role){throw 'Restart not confirmed by the native session'}
+ if($s.format -ne 'ac8-session-status-v3' -or $s.protocol -ne [string]$ExpectedProtocol -or $s.session_policy -ne '1' -or $s.phase -ne '10' -or $s.restart_ack -ne '2' -or $s.role -ne $Role){throw 'Restart not confirmed by the native session'}
  foreach($key in @('config_token','restart_id','epoch','revision','mission','difficulty')){if($t[$key] -ne $s[$key]){throw 'Stale restart ticket'}}
  $hostId=if($Role -eq 'host'){$s.self}else{$s.peer};if($hostId -ne $t.host_id){throw 'Restart host mismatch'}
  [IO.File]::Move($ticket,$ticket+'.consumed')

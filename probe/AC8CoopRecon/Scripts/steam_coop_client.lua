@@ -22,10 +22,12 @@ function M.new(c,output,source,native,log,provider)
   local f=io.open(output..'/'..name,'rb');if not f then return end;local data=f:read(limit+1);f:close();if #data>limit then return end;return data
  end
  function s.stop(reason)
-  pilot.stop(reason);if s.camera then s.camera.stop(reason);s.camera=nil end
+  if s.camera then s.camera.stop(reason);s.camera=nil end;pilot.stop(reason)
+  if s.context then s.context.local_owner_verified=false;s.context.local_owner_actor=nil end
   if s.engine then s.engine.stop(reason);s.engine=nil end
   if provider and provider.stop then provider.stop(reason)end;s.ready=false;s.isolated_world_verified=false;s.reason=reason
  end
+ function s.drain()pilot.update(s);return not pilot.cleanup_pending end
  local function update()
   local v=c.view();local phase=v.phase
   if c.cinema then c.cinema.update();if c.cinema.error then s.reason=c.cinema.error;return end end
@@ -71,11 +73,13 @@ function M.new(c,output,source,native,log,provider)
    -- aircraft; do not wait for Baxter before acknowledging terrain loading.
    for _,e in pairs(s.engine.entities)do if e.role==0 and e.alive then return e end end
   end
-  s.ready=s.engine.ready and s.engine.core.active and initial_pose()~=nil;s.isolated_world_verified=true
+  local local_running=native.pilot_prepare and pilot.active and context.local_owner_verified and s.engine.ready
+  s.ready=local_running or(s.engine.ready and s.engine.core.active and initial_pose()~=nil);s.isolated_world_verified=true
   if not s.ready then return end
   if not s.camera then
    s.camera=assert(loadfile(source..'/guest_pilot_camera.lua'))().new(view)
    s.camera.attach(context.pc,function()
+    if context.local_owner_verified and not context.local_owner_spectating and s.engine.owner_pose then return s.engine.owner_pose end
     local received=s.stream.sample(c.now)
     if received then return received.poses[(received.flags&2)~=0 and 1 or 2]end
     return initial_pose()
@@ -83,15 +87,23 @@ function M.new(c,output,source,native,log,provider)
   end
   if phase==5 and not c.pending and not s.loaded_epochs[c.snapshot.epoch]then c.loaded();s.loaded_epochs[c.snapshot.epoch]=true end
   if phase==6 and not pilot.active then pilot.try_start(s)end
+  if native.pilot_prepare and pilot.reason then error(pilot.reason)end
   pilot.update(s)
-  local state=read('guest-pilot-state.ac8p',368)
+  if context.local_owner_verified then
+   local local_state=read('guest-owner-local.ac8p',392)
+   if local_state then s.engine.set_owner_pose(view.owner(local_state))end
+  end
+  local state=read('guest-pilot-state.ac8p',392)
   if state then
    local frame=view.parse(state)
-   if frame.generation==tonumber(c.snapshot.generation)and frame.revision==tonumber(c.snapshot.revision)then s.stream.accept(frame,c.now)end
+   if frame.generation==tonumber(c.snapshot.generation)and frame.revision==tonumber(c.snapshot.revision)then
+    s.stream.accept(frame,c.now)
+    if native.pilot_prepare and(frame.flags&2)~=0 then context.local_owner_spectating=true;s.engine.owner_pose=nil end
+   end
   end
  end
  function s.update()
-  if s.error then return end
+  if s.error then s.drain();return end
   local ok,err=xpcall(update,debug.traceback)
   if not ok then s.error=tostring(err);s.stop(s.error);c.error='Клиентская сцена: '..s.error;log('coop_client_error',s.error)end
  end

@@ -33,4 +33,16 @@ class SteamCoopClientTests(unittest.TestCase):
    C.snapshot.phase='5';P={prepare_flight=function()return {session_token='123',generation=99,revision=2,isolated_world_verified=true}end,verify=function()error('Must reject generation first')end}
    S=M.new(C,'missing-output',SOURCE,N,function()end,P);S.update();assert(ACK==0 and not S.error and not S.engine)
   """)
+ def test_active_local_owner_keeps_ticking_when_host_visuals_are_stale(self):
+  self.l.execute("""
+   local original=loadfile;UPDATES=0;local fake={active=true,update=function()UPDATES=UPDATES+1 end,stop=function()end}
+   loadfile=function(p)if p:find('steam_coop_pilot.lua',1,true)then return function()return {new=function()return fake end}end end;return original(p)end
+   C.snapshot.phase='6';N.pilot_prepare=function()end
+   local ctx={session_token='123',generation=1,revision=2,isolated_world_verified=true,local_owner_verified=true,world={GetFullName=function()return 'World'end}}
+   local p={role=1,alive=true,position={0,0,0},rotation={0,0,0,1}}
+   local provider={prepare_flight=function()return ctx end,verify=function()return true end}
+   S=M.new(C,'missing-output',SOURCE,N,function()end,provider);S.context=ctx;S.camera={active=true}
+   S.engine={ready=true,assets_ready=true,guest_pose=p,nodes={one={}},entities={p},core={active=false,current={},sequence=1},pump=function()end,render=function()return false end}
+   S.update();assert(not S.error and S.ready and UPDATES==1)
+  """)
 if __name__=='__main__':unittest.main()

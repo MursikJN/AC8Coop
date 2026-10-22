@@ -111,6 +111,25 @@ static void worker(ac8session::State&authority,const wchar_t*folder,uint64_t tok
  if(ready&&authority.stage!=ac8session::Stage::lobby&&authority.stage!=ac8session::Stage::stopped)scene_files(folder);
 }
 static void status(FILE*f,const ac8session::State&s){
+#ifdef AC8_OWNER_NATIVE_R31
+ if(connected&&session.ready()){
+  // Correlation only: hash canonical identities/nonces, never print raw nonces.
+  std::array<uint64_t,3> ids={role==Role::host?local_id:peer_id,role==Role::host?session.nonce:session.remote,role==Role::host?session.remote:session.nonce};
+  std::array<UCHAR,32>digest{};BCRYPT_ALG_HANDLE algorithm=nullptr;
+  if(BCryptOpenAlgorithmProvider(&algorithm,BCRYPT_SHA256_ALGORITHM,nullptr,0)>=0){
+   if(BCryptHash(algorithm,nullptr,0,reinterpret_cast<PUCHAR>(ids.data()),ULONG(sizeof ids),digest.data(),ULONG(digest.size()))>=0){
+    fputs("attempt_id\t",f);for(auto value:digest)fprintf(f,"%02x",unsigned(value));fputc('\n',f);
+   }BCryptCloseAlgorithmProvider(algorithm,0);
+  }
+ }
+#endif
+#ifdef AC8_OWNER_SIM_R30
+#ifdef AC8_OWNER_NATIVE_R31
+ fprintf(f,"owner_simulation_protocol\t1\nowner_native_candidate\t1\nowner_native_adapter_present\t1\nowner_runtime_tested\t0\nowner_blocker\truntime_validation_pending\n");
+#else
+ fprintf(f,"owner_simulation_protocol\t1\nowner_runtime_ready\t0\nnative_sortie_backend_verified\t0\nowner_blocker\tguest_stock_model_bootstrap_and_selector_lifecycle\n");
+#endif
+#endif
  auto now=GetTickCount64();const bool calibrated=role==Role::host||clock.ready(now);
  fprintf(f,"mission_sync\t1\nprotocol\t%u\nscene\t%u\nscene_exit\t%u\nscene_return\t%u\nloaded_mask\t%u\nvote_mask\t%u\ncommit_mask\t%u\nrelease_at\t%llu\ngeneration\t%u\nlocal_tick\t%llu\nhost_tick\t%llu\nclock_ready\t%d\nclock_rtt\t%llu\nhangar_scene_supported\t1\n",ac8session::protocol_version,s.scene,s.scene_exit,s.scene_return,s.loaded,s.votes,s.committed,static_cast<unsigned long long>(s.release_at),s.generation,static_cast<unsigned long long>(now),static_cast<unsigned long long>(role==Role::host?now:clock.host_now(now)),calibrated?1:0,static_cast<unsigned long long>(clock.rtt));
 #ifdef AC8_CINEMA_SYNC_R28
@@ -140,7 +159,7 @@ bool send(ac8pilot::Frame f){
  const auto p=coop27::view();if(!p.flight_phase||!p.context.peer||p.generation!=f.generation||p.revision!=f.revision||GetTickCount64()-p.at>1000)return false;
  AcquireSRWLockExclusive(&coop27::lock);
  // Replace unsent continuous state/input, but retain loaded/stop barriers.
- if(f.kind==ac8pilot::Kind::input||f.kind==ac8pilot::Kind::state){
+ if(f.kind==ac8pilot::Kind::input||f.kind==ac8pilot::Kind::state||f.kind==ac8pilot::Kind::owner_state){
   for(auto i=coop27::outbound.begin();i!=coop27::outbound.end();)if(i->kind==f.kind)i=coop27::outbound.erase(i);else ++i;
  }
  const auto&current=coop27::published;

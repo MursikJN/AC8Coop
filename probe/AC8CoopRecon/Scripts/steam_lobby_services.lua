@@ -95,7 +95,7 @@ function M.new(output,native,clock,options)
   if not c.active then return end
   local s=read('shared-session-status.tsv','ac8-session-status-v3')
   if s then
-   if mission_sync and(s.mission_sync~='1'or s.protocol~=(policy and'7'or cinema_sync and'6'or'5')or(cinema_sync and s.cinema_sync~='1')or(policy and(s.session_policy~='1'or s.host_progress_only~='1')))then c.incompatible=true;c.error='Несовместимая сборка совместного полёта.';if policy then c.local_failure=c.error end;return end
+   if mission_sync and(s.mission_sync~='1'or s.protocol~=(options.owner_native and'8'or policy and'7'or cinema_sync and'6'or'5')or(options.owner_native and s.owner_native_candidate~='1')or(cinema_sync and s.cinema_sync~='1')or(policy and(s.session_policy~='1'or s.host_progress_only~='1')))then c.incompatible=true;c.error='Несовместимая сборка совместного полёта.';if policy then c.local_failure=c.error end;return end
    c.incompatible=false
    -- Tokens prevent an old room/status file from confirming a new attempt.
    if c.snapshot.connected=='1'and s.connected~='1'then c.pending=nil;c.error='Связь с участником потеряна. Готовность сброшена.'end

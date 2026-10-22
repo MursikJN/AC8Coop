@@ -23,8 +23,8 @@ inline bool translate(Snapshot& s,int32_t x,int32_t y,int32_t z) {
     for(unsigned i=0;i<3;++i)plane_initial_state::put(s.main,0x2c+i*4,next[i]);
     return true;
 }
-template<class B> bool caches_match(B& b,const Snapshot& s,const OwnedCaches& o) {
-    if(!plane_initial_state::verify_owned(b,s,o))return false;
+template<class B> bool caches_match(B& b,const Snapshot& s,const OwnedCaches& o,bool self=false) {
+    if(!(self?plane_initial_state::verify_self_owned(b,s,o):plane_initial_state::verify_owned(b,s,o)))return false;
     const uint8_t* blocks[]={s.main.data(),s.aux140.data(),s.aux150.data(),s.aux160.data(),s.aux170.data()};
     for(const auto& f:plane_initial_state::fields()) {
         const uintptr_t p=(f.cache==5?o.plane:o.data[f.cache])+f.offset;
@@ -32,8 +32,8 @@ template<class B> bool caches_match(B& b,const Snapshot& s,const OwnedCaches& o)
         uint8_t actual[8]{};if(!b.read(p,actual,f.size)||std::memcmp(actual,expected,f.size))return false;
     }return true;
 }
-template<class B> bool models_owned(B& b,const Snapshot& s,const OwnedCaches& o) {
-    if(!caches_match(b,s,o))return false;
+template<class B> bool models_owned(B& b,const Snapshot& s,const OwnedCaches& o,bool self=false) {
+    if(!caches_match(b,s,o,self))return false;
     uintptr_t vt=0;if(!get(b,o.plane+0xf48,vt)||vt!=s.image+0xcc01460)return false;
     for(unsigned i=0;i<2;++i) {
         const auto m=o.plane+(i?0x3c60:0x2268);uintptr_t provider=0,bodyvt=0;uint8_t mode=0;
@@ -103,19 +103,19 @@ template<class B> bool verify_model(B& b,uintptr_t m,const Snapshot& s,Report& r
 // must NOT catch a native mutation fault and pretend execution can safely resume.
 // reset_model:4d344f0 RCX=model; consume:74d8c00 RCX=network,RDX=model;
 // input:4d32580 RCX=model,RDX=cache170+8. All execute on game thread.
-template<class B> bool finalize(B& b,const Snapshot& s,const OwnedCaches& o,Report& r) {
+template<class B> bool finalize_impl(B& b,const Snapshot& s,const OwnedCaches& o,Report& r,bool self) {
     r={};r.error="owned_cache_or_model_identity_failed";
-    if(!models_owned(b,s,o))return false;
+    if(!models_owned(b,s,o,self))return false;
     r.error="secondary_configuration_reset_failed";
     if(!b.reset_model(o.plane+0x3c60))return false;++r.native_calls;
     // Secondary configuration refresh writes primary provider-derived scalars.
     // Therefore finish all refresh work BEFORE consuming either baseline.
     for(uintptr_t m:{o.plane+0x2268,o.plane+0x3c60}) {
-        r.error="baseline_consume_failed";if(!models_owned(b,s,o)||!b.consume(o.network,m))return false;++r.native_calls;
+        r.error="baseline_consume_failed";if(!models_owned(b,s,o,self)||!b.consume(o.network,m))return false;++r.native_calls;
     }
     for(uintptr_t m:{o.plane+0x2268,o.plane+0x3c60}) {
         std::array<float,6> expected{};r.error="input_filter_prerequisites_failed";
-        if(!models_owned(b,s,o)||!expected_input(b,m,s,expected))return false;
+        if(!models_owned(b,s,o,self)||!expected_input(b,m,s,expected))return false;
         r.error="native_input_setter_failed";if(!b.input(m,o.data[4]+8))return false;++r.native_calls;
         r.error="input_readback_failed";
         for(unsigned i=0;i<6;++i)if(!eq(b,m+i*4,expected[i],r))return false;
@@ -123,10 +123,12 @@ template<class B> bool finalize(B& b,const Snapshot& s,const OwnedCaches& o,Repo
     }
     r.error="model_baseline_readback_failed";
     for(uintptr_t m:{o.plane+0x2268,o.plane+0x3c60})if(!verify_model(b,m,s,r))return false;
-    r.error="final_ownership_or_cache_changed";if(!models_owned(b,s,o))return false;
+    r.error="final_ownership_or_cache_changed";if(!models_owned(b,s,o,self))return false;
     r.models_seeded=true;r.inputs_verified=true;
     // ready stays false: caller still owns native configuration/component proof,
     // update permit, deadlines, error rollback and source/player preservation.
     r.error="models_seeded_readback_verified_update_barrier_retained";return true;
 }
+template<class B> bool finalize(B&b,const Snapshot&s,const OwnedCaches&o,Report&r){return finalize_impl(b,s,o,r,false);}
+template<class B> bool finalize_self(B&b,const Snapshot&s,const OwnedCaches&o,Report&r){return finalize_impl(b,s,o,r,true);}
 }

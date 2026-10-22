@@ -53,3 +53,8 @@ foreach($name in @('Start-SteamLobby.ps1','Session-Policy.ps1')){
  Assert-Policy ($errors.Count -eq 0) ('PowerShell syntax: '+$name)
 }
 Write-Output ($script:checks.ToString()+' save isolation, restart ticket and launcher syntax checks passed; game not launched')
+$run=New-TestRun
+[IO.File]::WriteAllText($run.Status,[IO.File]::ReadAllText($run.Status).Replace("protocol`t7","protocol`t8"))
+Assert-Rejected {Get-CoopRestartPlan -Root $scratch -Session $run.Session -Role host -ExitCode 0}
+Assert-Policy ((Get-CoopRestartPlan -Root $scratch -Session $run.Session -Role host -ExitCode 0 -ExpectedProtocol 8).HostId -eq '76561198000000001') 'R31 restart protocol 8 rejected'
+Write-Output ($script:checks.ToString()+' total policy checks including protocol 8; no game launched')

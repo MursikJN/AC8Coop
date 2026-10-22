@@ -4,7 +4,9 @@
 #include <string>
 // Private, versioned connect string. Never an engine URL or console command.
 namespace ac8invite {
-#ifdef AC8_SESSION_POLICY_R29
+#ifdef AC8_OWNER_SIM_R30
+constexpr char prefix[]="ac8coop:v8:25201480:";
+#elif defined(AC8_SESSION_POLICY_R29)
 constexpr char prefix[]="ac8coop:v7:25201480:";
 #elif defined(AC8_CINEMA_SYNC_R28)
 constexpr char prefix[]="ac8coop:v6:25201480:";

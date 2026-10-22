@@ -39,9 +39,15 @@ function M.new(c,output,source,log,api)
   assert(math.abs(gameplay:GetTimeSeconds(context.world)-context.baseline)<.001,'Guest simulation advanced')
   local originals=actors(context.world)
   for key,o in pairs(originals)do
+   if context.local_owner_verified and same(o,context.local_owner_actor)then
+    -- Its stock model is stepped manually on GT. The actual World stays
+    -- paused and every other original actor must still be frozen.
+    originals[key]=nil
+   else
    local at=o:K2_GetActorLocation();local old=s.observed[key]
    if old then assert(math.abs(at.X-old.X)<.01 and math.abs(at.Y-old.Y)<.01 and math.abs(at.Z-old.Z)<.01,'Local guest actor moved')
    else s.observed[key]={X=at.X,Y=at.Y,Z=at.Z};s.stable_since=c.now end
+   end
   end
   originals[context.pawn:GetAddress()]=context.pawn;context.visibility.set(originals)
   s.checks=s.checks+1

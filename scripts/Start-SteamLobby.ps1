@@ -3,13 +3,16 @@ param(
  [ValidateSet('host','guest')][string]$Role='host',
  [string]$GameDirectory,
  [switch]$ValidateOnly,
+ [switch]$LocalModelTest,
  [ValidateRange(0,5)][int]$RestartBudget=5,
  [ValidatePattern('^$|^[1-9][0-9]{16}$')][string]$ResumeHost=''
 )
 $ErrorActionPreference='Stop'
+if(!(Get-Command Get-FileHash -ErrorAction SilentlyContinue)){Import-Module (Join-Path $PSHOME 'Modules/Microsoft.PowerShell.Utility/Microsoft.PowerShell.Utility.psd1') -ErrorAction Stop}
 $root=$PSScriptRoot
 $manifest=Get-Content -LiteralPath (Join-Path $root 'lobby-manifest.json') -Raw|ConvertFrom-Json
 $revision=$manifest.revision
+$ownerNative=$revision -like 'r31*' -or (Test-Path -LiteralPath (Join-Path $root 'Coop-Kit.ps1'))
 $diagnostics=$manifest.PSObject.Properties['session_diagnostics'] -and $manifest.session_diagnostics
 $automaticReports=$diagnostics -and $manifest.PSObject.Properties['automatic_reports'] -and $manifest.automatic_reports
 trap {
@@ -22,8 +25,13 @@ trap {
  throw
 }
 if($ResumeHost -and !$manifest.session_policy){throw 'Resume requires the session policy profile.'}
+if($LocalModelTest -and (!$ownerNative -or $Role -ne 'guest' -or $ResumeHost)){throw 'Local model test requires the R31 guest profile without resume.'}
+if($ownerNative){
+ . (Join-Path $root 'Coop-Kit.ps1');$manifest=Test-CoopKit $root
+ $GameDirectory=Test-CoopLab -Root $root -Manifest $manifest -GameDirectory $GameDirectory
+}
 if(!$GameDirectory){
- $candidates=@('D:\Programs\Steam\steamapps\common\ACE COMBAT 8\Game\Binaries\Win64')
+ $candidates=@()
  $steamRoot=(Get-ItemProperty 'HKCU:\Software\Valve\Steam' -ErrorAction SilentlyContinue).SteamPath
  if($steamRoot){
   $libraries=@($steamRoot);$vdf=Join-Path $steamRoot 'steamapps\libraryfolders.vdf'
@@ -55,6 +63,7 @@ $stamp=Get-Date -Format 'yyyyMMdd-HHmmss-fff'
 $session=Join-Path $root ('evidence\session-'+$stamp+'-'+$Role)
 $output=Join-Path $session 'mod';New-Item -ItemType Directory -Path $output -Force|Out-Null
 $userDir=if($manifest.session_policy){Get-CoopUserDirectory -Root $root -Session $session -Role $Role}else{Join-Path $root 'userdata'}
+if($ownerNative){Assert-CoopPlainPath $userDir;Assert-CoopPlainPath (Join-Path $userDir 'Saved')}
 $userSaved=Join-Path $userDir 'Saved';New-Item -ItemType Directory -Path $userSaved -Force|Out-Null
 $saved=Join-Path $env:LOCALAPPDATA 'BANDAI NAMCO Entertainment\ACE COMBAT 8\Saved'
 $backup=Join-Path $root ('save-backups\'+$stamp)
@@ -79,7 +88,7 @@ if($diagnostics){
 $recordPath=Join-Path $session 'session.json'
 function Save-Record{$record|ConvertTo-Json -Depth 4|Set-Content -LiteralPath $recordPath -Encoding UTF8}
 Save-Record
-$owned=$false;$process=$null;$autoReportState=$null;$autoReportClock=$null
+$owned=$false;$process=$null;$autoReportState=$null;$autoReportClock=$null;$labPeer=$null
 try{
  [IO.File]::Copy($proxySource,$proxy,$false);$owned=$true
  $info=New-Object Diagnostics.ProcessStartInfo
@@ -99,6 +108,7 @@ try{
   $info.EnvironmentVariables['AC8_STEAM_COOP']='25201480'
   $info.EnvironmentVariables['AC8_MISSION_SYNC']='25201480'
   $info.EnvironmentVariables['AC8_GUEST_PILOT']='25201480'
+  if($ownerNative){$info.EnvironmentVariables['AC8_OWNER_NATIVE']='25201480'}
   $info.EnvironmentVariables['AC8_LOCAL_SCRIPTS']=Join-Path $root 'runtime\Mods\AC8CoopRecon\Scripts'
   # r19 role module's existing exact-build gate. This main.lua does not expose
   # the development evaluator/mailbox from the older local laboratory.
@@ -109,6 +119,13 @@ try{
  $info.EnvironmentVariables['AC8_LOBBY_ROLE']=$Role
  $info.EnvironmentVariables['AC8_LOBBY_SCRIPTS']=Join-Path $root 'runtime\Mods\AC8CoopRecon\Scripts'
  $info.EnvironmentVariables['AC8_LOBBY_DLL']=Join-Path $root $manifest.native_file
+ if($LocalModelTest){
+  $info.EnvironmentVariables['AC8_OWNER_LOCAL_LAB']='25201480';$record.local_model_test=$true
+  $token=Get-Random -Minimum 100000000 -Maximum 2000000000
+  $helper=New-Object Diagnostics.ProcessStartInfo;$helper.FileName=Join-Path $root 'Owner-Lab-Peer.exe';$helper.WorkingDirectory=$root;$helper.UseShellExecute=$false;$helper.CreateNoWindow=$true
+  $helper.Arguments='"'+$output+'" '+$token
+  $labPeer=[Diagnostics.Process]::Start($helper);$record.lab_peer_pid=$labPeer.Id;Save-Record
+ }
  if($diagnostics){
   $info.EnvironmentVariables['AC8_SESSION_DIAGNOSTICS']='1'
   $info.EnvironmentVariables['AC8_SESSION_ID']=$record.session_id
@@ -138,11 +155,12 @@ finally{
  $gameLogs=Join-Path $userSaved 'Logs'
  if(Test-Path -LiteralPath $gameLogs){Get-ChildItem -LiteralPath $gameLogs -File -Filter '*.log'|Where-Object {$_.Length -lt 64MB -and $_.LastWriteTime -ge [DateTime]::Parse($record.started)}|ForEach-Object {Copy-Item -LiteralPath $_.FullName -Destination $output}}
  $record.finished=Get-Date -Format o;Save-Record
+ if($labPeer -and !$labPeer.HasExited){$labPeer.Kill();$labPeer.WaitForExit(3000)|Out-Null}
  if($diagnostics){try{Copy-CoopDiagnosticLogs -UserSaved $userSaved -Output $output -Since ([DateTime]::Parse($record.started)) -RuntimeLog (Join-Path $root 'runtime/UE4SS.log') -FallbackSaved $saved}catch{Write-Warning ('Diagnostic game log copy failed: '+$_.Exception.Message)}}
  try{& (Join-Path $root 'Collect-CoopLogs.ps1') -SessionDirectory $session -ReportsDirectory (Join-Path $root 'reports')}catch{Write-Warning ('Report collection failed: '+$_.Exception.Message)}
 }
 if($manifest.session_policy -and $process -and $process.HasExited -and $record.proxy_removed -and $RestartBudget -gt 0){
- try{$plan=Get-CoopRestartPlan -Root $root -Session $session -Role $Role -ExitCode $process.ExitCode}catch{$plan=$null;$record.restart_rejected=$_.Exception.Message;Save-Record;if($diagnostics){try{& (Join-Path $root 'Collect-CoopLogs.ps1') -SessionDirectory $session -ReportsDirectory (Join-Path $root 'reports')}catch{Write-Warning ('Restart failure report: '+$_.Exception.Message)}}}
+ try{$plan=Get-CoopRestartPlan -Root $root -Session $session -Role $Role -ExitCode $process.ExitCode -ExpectedProtocol $manifest.protocol}catch{$plan=$null;$record.restart_rejected=$_.Exception.Message;Save-Record;if($diagnostics){try{& (Join-Path $root 'Collect-CoopLogs.ps1') -SessionDirectory $session -ReportsDirectory (Join-Path $root 'reports')}catch{Write-Warning ('Restart failure report: '+$_.Exception.Message)}}}
  if($plan){
   $record.shared_restart=$plan.RestartId;Save-Record
   if($diagnostics){try{& (Join-Path $root 'Collect-CoopLogs.ps1') -SessionDirectory $session -ReportsDirectory (Join-Path $root 'reports')}catch{Write-Warning ('Restart decision report: '+$_.Exception.Message)}}

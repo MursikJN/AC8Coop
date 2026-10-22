@@ -51,11 +51,12 @@ def analyze(path):
     if info.file_size>MAX_MEMBER:raise ValueError('Manifest entry exceeds budget')
     if hashlib.sha256(z.read(info)).hexdigest().upper()!=item.get('sha256','').upper():raise ValueError('Report hash mismatch: '+name)
  events.sort(key=lambda r:(str(r.get('session_id','')),number(r.get('sequence'))))
- commands={};rejects=[];timeline=[];phases=[];metrics={};signals=[];counts=Counter();host_ids=set();identities=set();last_error=None
+ commands={};rejects=[];timeline=[];phases=[];metrics={};signals=[];counts=Counter();host_ids=set();identities=set();attempts=set();last_error=None;first_error=None
  for row in events:
   event=row.get('event');detail=row['detail'];context=row['context'];counts[event]+=1
   identities.add(row.get('session_id','unknown'))
   role=row.get('role',record.get('role','unknown'))
+  if context.get('attempt_id'):attempts.add(str(context['attempt_id']))
   host=context.get('self')if role=='host'else context.get('peer')
   if host and host!='0':host_ids.add(str(host))
   key=(row.get('session_id'),context.get('config_token'),number(detail.get('request')))
@@ -73,10 +74,12 @@ def analyze(path):
   elif event=='session_state':
    phase=number(detail.get('phase'),-1)
    if phase>=0 and(not phases or phases[-1]!=phase):phases.append(phase)
-   if detail.get('error')or detail.get('local_failure'):last_error=detail.get('local_failure')or detail.get('error')
+   if detail.get('error')or detail.get('local_failure'):
+    last_error=detail.get('local_failure')or detail.get('error')
+    if first_error is None:first_error={'sequence':row.get('sequence'),'error':last_error,'phase':PHASES.get(phase,str(phase))}
   elif event=='health_sample':
    status=detail.get('status')or{};pilot=status.get('guest-pilot-status.tsv')or{}
-   for name in ('accepted_inputs','native_steps','state_sequence','peer_loaded','spectating','last_roll_input','engine_detail','state'):
+   for name in ('accepted_inputs','native_steps','state_sequence','peer_loaded','spectating','last_roll_input','engine_detail','state','owner_ready','owner_pointer','owner_index','owner_serial','owner_detail','owner_native_steps','owner_cleanup','owner_cleanup_reason','owner_cleanup_complete','owner_endplay_graph_verified','owner_world_objects_checked','owner_world_objects_ready','owner_world_objects_reason','owner_combat_zone_pointer','owner_actor_mapper_pointer'):
     if name in pilot:metrics[name]=pilot[name]
    components=detail.get('components')or{};client=(components.get('client')or{}).get('metrics')or{}
    metrics.update(client)
@@ -89,7 +92,7 @@ def analyze(path):
   if event in ('session_state','command_sent','emergency_sent','command_confirmed','invite_received','scene_frame_ignored','component_event','component_state','observation_gap'):
    clock=context.get('clock_ready')=='1'and context.get('host_tick_ms')is not None
    timeline.append({'role':role,'session_id':row.get('session_id'),'sequence':row.get('sequence'),'host_tick_ms':number(context.get('host_tick_ms'))if clock else None,'utc':row.get('utc'),'event':event,'phase':PHASES.get(number(context.get('phase'),-1),'unknown'),'scene':context.get('scene'),'generation':context.get('generation'),'detail':detail})
- if not events:warnings.append('No structured diagnostics: use r29-debug1 on both PCs.')
+ if not events:warnings.append('No structured diagnostics: use the same diagnostic kit on both PCs.')
  if summary.get('rotations'):warnings.append('Older command/event history has rotated; this report is not the complete run.')
  if summary.get('health_rotations'):warnings.append('Older periodic telemetry has rotated; the event journal is separate.')
  if summary.get('write_errors'):warnings.append('Recorder reported write errors; some events may be missing.')
@@ -100,7 +103,8 @@ def analyze(path):
  if pending:warnings.append('Some commands have no observed confirmation; this can also be an incomplete/rotated recording.')
  if last_error:warnings.append('Last controller error: '+str(last_error)[:500])
  if number(metrics.get('scene_age_ms'))>500:warnings.append('Last client scene sample is older than 500 ms; inspect pause/transport context.')
- return {'archive':str(path),'role':record.get('role'),'package':record.get('revision'),'session_ids':sorted(identities),'host_ids':sorted(host_ids),'exit_code':record.get('exit_code'),'phases':[PHASES.get(x,str(x))for x in phases],'events':len(events),'event_counts':dict(counts),'commands':list(commands.values()),'rejects':rejects,'metrics':metrics,'signals':signals,'warnings':warnings,'timeline':timeline,'shared_flight_verified':False}
+ if metrics.get('owner_cleanup_complete')=='0':warnings.append('Native owner cleanup is unconfirmed; inspect identity/retirement logs. This may be an active live capture.')
+ return {'archive':str(path),'role':record.get('role'),'package':record.get('revision'),'session_ids':sorted(identities),'attempt_ids':sorted(attempts),'host_ids':sorted(host_ids),'first_recorded_error':first_error,'exit_code':record.get('exit_code'),'phases':[PHASES.get(x,str(x))for x in phases],'events':len(events),'event_counts':dict(counts),'commands':list(commands.values()),'rejects':rejects,'metrics':metrics,'signals':signals,'warnings':warnings,'timeline':timeline,'shared_flight_verified':False}
 
 def combined(paths):
  reports=[analyze(Path(p))for p in paths];hosts=set().union(*(set(r['host_ids'])for r in reports))
@@ -108,12 +112,19 @@ def combined(paths):
  if len(hosts)>1:warnings.append('Reports identify different hosts. Do not interpret their host ticks as a shared timeline.')
  if not {'host','guest'}<=set(r['role']for r in reports):warnings.append('Both host and guest reports are needed to compare peers.')
  if len({r['package']for r in reports})>1:warnings.append('Packages differ between supplied reports.')
+ attempts=[set(r['attempt_ids'])for r in reports];matched=bool(attempts and all(attempts)and set.intersection(*attempts))
+ if any(attempts)and not matched:warnings.append('Reports do not share a confirmed attempt_id; do not merge timelines.')
+ common=[p for p in reports[0]['phases']if all(p in r['phases']for r in reports)]if reports else[]
+ if any(attempts)and not matched:common=[]
+ # Per-side errors retain local order. Do not infer cross-PC causality from UTC.
+ for r in reports:r['last_common_phase_candidate']=common[-1]if common else None;r['attempt_match_confirmed']=matched
  return {'format':'ac8-diagnostic-analysis-v1','warnings':warnings,'reports':reports,'shared_flight_verified':False,'clock_note':'Host ticks are sampled and approximate; compare only a matched host/guest attempt with clock_ready=1. UTC clocks may differ. A phase flag alone is not proof of a working flight.'}
 
 def markdown(result):
  lines=['# AC8 — разбор диагностических отчётов','',result['clock_note'],'']
  lines.extend('- '+x for x in result['warnings'])
  for r in result['reports']:
+  if r.get('first_recorded_error'):lines+=['','Первый зарегистрированный отказ этой стороны: '+json.dumps(r['first_recorded_error'],ensure_ascii=False)]
   lines+=['',f"## {r['role']} · {r['package']}",'',f"Архив: `{Path(r['archive']).name}`",f"Событий: {r['events']}; код выхода: {r['exit_code']}.",'',"Этапы: "+' → '.join(r['phases']),'',"Отклонённые команды: "+json.dumps(r['rejects'],ensure_ascii=False),'',"Последние показатели:",'','```json',json.dumps(r['metrics'],ensure_ascii=False,indent=2),'```','']
   lines.extend('- '+x for x in r['warnings'])
   if r['signals']:lines+=['','Сигналы задержек (требуют проверки контекста):','',json.dumps(r['signals'][:20],ensure_ascii=False)]

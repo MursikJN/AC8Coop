@@ -1,4 +1,5 @@
--- Authoritative host snapshots only. No local mission simulation or prediction.
+-- Host authority for mission/health. R30 additionally decodes movement-only
+-- owner snapshots; a verified local backend must supply the local camera pose.
 local M={}
 local function finite(x)return type(x)=='number'and x==x and math.abs(x)<1e12 end
 function M.pose(p)
@@ -8,11 +9,12 @@ function M.pose(p)
  return math.abs(n-1)<.002
 end
 function M.parse(data)
- assert(type(data)=='string'and #data==368,'Invalid host state size')
+ assert(type(data)=='string'and(#data==368 or #data==392),'Invalid host state size')
  local magic,version,size,build,kind=string.unpack('<c4I2I2I4I4',data)
- assert(magic=='AC8P'and(version==1 or version==2)and size==368 and build==25201480 and kind==1,'Invalid host state header')
+ assert(magic=='AC8P'and((version==1 or version==2)and size==368 or version==3 and size==392)and size==#data and build==25201480 and kind==1,'Invalid host state header')
  local sequence,generation,source_us,revision,mission,slot,aircraft,flags,count=string.unpack('<I8I8I8I4I4I4I4I4I4',data,41)
- assert(sequence>0 and generation>0 and revision>0 and mission==7 and slot==1 and aircraft==23 and count==4 and(flags&4)==4 and flags<= (version==2 and 15 or 7),'Invalid host assignment')
+ assert(sequence>0 and generation>0 and revision>0 and mission==7 and slot==1 and aircraft==23 and count==4 and(flags&4)==4 and flags<= (version>=2 and 15 or 7),'Invalid host assignment')
+ if version==3 then local x,y,z=string.unpack('<ddd',data,369);assert(x==0 and y==0 and z==0,'Host cannot write owner velocity')end
  local frame={sequence=sequence,generation=generation,source_us=source_us,revision=revision,flags=flags,poses={}}
  for i=0,3 do
   local role,model,x,y,z,qx,qy,qz,qw,speed,hp,maxhp,state=string.unpack('<I4I4dddfffffffI4',data,105+64*i)
@@ -21,6 +23,21 @@ function M.parse(data)
   frame.poses[i+1]=p
  end
  assert(frame.poses[2].aircraft==23,'Guest aircraft mismatch');return frame
+end
+function M.owner(data)
+ assert(type(data)=='string'and #data==392,'Invalid owner state size')
+ local magic,version,size,build,kind=string.unpack('<c4I2I2I4I4',data)
+ assert(magic=='AC8P'and version==3 and size==392 and build==25201480 and kind==5,'Invalid owner state header')
+ local sequence,generation,source_us,revision,mission,slot,aircraft,flags,count=string.unpack('<I8I8I8I4I4I4I4I4I4',data,41)
+ assert(sequence>0 and generation>0 and source_us>0 and revision>0 and mission==7 and slot==1 and aircraft==23 and flags==0 and count==1,'Invalid owner assignment')
+ -- No axes/reserved bytes, partner planes, damage, death or event writes.
+ assert(data:sub(89,104)==string.rep('\0',16)and data:sub(169,368)==string.rep('\0',200),'Owner has non-movement payload')
+ local role,model,x,y,z,qx,qy,qz,qw,speed,hp,maxhp,state=string.unpack('<I4I4dddfffffffI4',data,105)
+ local pose={role=role,aircraft=model,position={x,y,z},rotation={qx,qy,qz,qw},speed=speed}
+ assert(role==1 and model==23 and M.pose(pose)and finite(speed)and speed>=0 and speed<=1e6 and hp==0 and maxhp==0 and state==0,'Invalid owner plane')
+ local vx,vy,vz=string.unpack('<ddd',data,369);local velocity={vx,vy,vz}
+ for _,v in ipairs(velocity)do assert(finite(v)and math.abs(v)<=1e8,'Invalid owner velocity')end
+ return {sequence=sequence,generation=generation,source_us=source_us,revision=revision,pose=pose,velocity=velocity}
 end
 function M.follow(p,back,up,ahead)
  assert(M.pose(p),'Invalid camera source pose');back=back or 4200;up=up or 1100;ahead=ahead or 6000
