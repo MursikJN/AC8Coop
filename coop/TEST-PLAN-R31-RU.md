@@ -1,14 +1,19 @@
 # Первый тест R31: хост и гость
 
-[Скачать комплект](https://github.com/MursikJN/AC8Coop/releases/download/r31-object-readiness-1/ac8-steam-coop-r31-development.zip) ·
+[Скачать компактный комплект](https://github.com/MursikJN/AC8Coop/releases/download/r31-compact-1/ac8-steam-coop-r31-development.zip) ·
 [Подготовка и запуск](https://github.com/MursikJN/AC8Coop/blob/main/coop/README-STEAM-COOP-R31-RU.md) ·
-[Релиз и контрольная сумма](https://github.com/MursikJN/AC8Coop/releases/tag/r31-object-readiness-1).
+[Релиз и контрольная сумма](https://github.com/MursikJN/AC8Coop/releases/tag/r31-compact-1).
 
 Оба используют **один и тот же ZIP r31-development**, распакованный отдельно.
-Текущее обновление — **object-readiness-1** (поле `kit_update` в manifest).
+Текущее обновление — **compact-1** (поле `kit_update` в manifest), включая
+прежнюю проверку object-readiness-1. Дополнительно нужно около 5 ГБ, лучше 6–8 ГБ.
 Старый r31 нужно заменить у обоих, распаковав новый ZIP в отдельные папки.
 Сначала выполните подготовку из `README-RU.md`: Validate-Kit → Prepare-Lab →
 Validate-Lab. Не смешивайте DLL/Lua с r29 и не запускайте старую r11b.
+Для создания file symlink может потребоваться запустить Prepare-Lab.cmd
+от имени администратора. Исходная установка остаётся на месте и используется
+для чтения архивов. Окно лаунчера удерживает защитные read-only handles;
+не закрывайте его во время игры, не обновляйте исходную игру через Steam.
 Игра в новой конфигурации ещё не проверялась: цель — получить реальный результат
 и парные отчёты, включая точный этап отказа, если он произойдёт.
 

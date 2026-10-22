@@ -1,6 +1,7 @@
 [CmdletBinding()]
-param([string]$Kit=(Join-Path (Split-Path $PSScriptRoot -Parent) 'profiles/ac8-steam-coop-r31'))
+param([string]$Kit='')
 $ErrorActionPreference='Stop';$repo=Split-Path $PSScriptRoot -Parent
+if(!$Kit){$Kit=Join-Path $repo 'profiles/ac8-steam-coop-r31'}
 . (Join-Path $PSScriptRoot 'Coop-Kit.ps1')
 $script:checks=0
 function Assert-Kit([bool]$Ok,[string]$Why){$script:checks++;if(!$Ok){throw $Why}}
@@ -17,7 +18,7 @@ $manifestPath=Join-Path $fixture 'lobby-manifest.json';$m=Get-Content -LiteralPa
 $m.game_sha256=(Get-FileHash (Join-Path $sourceBin 'AceCombat8.exe')).Hash;$m.steam_sha256=(Get-FileHash (Join-Path $sourceSteam 'steam_api64.dll')).Hash
 $m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8
 $before=@(Get-ChildItem -LiteralPath $source -Recurse -File|ForEach-Object {(Get-FileHash $_.FullName).Hash}) -join '|'
-& (Join-Path $fixture 'Prepare-CoopLab.ps1') -SourceGameDirectory $source|Out-Null
+& (Join-Path $fixture 'Prepare-CoopLab.ps1') -SourceGameDirectory $source -StorageMode Full|Out-Null
 $bin=Test-CoopLab -Root $fixture -Manifest $m
 Assert-Kit ($bin -eq (Join-Path $fixture 'lab-game/Game/Binaries/Win64')) 'Lab path mismatch'
 $after=@(Get-ChildItem -LiteralPath $source -Recurse -File|ForEach-Object {(Get-FileHash $_.FullName).Hash}) -join '|'
@@ -33,7 +34,7 @@ $m.owner_world_readiness=0;$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $
 Reject-Kit {Test-CoopKit $fixture}
 $m.owner_world_readiness=1;$m.kit_update='old-r31';$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8
 Reject-Kit {Test-CoopKit $fixture}
-$m.kit_update='object-readiness-1'
+$m.kit_update='compact-1'
 $m.owner_native=$false;$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8
 Reject-Kit {& (Join-Path $fixture 'Start-SteamLobby.ps1') -ValidateOnly -Role host}
 $m.owner_native=$true;$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8

@@ -38,7 +38,7 @@ def prepare(revision='r27'):
   sources['Collect-DebugLogs.ps1']=ROOT/'coop/Collect-DebugLogs.ps1'
  if automatic:sources['Auto-Reports.ps1']=ROOT/'scripts/Auto-Reports.ps1'
  if owner:
-  for name in ('Coop-Kit','Prepare-CoopLab'):sources[name+'.ps1']=ROOT/'scripts'/(name+'.ps1')
+  for name in ('Coop-Kit','Coop-LabStorage','Prepare-CoopLab'):sources[name+'.ps1']=ROOT/'scripts'/(name+'.ps1')
   sources['Owner-Lab-Peer.exe']=ROOT/'build/steam-coop-r31/owner_lab_peer.exe'
   sources['runtime/Mods/AC8CoopRecon/Scripts/owner_local_lab.lua']=ROOT/'probe/AC8CoopRecon/Scripts/owner_local_lab.lua'
   sources['TEST-PLAN-RU.md']=ROOT/'coop/TEST-PLAN-R31-RU.md'
@@ -67,7 +67,8 @@ def prepare(revision='r27'):
   session_diagnostics=diagnostic,diagnostics_schema=1 if diagnostic else 0,
   automatic_reports=automatic,
   owner_native=owner,isolated_lab_required=owner,local_model_test_implemented=owner,owner_runtime_tested=False,
-  owner_world_readiness=1 if owner else 0,kit_update='object-readiness-1'if owner else None,
+  owner_world_readiness=1 if owner else 0,kit_update='compact-1'if owner else None,
+  lab_storage_policy=2 if owner else 0,lab_storage_default='compact'if owner else None,shared_archives_read_locked=owner,
   scope=('Steam room + local stock F-14D simulation + owner-state transport + isolated client terrain/replicas + local cinematic barriers'if owner else'Steam room + mission barriers + input/pose transport + paused replica terrain loader candidate'+(' + local cinematic player candidates and per-clip two-peer completion barriers'if cinema else''))+'; not game validated',
   files=[dict(path=p.relative_to(PROFILE).as_posix(),sha256=digest(p))for p in sorted(files)])
  path=PROFILE/'lobby-manifest.json';path.write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8');files.append(path)

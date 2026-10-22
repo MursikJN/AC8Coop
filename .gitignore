@@ -11,6 +11,8 @@ profiles/
 sessions/
 state/
 peers.json
+/ac8-steam-coop-r31/
+/ac8-steam-coop-r31-compact*/
 *.py[cod]
 *.dll
 *.exe

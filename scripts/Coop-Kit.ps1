@@ -1,5 +1,6 @@
 # Read-only kit/lab checks. Dot-sourcing does not start a process or write files.
 if(!(Get-Command Get-FileHash -ErrorAction SilentlyContinue)){Import-Module (Join-Path $PSHOME 'Modules/Microsoft.PowerShell.Utility/Microsoft.PowerShell.Utility.psd1') -ErrorAction Stop}
+. (Join-Path $PSScriptRoot 'Coop-LabStorage.ps1')
 function Assert-CoopPlainPath {
  param([string]$Path)
  $p=[IO.Path]::GetFullPath($Path)
@@ -20,30 +21,45 @@ function Test-CoopKit {
  param([string]$Root)
  $rootPath=[IO.Path]::GetFullPath($Root).TrimEnd([char[]]@('\','/'));Assert-CoopPlainPath $rootPath
  $m=Get-Content -LiteralPath (Join-Path $rootPath 'lobby-manifest.json') -Raw|ConvertFrom-Json
- if($m.revision -ne 'r31-development' -or $m.protocol -ne 8 -or $m.pilot_protocol -ne 3 -or !$m.owner_native -or !$m.isolated_lab_required -or !$m.automatic_reports -or $m.owner_world_readiness -ne 1 -or $m.kit_update -ne 'object-readiness-1'){throw 'R31 manifest policy mismatch (object-readiness-1 required)'}
+ if($m.revision -ne 'r31-development' -or $m.protocol -ne 8 -or $m.pilot_protocol -ne 3 -or !$m.owner_native -or !$m.isolated_lab_required -or !$m.automatic_reports -or $m.owner_world_readiness -ne 1 -or $m.kit_update -ne 'compact-1' -or $m.lab_storage_policy -ne 2){throw 'R31 manifest policy mismatch (compact-1 required)'}
  $seen=@{};foreach($f in $m.files){
   if(!$f.path -or [IO.Path]::IsPathRooted($f.path) -or $f.path -match '(^|[\\/])\.\.([\\/]|$)' -or $f.path.Contains(':')){throw 'Invalid manifest path'}
   $path=[IO.Path]::GetFullPath((Join-Path $rootPath $f.path));if(!$path.StartsWith($rootPath+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase) -or $seen.ContainsKey($f.path)){throw 'Duplicate or outside manifest path'}
   $seen[$f.path]=$true;Assert-CoopPlainPath $path
   if((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -ne $f.sha256){throw ('Package file mismatch: '+$f.path)}
  }
- foreach($f in @('Start-Host.cmd','Start-Guest.cmd','Prepare-Lab.cmd','Validate-Kit.cmd','Start-SteamLobby.ps1','Coop-Kit.ps1','Prepare-CoopLab.ps1','Auto-Reports.ps1','Session-Diagnostics.ps1','Collect-CoopLogs.ps1','runtime/ac8_steam_coop_r31.dll','runtime/Mods/AC8CoopRecon/Scripts/main.lua','runtime/Mods/AC8CoopRecon/Scripts/guest_owner_preparation.lua','runtime/Mods/AC8CoopRecon/Scripts/owner_local_lab.lua','Owner-Lab-Peer.exe')){if(!$seen.ContainsKey($f)){throw ('Required manifest entry missing: '+$f)}}
+ foreach($f in @('Start-Host.cmd','Start-Guest.cmd','Prepare-Lab.cmd','Validate-Kit.cmd','Start-SteamLobby.ps1','Coop-Kit.ps1','Coop-LabStorage.ps1','Prepare-CoopLab.ps1','Auto-Reports.ps1','Session-Diagnostics.ps1','Collect-CoopLogs.ps1','runtime/ac8_steam_coop_r31.dll','runtime/Mods/AC8CoopRecon/Scripts/main.lua','runtime/Mods/AC8CoopRecon/Scripts/guest_owner_preparation.lua','runtime/Mods/AC8CoopRecon/Scripts/owner_local_lab.lua','Owner-Lab-Peer.exe')){if(!$seen.ContainsKey($f)){throw ('Required manifest entry missing: '+$f)}}
  $exports=@(Get-CoopPeExports (Join-Path $rootPath $m.native_file))
  foreach($e in @('luaopen_ac8_pilot_prepare','luaopen_ac8_pilot_start','luaopen_ac8_pilot_tick','luaopen_ac8_pilot_stop','luaopen_ac8_pilot_loaded','luaopen_ac8_pilot_capture_input','luaopen_ac8_lobby24_start','luaopen_ac8_invites25_open')){if($e -notin $exports){throw ('Native export missing: '+$e)}}
  return $m
 }
 function Test-CoopLab {
- param([string]$Root,$Manifest,[string]$GameDirectory)
+ param([string]$Root,$Manifest,[string]$GameDirectory,[ref]$ArchiveGuard)
  $lab=Join-Path ([IO.Path]::GetFullPath($Root)) 'lab-game'
  $expected=[IO.Path]::GetFullPath((Join-Path $lab 'Game/Binaries/Win64'))
  if($GameDirectory -and [IO.Path]::GetFullPath($GameDirectory).TrimEnd([char[]]@('\','/')) -ne $expected){throw 'R31 only launches this kit lab-game copy. Run Prepare-Lab.cmd.'}
  Assert-CoopPlainPath $expected
- $marker=Get-Content -LiteralPath (Join-Path $lab '.ac8-coop-lab.json') -Raw|ConvertFrom-Json
- if($marker.format -ne 'ac8-isolated-lab-v1' -or $marker.state -ne 'complete' -or [IO.Path]::GetFullPath($marker.destination) -ne [IO.Path]::GetFullPath($lab) -or !$marker.source -or [IO.Path]::GetFullPath($marker.source) -eq [IO.Path]::GetFullPath($lab)){throw 'Unverified laboratory copy'}
+ $markerPath=Join-Path $lab '.ac8-coop-lab.json'
+ if(!(Test-Path -LiteralPath $markerPath)){throw 'Lab is not prepared. Run Prepare-Lab.cmd, choose the original ACE COMBAT 8 folder, then Validate-Lab.cmd. Compact mode needs about 5 GB plus reserve.'}
+ Assert-CoopPlainPath $markerPath
+ $marker=Get-Content -LiteralPath $markerPath -Raw|ConvertFrom-Json
+ if($marker.format -ne 'ac8-isolated-lab-v2' -or $marker.state -ne 'complete' -or $marker.storage_mode -notin @('compact','full') -or [IO.Path]::GetFullPath($marker.destination) -ne [IO.Path]::GetFullPath($lab) -or !$marker.source -or [IO.Path]::GetFullPath($marker.source) -eq [IO.Path]::GetFullPath($lab)){throw 'Unverified laboratory copy; preserve it and prepare a fresh compact kit.'}
+ $source=[IO.Path]::GetFullPath($marker.source).TrimEnd([char[]]@('\','/'))
+ if($source.StartsWith($lab+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase) -or $lab.StartsWith($source+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)){throw 'Source and lab trees overlap'}
+ Assert-CoopPlainPath $source
+ Assert-CoopLabTree -Root $Root -Marker $marker
  $game=Join-Path $expected 'AceCombat8.exe';$steam=Join-Path $lab 'Engine/Binaries/ThirdParty/Steamworks/Steamv157/Win64/steam_api64.dll'
  foreach($p in @($game,$steam)){Assert-CoopPlainPath $p}
  if((Get-FileHash -LiteralPath $game).Hash -ne $Manifest.game_sha256 -or (Get-FileHash -LiteralPath $steam).Hash -ne $Manifest.steam_sha256){throw 'Laboratory game/Steam build mismatch'}
  if($marker.game_sha256 -ne $Manifest.game_sha256){throw 'Lab marker build mismatch'}
+ if((Get-FileHash -LiteralPath (Join-Path $source 'Game/Binaries/Win64/AceCombat8.exe')).Hash -ne $Manifest.game_sha256){throw 'Original game build changed; prepare a fresh supported kit after Steam updates.'}
+ Assert-CoopSeparateBinary -Copy $game -Original (Join-Path $source 'Game/Binaries/Win64/AceCombat8.exe')
+ Assert-CoopSeparateBinary -Copy $steam -Original (Join-Path $source 'Engine/Binaries/ThirdParty/Steamworks/Steamv157/Win64/steam_api64.dll')
  foreach($name in @('dinput8.dll','dxgi.dll','winmm.dll','UE4SS.dll')){if(Test-Path -LiteralPath (Join-Path $expected $name)){throw ('Conflicting loader in lab: '+$name)}}
- return $expected
+ $held=$null
+ try{
+  if($marker.storage_mode -eq 'compact'){$held=Open-CoopArchiveGuard -Root $Root -Marker $marker}
+  if($ArchiveGuard){$ArchiveGuard.Value=$held;$held=$null}
+  return $expected
+ }finally{Close-CoopArchiveGuard $held}
 }

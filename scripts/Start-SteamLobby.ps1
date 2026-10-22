@@ -16,13 +16,14 @@ $ownerNative=$revision -like 'r31*' -or (Test-Path -LiteralPath (Join-Path $root
 $diagnostics=$manifest.PSObject.Properties['session_diagnostics'] -and $manifest.session_diagnostics
 $automaticReports=$diagnostics -and $manifest.PSObject.Properties['automatic_reports'] -and $manifest.automatic_reports
 trap {
+ $launchError=$_
  if($diagnostics){
   try{
    $reportRoot=Join-Path $root 'reports';New-Item -ItemType Directory -Force -Path $reportRoot|Out-Null
-   [ordered]@{format='ac8-launch-failure-v1';utc=[DateTime]::UtcNow.ToString('o');revision=$revision;role=$Role;error=$_.Exception.Message;stack=$_.ScriptStackTrace}|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $reportRoot ('launch-failure-'+[DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss-fff')+'.json')) -Encoding UTF8
+   [ordered]@{format='ac8-launch-failure-v1';utc=[DateTime]::UtcNow.ToString('o');revision=$revision;role=$Role;error=$launchError.Exception.Message;stack=$launchError.ScriptStackTrace}|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $reportRoot ('launch-failure-'+[DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss-fff')+'.json')) -Encoding UTF8
   }catch{}
  }
- throw
+ throw $launchError
 }
 if($ResumeHost -and !$manifest.session_policy){throw 'Resume requires the session policy profile.'}
 if($LocalModelTest -and (!$ownerNative -or $Role -ne 'guest' -or $ResumeHost)){throw 'Local model test requires the R31 guest profile without resume.'}
@@ -88,8 +89,13 @@ if($diagnostics){
 $recordPath=Join-Path $session 'session.json'
 function Save-Record{$record|ConvertTo-Json -Depth 4|Set-Content -LiteralPath $recordPath -Encoding UTF8}
 Save-Record
-$owned=$false;$process=$null;$autoReportState=$null;$autoReportClock=$null;$labPeer=$null
+$owned=$false;$process=$null;$autoReportState=$null;$autoReportClock=$null;$labPeer=$null;$archiveGuard=$null
 try{
+ if($ownerNative){
+  $null=Test-CoopLab -Root $root -Manifest $manifest -GameDirectory $GameDirectory -ArchiveGuard ([ref]$archiveGuard)
+  $record.lab_storage_mode=if($archiveGuard){'compact'}else{'full'}
+  $record.shared_archive_count=if($archiveGuard){$archiveGuard.ArchiveCount}else{0};Save-Record
+ }
  [IO.File]::Copy($proxySource,$proxy,$false);$owned=$true
  $info=New-Object Diagnostics.ProcessStartInfo
  $info.FileName=$game;$info.WorkingDirectory=$GameDirectory;$info.UseShellExecute=$false
@@ -146,6 +152,7 @@ try{
 finally{
  if($process -and !$process.HasExited){while(!$process.HasExited){Start-Sleep -Seconds 1}}
  if($process){$record.exit_code=$process.ExitCode}
+ if($ownerNative){Close-CoopArchiveGuard $archiveGuard}
  $cleanupDeadline=[DateTime]::UtcNow.AddSeconds(5)
  while($owned -and (Get-Process AceCombat8 -ErrorAction SilentlyContinue) -and [DateTime]::UtcNow -lt $cleanupDeadline){Start-Sleep -Milliseconds 100}
  if($owned -and !(Get-Process AceCombat8 -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath $proxy)){
