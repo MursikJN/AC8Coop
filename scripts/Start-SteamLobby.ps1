@@ -94,6 +94,7 @@ try{
  if($ownerNative){
   $null=Test-CoopLab -Root $root -Manifest $manifest -GameDirectory $GameDirectory -ArchiveGuard ([ref]$archiveGuard)
   $record.lab_storage_mode=if($archiveGuard){'compact'}else{'full'}
+  $record.adapter_bootstrap=$manifest.adapter_bootstrap
   $record.archive_layout=if($archiveGuard){$archiveGuard.Layout}else{'independent-copy'}
   $record.shared_archive_count=if($archiveGuard){$archiveGuard.ArchiveCount}else{0};Save-Record
  }
@@ -106,6 +107,8 @@ try{
  $info.EnvironmentVariables['AC8_STEAM_LOBBY']='25201480'
  if($manifest.steam_invites){$info.EnvironmentVariables['AC8_STEAM_INVITES']='25201480'}
  if($manifest.steam_coop){
+  . (Join-Path $root 'Coop-AdapterEnvironment.ps1')
+  Set-CoopAdapterEnvironment -Info $info -Root $root
   if($manifest.session_policy){
    $info.EnvironmentVariables['AC8_SESSION_POLICY']='25201480'
    $info.EnvironmentVariables['AC8_SAVE_POLICY']=$record.save_policy
@@ -113,10 +116,8 @@ try{
   }
   if($manifest.cinema_sync){$info.EnvironmentVariables['AC8_CINEMA_SYNC']='25201480'}
   $info.EnvironmentVariables['AC8_STEAM_COOP']='25201480'
-  $info.EnvironmentVariables['AC8_MISSION_SYNC']='25201480'
   $info.EnvironmentVariables['AC8_GUEST_PILOT']='25201480'
   if($ownerNative){$info.EnvironmentVariables['AC8_OWNER_NATIVE']='25201480'}
-  $info.EnvironmentVariables['AC8_LOCAL_SCRIPTS']=Join-Path $root 'runtime\Mods\AC8CoopRecon\Scripts'
   # r19 role module's existing exact-build gate. This main.lua does not expose
   # the development evaluator/mailbox from the older local laboratory.
   $info.EnvironmentVariables['AC8_LOCAL_ADAPTER_DEV']='25201480'

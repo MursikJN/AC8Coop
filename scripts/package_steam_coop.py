@@ -31,6 +31,7 @@ def prepare(revision='r27'):
  if policy:
   for name in ('session_lifecycle','session_recovery_ui'):sources['runtime/Mods/AC8CoopRecon/Scripts/'+name+'.lua']=ROOT/'probe/AC8CoopRecon/Scripts'/(name+'.lua')
   sources['Session-Policy.ps1']=ROOT/'scripts/Session-Policy.ps1'
+ sources['Coop-AdapterEnvironment.ps1']=ROOT/'scripts/Coop-AdapterEnvironment.ps1'
  if diagnostic:
   sources['runtime/Mods/AC8CoopRecon/Scripts/session_diagnostics.lua']=ROOT/'probe/AC8CoopRecon/Scripts/session_diagnostics.lua'
   sources['Session-Diagnostics.ps1']=ROOT/'scripts/Session-Diagnostics.ps1'
@@ -67,7 +68,7 @@ def prepare(revision='r27'):
   session_diagnostics=diagnostic,diagnostics_schema=1 if diagnostic else 0,
   automatic_reports=automatic,
   owner_native=owner,isolated_lab_required=owner,local_model_test_implemented=owner,owner_runtime_tested=False,
-  owner_world_readiness=1 if owner else 0,kit_update='compact-2'if owner else None,
+  owner_world_readiness=1 if owner else 0,kit_update='adapters-1'if owner else None,adapter_bootstrap=1 if owner else 0,
   lab_storage_policy=3 if owner else 0,lab_storage_default='compact'if owner else None,archive_layout='paks-junction-v1'if owner else None,shared_archives_read_locked=owner,
   scope=('Steam room + local stock F-14D simulation + owner-state transport + isolated client terrain/replicas + local cinematic barriers'if owner else'Steam room + mission barriers + input/pose transport + paused replica terrain loader candidate'+(' + local cinematic player candidates and per-clip two-peer completion barriers'if cinema else''))+'; not game validated',
   files=[dict(path=p.relative_to(PROFILE).as_posix(),sha256=digest(p))for p in sorted(files)])

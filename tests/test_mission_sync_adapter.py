@@ -12,14 +12,14 @@ PLAYER={IsValid=valid,GetWorld=function()return WORLD end}
 PAWN={IsValid=valid,IsA=function()return true end,K2_GetActorLocation=function()return {X=1,Y=2,Z=3}end,GetClass=function()return {GetFullName=function()return '/PP0007_fa18c/BP_Player'end}end,bIsActivated=true,bIsIGCActor=false};PLAYER.Pawn=PAWN
 GAME={IsGamePaused=function()return PAUSED end,SetGamePaused=function(_,_,value)PAUSED=value;return true end,GetTimeSeconds=function()return TIME end}
 OBJ={IsValid=valid}
-N={find=function(q)return VISIBLE[q]and OBJ or nil end,
+N={bootstrap=function()if FAIL_MENU_BOOT then error('menu bootstrap refused')end;MENU_BOOTS=(MENU_BOOTS or 0)+1 end,find=function(q)return VISIBLE[q]and OBJ or nil end,
  command=function()return {status='verified',selected=HOST_PLANE or '7010',value=GUEST_PLANE or '23010'}end,
  step=function(k,q)if VISIBLE[q]then if k=='sortie'then SORTIES=SORTIES+1 end;return true end;return false end}
 G={poll=function(o,scene,voting,authorize)
  GUARDS[#GUARDS+1]={scene=scene,voting=voting,authorize=authorize}
  return {threshold='0.4',treat='0.3',requested=REQUESTED and '1'or'0',consumed='0'}
 end}
-P={command=function(op)
+P={bootstrap=function()if FAIL_PAUSE_BOOT then error('pause bootstrap refused')end;PAUSE_BOOTS=(PAUSE_BOOTS or 0)+1 end,command=function(op)
  if op=='acquire'then PAUSED=true;return {held='1',paused='1',flags='24'}end
  PAUSED=OTHER_PAUSE==true;return {held='0',paused=PAUSED and '1'or'0',flags=PAUSED and '16'or'0'}
 end}
@@ -59,6 +59,12 @@ class MissionAdapterTests(unittest.TestCase):
  def test_no_loaded_ack_until_real_scene_exists(self):
   self.runlua("C.snapshot.phase='1';A.step=6;A.update();A.update()")
   self.assertEqual(self.val('LOADED'),0);self.assertFalse(self.val('PAUSED'))
+ def test_bootstraps_are_checked_once_before_menu_route(self):
+  self.runlua("C.snapshot.phase='1';A.update();A.update();assert(MENU_BOOTS==1 and PAUSE_BOOTS==1 and A.bootstrap_ready)")
+ def test_menu_bootstrap_failure_stops_before_route_or_loaded_ack(self):
+  self.runlua("FAIL_MENU_BOOT=true;C.snapshot.phase='1';A.update();A.update();assert(A.error and A.step==1 and LOADED==0 and SORTIES==0 and not PAUSE_BOOTS)")
+ def test_pause_bootstrap_failure_stops_before_route_or_loaded_ack(self):
+  self.runlua("FAIL_PAUSE_BOOT=true;C.snapshot.phase='1';A.update();A.update();assert(A.error and A.step==1 and LOADED==0 and SORTIES==0 and MENU_BOOTS==1)")
  def test_stale_authority_never_advances_route(self):
   self.runlua("CONNECTED=false;C.snapshot.phase='5';VISIBLE.LiveMenuHangarStandbyWidget=true;A.update()")
   self.assertEqual(self.val('SORTIES'),0)
@@ -114,4 +120,26 @@ class MissionAdapterTests(unittest.TestCase):
  def test_r29_changed_host_aircraft_requires_new_readiness_snapshot(self):
   self.runlua("C.session_policy=true;C.snapshot.phase='4';VISIBLE.LiveMenuHangarStandbyWidget=true;HOST_PLANE='9010';C.host_loadout=function(a)NEW_AIRCRAFT=a end;A.update()")
   self.assertEqual(self.val('NEW_AIRCRAFT'),9)
+ def test_full_modeled_route_waits_for_host_choice_and_new_ready_before_sortie(self):
+  self.runlua(r'''
+   ROUTE={};local step=N.step;N.step=function(k,q)ROUTE[#ROUTE+1]=k;return step(k,q)end
+   C.snapshot.phase='1';C.snapshot.ready_mask='3'
+   for _,q in ipairs({'LiveMenuMainTopWidget','LiveMenuCampaignTopWidget','LiveMenuCampaignFreeMissionDifficultyWidget','LiveMenuCampaignFreeMissionWidget','LiveMenuCampaignNarrativeSelectWidget'})do
+    VISIBLE={[q]=true};A.update();assert(not A.error)
+   end
+   assert(A.step==6 and MENU_BOOTS==1 and PAUSE_BOOTS==1 and LOADED==0)
+   SKIP=make_skip('briefing');A.update();assert(PAUSED and LOADED==1)
+   C.snapshot.phase='2';SKIP=false;VISIBLE={LiveMenuBriefingProgressWidget=true};A.update();assert(not PAUSED and ENDS==1)
+   C.snapshot.phase='3';A.update();VISIBLE={LiveMenuHangarTopWidget=true};A.update()
+   VISIBLE={LiveMenuHangarSquadWidget=true};HOST_PLANE='23010';A.update();assert(A.hangar_step==3 and HANGARS==0)
+   HOST_PLANE='7010';A.update();assert(A.hangar_step==4);A.update()
+   VISIBLE={LiveMenuHangarAircraftSettingWidget=true};A.update()
+   VISIBLE={LiveMenuHangarStandbyWidget=true};A.update()
+   C.hangar_verified=function(a,b)assert(a==7 and b==23);HANGARS=HANGARS+1;C.snapshot.phase='4';C.snapshot.ready_mask='0'end
+   A.update();assert(HANGARS==1 and not A.error and C.snapshot.ready_mask=='0')
+   assert(not pcall(A.start));C.snapshot.ready_mask='1';assert(not pcall(A.start));assert(SORTIES==0)
+   C.snapshot.ready_mask='3';A.start();A.update();A.update();assert(SORTIES==1 and LOADED==1)
+   PLANE=true;A.update();assert(LOADED==2 and PAUSED);C.snapshot.phase='6';A.update();assert(not PAUSED and not A.error and SORTIES==1)
+   for _,k in ipairs(ROUTE)do assert(k~='aircraft_host_f14')end
+  ''')
 if __name__=='__main__':unittest.main()

@@ -48,4 +48,8 @@ class SessionLifecycleTests(unittest.TestCase):
   self.l.execute('FAIL_QUIT=true;assert(not pcall(R.quit));assert(not R.quitting);FAIL_QUIT=false;R.quit();assert(QUITS==1)')
  def test_native_cleanup_waits_before_restart_loaded(self):
   self.l.execute("C.snapshot.phase='9';P.client.drain=function()return false end;R.update(P);assert(ACKS==0 and not R.quiesced);P.client.drain=function()return true end;R.update(P);assert(ACKS==1 and R.quiesced)")
+ def test_failed_hold_is_latched_without_native_retry_or_restart_ack(self):
+  self.l.execute("C.snapshot.phase='9';FAIL_HOLD=true;assert(R.update(P));local n=#EVENTS;assert(R.hold_failure and ACKS==0 and QUITS==0);assert(R.update(P));assert(#EVENTS==n and ACKS==0 and not R.quiesced)")
+ def test_manual_quit_still_works_after_terminal_hold_failure(self):
+  self.l.execute("C.snapshot.phase='8';FAIL_HOLD=true;R.update(P);local n=#EVENTS;R.quit();assert(QUITS==1 and #EVENTS==n+1 and not FILES['out/session-restart.tsv'])")
 if __name__=='__main__':unittest.main()

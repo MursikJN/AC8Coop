@@ -24,7 +24,7 @@ def validate(archive,output):
  expected={f['path']for f in m['files']}|{'lobby-manifest.json'}
  actual={p.relative_to(kit).as_posix()for p in kit.rglob('*')if p.is_file()};assert actual==expected,'Unlisted/missing file'
  assert m['protocol']==8 and m['pilot_protocol']==3 and m['owner_native']and m['isolated_lab_required']and m['automatic_reports']
- assert m['owner_world_readiness']==1 and m['kit_update']=='compact-2'and m['lab_storage_policy']==3 and m['archive_layout']=='paks-junction-v1'and m['shared_archives_read_locked']
+ assert m['owner_world_readiness']==1 and m['kit_update']=='adapters-1'and m['adapter_bootstrap']==1 and m['lab_storage_policy']==3 and m['archive_layout']=='paks-junction-v1'and m['shared_archives_read_locked']
  assert not m['game_tested']and not m['owner_runtime_tested']and not m['first_shared_flight_ready']
  lua=LuaRuntime(unpack_returned_tuples=True);compiled=0;text_scanned=0
  for f in m['files']:

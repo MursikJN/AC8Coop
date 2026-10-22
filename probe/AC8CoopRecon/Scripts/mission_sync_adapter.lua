@@ -94,6 +94,9 @@ function M.new(controller,output,source,log,previous)
   local v=controller.view()
   if v.phase~=0 and v.phase~=8 and not v.connected then r.phase='waiting_fresh_host_state';return end
   if v.phase>=1 and v.phase<=6 then assert(controller.snapshot.mission=='6'and controller.snapshot.difficulty=='1'and controller.snapshot.guest_aircraft=='23','Неподдерживаемая игровая конфигурация.')end
+  if v.phase>=1 and v.phase<=6 and not r.bootstrap_ready then
+   native.bootstrap();pause.bootstrap();r.bootstrap_ready=true;log('mission_adapters_bootstrap_ready','menu/pause')
+  end
   if v.phase==1 then
    r.phase='loading_intro'
    if not r.menu_closed then if _G.AC8MainMenuEntry then _G.AC8MainMenuEntry.close()end;r.menu_closed=true end

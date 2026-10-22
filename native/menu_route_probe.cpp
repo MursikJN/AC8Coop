@@ -14,9 +14,11 @@
 #include <share.h>
 #include <set>
 #include "menu_route_contract.h"
+#include "adapter_bridge_io.h"
 namespace {
 uintptr_t base=0;DWORD game_thread=0;std::wstring output;std::string consumed;
 std::set<std::string>used_requests,used_actions;
+const char*bootstrap_reason="bootstrap_not_checked";
 bool read_bytes(uintptr_t p,void*out,size_t n){
  if(p<0x10000||p>=0x800000000000ULL||!n||n>4096||p+n>=0x800000000000ULL)return false;
  __try{memcpy(out,reinterpret_cast<void*>(p),n);return true;}
@@ -27,16 +29,27 @@ bool ptr(uintptr_t p){return p>=0x10000&&p<0x800000000000ULL&&p%8==0;}
 bool env(const wchar_t*key,wchar_t*out,DWORD n){const auto size=GetEnvironmentVariableW(key,out,n);return size>0&&size<n;}
 bool setup(){
  wchar_t marker[32]{},path[32768]{},self[32768]{},source[32768]{},normalized[32768]{};
- if(!env(L"AC8_COOP_RECON",marker,32)||wcscmp(marker,L"1")||!env(L"AC8_COOP_RECON_OUTPUT",path,32768)||!env(L"AC8_COOP_RECON_EXTENSION",source,32768))return false;
+ output.clear();bootstrap_reason="bootstrap_output";
+ if(!env(L"AC8_COOP_RECON_OUTPUT",path,32768))return false;output=path;
+ const bool profile=env(L"AC8_MENU_ROUTE",marker,32);
+ bootstrap_reason="bootstrap_environment";
+ if(profile){if(wcscmp(marker,L"25201480")||!env(L"AC8_LOCAL_SCRIPTS",source,32768))return false;}
+ else{
+  if(!env(L"AC8_COOP_RECON",marker,32)||wcscmp(marker,L"1")||!env(L"AC8_COOP_RECON_EXTENSION",source,32768))return false;
+  auto last=wcsrchr(source,L'\\');if(!last)return false;*last=0;
+ }
+ bootstrap_reason="bootstrap_module";
  HMODULE module=nullptr;if(!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_PIN,reinterpret_cast<LPCWSTR>(&setup),&module))return false;
  if(!GetModuleFileNameW(module,self,32768))return false;
- auto last=wcsrchr(source,L'\\');if(!last)return false;*last=0;
  const auto filename=wcsrchr(self,L'\\');if(!filename||(wcsncmp(filename+1,L"ac8_menu_route_r9",17)&&wcsncmp(filename+1,L"ac8_menu_route_r13",18))||!wcsstr(filename+1,L".dll"))return false;
  std::wstring expected=std::wstring(source)+L"\\..\\..\\..\\"+(filename+1);
+ bootstrap_reason="bootstrap_module_path";
  if(!GetFullPathNameW(expected.c_str(),32768,normalized,nullptr)||_wcsicmp(self,normalized))return false;
+ bootstrap_reason="bootstrap_process";auto last=static_cast<wchar_t*>(nullptr);
  if(!GetModuleFileNameW(nullptr,source,32768)||(last=wcsrchr(source,L'\\'))==nullptr||_wcsicmp(last+1,L"AceCombat8.exe"))return false;
+ bootstrap_reason="bootstrap_thread";
  if(!game_thread)game_thread=GetCurrentThreadId();if(game_thread!=GetCurrentThreadId())return false;
- base=reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));output=path;return true;
+ base=reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));bootstrap_reason="bootstrap_ready";return true;
 }
 void status(const char*state,const char*reason,const std::string&stamp,int selected=-1,int value=-1,int count=0,bool returned=false){
  const auto temp=output+L"\\menu-route-status.tmp",path=output+L"\\menu-route-status.tsv";FILE*f=_wfsopen(temp.c_str(),L"w",_SH_DENYWR);if(!f)return;
@@ -94,7 +107,7 @@ void hangar_loadout(uintptr_t object,const std::string&stamp){
  status("verified","hangar_plane_map",stamp,player,guest,2);
 }
 void dispatch(){
- if(!setup())return;
+ if(!setup()){if(!output.empty())status("refused",bootstrap_reason,ac8adapter::echo(output+L"\\menu-route-request.tsv"));return;}
  FILE*f=_wfsopen((output+L"\\menu-route-request.tsv").c_str(),L"rb",_SH_DENYNO);if(!f){status("refused","missing_request","");return;}
  char b[1025]{};const auto n=fread(b,1,1025,f);fclose(f);if(!n||n>1024){status("refused","request_size","");return;}
  std::string text(b,n);std::map<std::string,std::string>fields;size_t pos=0;
@@ -107,7 +120,8 @@ void dispatch(){
  if(fields.size()!=6){status("refused","request_fields","");return;}for(auto name:names)if(!fields.count(name)){status("refused","request_fields","");return;}
  const auto stamp=fields["stamp"];if(stamp.empty()||stamp.size()>64||stamp.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-")!=std::string::npos){status("refused","stamp","");return;}
  uint64_t created=0,object=0;const auto now=static_cast<uint64_t>(time(nullptr));
- if(fields["format"]!="ac8-menu-route-v1"||!number(fields["object"],object)||!number(fields["created_unix"],created)||created>now||now-created>3||(fields["operation"]!="inspect"&&fields["operation"]!="confirm"&&fields["operation"]!="select")){status("refused","request_contract",stamp);return;}
+ if(fields["format"]!="ac8-menu-route-v1"||!number(fields["object"],object)||!number(fields["created_unix"],created)||created>now||now-created>3||(fields["operation"]!="inspect"&&fields["operation"]!="confirm"&&fields["operation"]!="select"&&fields["operation"]!="bootstrap")){status("refused","request_contract",stamp);return;}
+ if(fields["operation"]=="bootstrap"){status(fields["kind"]=="bootstrap"&&object==0?"verified":"refused",fields["kind"]=="bootstrap"&&object==0?"bootstrap_ready":"request_contract",stamp);return;}
  if(fields["kind"]=="inventory"&&fields["operation"]=="inspect"){inventory(object,stamp);return;}
  if(fields["kind"]=="hangar_loadout"&&fields["operation"]=="inspect"){hangar_loadout(object,stamp);return;}
  const auto target=ac8route::target(fields["kind"]);

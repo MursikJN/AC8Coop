@@ -22,7 +22,9 @@ function M.new(c,output,source,log,engine)
   local f=assert(io.open(output..'/session-lifecycle.tsv','wb'));f:write('config_token\t',c.token,'\nphase\t',c.snapshot.phase or'0','\nhalted\t',r.halted and 1 or 0,'\nquiesced\t',r.quiesced and 1 or 0,'\nquitting\t',r.quitting and 1 or 0,'\nreason\t',(r.error or r.reason or''):gsub('[\r\n\t]',' '),'\nrestart_mode\tfresh_process_return_to_lobby\nhost_progress_only\t1\n');f:close()
  end
  local function quiesce(parts)
-  E.hold() -- Before touching any input, role, camera or actor lease.
+  if r.hold_failure then error(r.hold_failure,0)end
+  local held,why=pcall(E.hold) -- Before touching any input, role, camera or actor lease.
+  if not held then r.hold_failure=tostring(why);error(r.hold_failure,0)end
   if r.quiesced then return end
   if parts.pilot then parts.pilot.stop('session_quiesce')end
   if parts.role and parts.role.runtime then parts.role.runtime.stop('session_quiesce')end
@@ -50,6 +52,7 @@ function M.new(c,output,source,log,engine)
  function r.update(parts)
   r.parts=parts
   if r.quitting then return true end
+  if r.hold_failure then r.halted=true;save();return true end
   local ok,err=xpcall(function()
    local s=c.snapshot;local phase=tonumber(s.phase)or 0
    if phase>0 and phase<8 then
@@ -73,7 +76,11 @@ function M.new(c,output,source,log,engine)
     end
    end
   end,debug.traceback)
-  if not ok then r.error=tostring(err);r.quitting=false;r.halted=true;c.local_failure=r.error;pcall(E.hold);log('session_lifecycle_error',r.error)end
+  if not ok then
+   r.error=tostring(err);r.quitting=false;r.halted=true;c.local_failure=r.error
+   if not r.hold_failure then local held,why=pcall(E.hold);if not held then r.hold_failure=tostring(why)end end
+   log('session_lifecycle_error',r.error)
+  end
   save();return r.halted
  end
  return r

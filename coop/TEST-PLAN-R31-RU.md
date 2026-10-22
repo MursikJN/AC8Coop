@@ -1,17 +1,20 @@
 # Первый тест R31: хост и гость
 
-[Скачать компактный комплект](https://github.com/MursikJN/AC8Coop/releases/download/r31-compact-2/ac8-steam-coop-r31-development.zip) ·
+[Скачать комплект](https://github.com/MursikJN/AC8Coop/releases/download/r31-adapters-1/ac8-steam-coop-r31-development.zip) ·
 [Подготовка и запуск](https://github.com/MursikJN/AC8Coop/blob/main/coop/README-STEAM-COOP-R31-RU.md) ·
-[Релиз и контрольная сумма](https://github.com/MursikJN/AC8Coop/releases/tag/r31-compact-2).
+[Релиз и контрольная сумма](https://github.com/MursikJN/AC8Coop/releases/tag/r31-adapters-1).
 
 Оба используют **один и тот же ZIP r31-development**, распакованный отдельно.
-Текущее обновление — **compact-2** (поле `kit_update` в manifest), включая
-прежнюю проверку object-readiness-1. Дополнительно нужно около 5 ГБ, лучше 6–8 ГБ.
+Текущее обновление — **adapters-1** (поле `kit_update`), включая compact-2 и
+object-readiness-1. Исправлены запуск меню и паузы; новый маршрут проверен без
+игры. Дополнительно нужно около 5 ГБ, лучше 6–8 ГБ.
 Старый r31 нужно заменить у обоих, распаковав новый ZIP в отдельные папки.
 Сначала выполните подготовку из `README-RU.md`: Validate-Kit → Prepare-Lab →
 Validate-Lab. Не смешивайте DLL/Lua с r29 и не запускайте старую r11b.
 Если compact-1 уже подготовлена, замените только файлы комплекта из нового ZIP,
 выполните Repair-Lab.cmd → Validate-Lab.cmd; userdata и 5 ГБ копии сохраняются.
+Для compact-2 достаточно заменить файлы комплекта и выполнить Validate-Kit.cmd →
+Validate-Lab.cmd. Оба обновляются целиком, игровые файлы повторно не копируются.
 Старая compact-1 дала ранний I/O-краш; исправление compact-2 проверено без игры.
 Junction папки Paks обычно не требует прав администратора. Исходная установка остаётся на месте и используется
 для чтения архивов. Окно лаунчера удерживает защитные read-only handles;
