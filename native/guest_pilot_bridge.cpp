@@ -97,7 +97,12 @@ void report(){
  fprintf(f,"engine_detail\t%s\n",pilot_engine::reason);
 #ifdef AC8_OWNER_NATIVE_R31
  fprintf(f,"owner_native_candidate\t1\nowner_ready\t%d\nowner_pointer\t0x%llx\nowner_index\t%d\nowner_serial\t%d\nowner_detail\t%s\nowner_native_steps\t%llu\nowner_cleanup\t%s\nowner_cleanup_reason\t%s\n",owner_backend.seeded&&!owner_backend.closing?1:0,static_cast<unsigned long long>(owner_backend.actor.p),owner_backend.actor.index,owner_backend.actor.serial,owner_backend.detail,static_cast<unsigned long long>(owner_backend.steps),owner_backend.ledger.status,owner_backend.ledger.reason);
+ fprintf(f,"owner_camera_tracked\t%d\n",owner_backend.camera_actor.p?1:0);
+ fprintf(f,"owner_template_retained\t%d\nowner_template_roots_owned\t%d\nowner_dependency_field\t%s\nowner_dependency_failure\t%s\n",owner_backend.class_root.captured&&owner_backend.cdo_root.captured?1:0,int(owner_backend.class_root.owned)+int(owner_backend.cdo_root.owned),owner_backend.dependency_field,owner_backend.dependency_failure);
  fprintf(f,"owner_cleanup_complete\t%d\n",owner_backend.cleanup_complete?1:0);
+ fprintf(f,"owner_ticks_detached\t%d\nowner_destroy_accepted\t%d\nowner_gc_safe\t%d\nowner_tick_component_count\t%u\n",owner_backend.ticks_detached?1:0,owner_backend.ledger.destroy_accepted?1:0,owner_backend.gc_safe()?1:0,unsigned(owner_backend.tick_components.size()));
+ const auto sound_error=owner_backend.sound_objects_reason();
+ fprintf(f,"owner_preflight_ready\t%d\nowner_sound_ready\t%d\nowner_sound_reason\t%s\nowner_input_samples\t%llu\nowner_local_sequence\t%llu\nowner_camera_retired\t%d\n",owner_backend.configured?1:0,sound_error?0:1,sound_error?sound_error:"ready",static_cast<unsigned long long>(accepted_inputs),static_cast<unsigned long long>(owner_backend.local_sequence),owner_backend.camera_actor.p&&pilot_engine::retired(owner_backend.camera_actor)?1:0);
  const auto objects_error=owner_backend.world_objects_reason();
  fprintf(f,"owner_world_objects_checked\t%d\nowner_world_objects_ready\t%d\nowner_world_objects_reason\t%s\nowner_combat_zone_pointer\t0x%llx\nowner_actor_mapper_pointer\t0x%llx\n",owner_backend.world_objects_bound?1:0,objects_error?0:1,objects_error?objects_error:"ready",static_cast<unsigned long long>(owner_backend.world_objects.zone.p),static_cast<unsigned long long>(owner_backend.world_objects.mapper.p));
  uint64_t owner_key=0;if(owner_backend.network.p)pilot_engine::read(owner_backend.network.p+0x28,owner_key);
@@ -174,7 +179,7 @@ void stop(bool restore){
  gate.lease.revoke();gate.loaded=false;active=false;
 #ifdef AC8_OWNER_NATIVE_R31
  owner_receiver.stop();local_input={};local_input_at=0;
- if(!is_host){owner_pilot.stop();owner_backend.release();}
+ if(ac8owner::needs_owner_cleanup(is_host,owner_backend.camera_actor.p!=0)||owner_backend.class_root.captured||owner_backend.cdo_root.captured){owner_pilot.stop();owner_backend.release();}
 #endif
  if(restore&&local_paused_proof&&!checkpoint_done){checkpoint_done=pilot_engine::checkpoint_restore();detail=checkpoint_done?"local_trial_stopped_and_own_checkpoint_restored":"local_trial_restore_unverified";}
  else detail="pilot_transport_stopped";report();
@@ -182,7 +187,7 @@ void stop(bool restore){
 void tick(){
  if(!active){
 #ifdef AC8_OWNER_NATIVE_R31
-  if(!is_host&&owner_backend.closing){owner_backend.release();if(GetTickCount64()-last_report>=250)report();}
+  if(owner_backend.closing){owner_backend.release();if(GetTickCount64()-last_report>=250)report();}
 #endif
   return;
  }
@@ -282,7 +287,7 @@ bool guest_input(){
 bool submit_capture(ac8pilot::Frame f){
 #ifdef AC8_OWNER_NATIVE_R31
  const auto ctx=context();local_input=ac8pilot::input(f);local_input.sender=ctx.local;local_input.session=ctx.nonce;local_input.echo=ctx.remote;local_input.sequence=1;
- if(!ac8input::valid(local_input))return false;local_input_at=GetTickCount64();return true;
+ if(!ac8input::valid(local_input))return false;local_input_at=GetTickCount64();++accepted_inputs;return true;
 #else
  return send(f);
 #endif
@@ -315,6 +320,35 @@ int dispatch(unsigned action){
  if(action==4){guest_input();}
  if(action==5){capture_guest_input();}
 #ifdef AC8_OWNER_NATIVE_R31
+ if(action==7){
+  // Local lab only: evaluate dependencies without allocating an actor. Missing
+  // managers may finish loading; retry stays bounded by the Lua coordinator.
+  if(active&&local&&!is_host&&!owner_backend.configured&&!owner_backend.ledger.attempted&&have_state){
+   owner_backend.configure_request(owner_local_request,generation,revision,context());
+  }
+  report();
+ }
+ if(action==8){
+  FILE*f=nullptr;if(!_wfopen_s(&f,(pilot_engine::directory+L"\\owner-lab-clock.tsv").c_str(),L"wb")&&f){fprintf(f,"monotonic_ms\t%llu\n",GetTickCount64());fclose(f);}
+ }
+ if(action==9){
+  wchar_t marker[32]{};std::map<std::string,std::string>r;uint64_t created=0,pointer=0;
+  if(!active&&env(L"AC8_OWNER_LOCAL_LAB",marker,32)&&!wcscmp(marker,L"25201480")&&
+   pilot_engine::file(L"guest-owner-camera.tsv",r)&&pilot_engine::number(r["created_unix"],created)&&
+   std::llabs(int64_t(time(nullptr))-int64_t(created))<=3&&pilot_engine::number(r["camera"],pointer)){
+   detail=owner_backend.track_camera(pointer)?"local_camera_receipt_captured":owner_backend.reason();
+  }else detail="local_camera_receipt_refused";
+  report();
+ }
+ if(action==10){
+  wchar_t marker[32]{};std::map<std::string,std::string>r;uint64_t created=0,cl=0,cd=0;
+  if(!active&&env(L"AC8_OWNER_LOCAL_LAB",marker,32)&&!wcscmp(marker,L"25201480")&&
+     pilot_engine::file(L"guest-owner-template.tsv",r)&&pilot_engine::number(r["created_unix"],created)&&
+     std::llabs(int64_t(time(nullptr))-int64_t(created))<=3&&pilot_engine::number(r["owner_class"],cl)&&pilot_engine::number(r["owner_cdo"],cd)){
+   detail=owner_backend.retain_template(cl,cd)?"local_template_retained":owner_backend.reason();
+  }else detail="local_template_retain_refused";
+  report();
+ }
  if(action==6){
   if(active&&!is_host&&have_state&&!owner_pilot.running()){
    const auto ctx=context();const bool configured=!local||owner_backend.configured||owner_backend.configure_request(owner_local_request,generation,revision,ctx);
@@ -335,4 +369,8 @@ extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_pilot_input(void*){retu
 extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_pilot_capture_input(void*){return pilot_bridge::dispatch(5);}
 #ifdef AC8_OWNER_NATIVE_R31
 extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_pilot_prepare(void*){return pilot_bridge::dispatch(6);}
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_pilot_preflight(void*){return pilot_bridge::dispatch(7);}
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_pilot_track_camera(void*){return pilot_bridge::dispatch(9);}
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_pilot_retain_template(void*){return pilot_bridge::dispatch(10);}
+extern "C" __declspec(dllexport) int __cdecl luaopen_ac8_pilot_clock(void*){return pilot_bridge::dispatch(8);}
 #endif

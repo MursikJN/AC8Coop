@@ -7,7 +7,7 @@ struct Ledger {
  bool attempted=false,receipt_seen=false,identified=false,barrier=false,finish_entered=false,finished_ready=false;
  bool network_entered=false,parts_entered=false,network_identified=false,parts_identified=false;
  bool unknown_spawn=false,unknown_network=false,unknown_parts=false,running=false,cleanup_requested=false;
- bool plane_retired=false,network_retired=false,parts_retired=false,quarantined=false;
+ bool plane_retired=false,network_retired=false,parts_retired=false,quarantined=false,destroy_accepted=false;
  uintptr_t raw_owned=0,raw_network=0,raw_parts=0;
  Identity owned{},network{},parts{};
  unsigned callbacks=0,destroys=0,ticks=0;
@@ -36,14 +36,17 @@ struct Ledger {
    bool complete=(!raw_network||network_retired)&&(!raw_parts||parts_retired);
    status=complete?"retired":"cleanup_pending";reason=complete?"all_owned_identities_retired":"owned_children_pending";return;
   }
-  if(seen!=Seen::safe){quarantine(b,"owned_identity_unverified");return;}
   if(quarantined){status="quarantine";return;}
+  if(seen==Seen::pending&&destroy_accepted){status="cleanup_pending";reason="actor_destroy_pending";return;}
+  if(seen!=Seen::safe){quarantine(b,"owned_identity_unverified");return;}
+  if(destroy_accepted){status="cleanup_pending";reason="destroy_accepted_waiting_retirement";return;}
   if(b.pending()){status="cleanup_pending";reason="actor_destroy_pending";return;}
   if(finish_entered&&!finished_ready){quarantine(b,"partial_finish_cleanup_not_proven");return;}
   if(!b.cleanup_guard(finish_entered)){quarantine(b,"cleanup_graph_or_registry_unverified");return;}
   b.close_actor_barrier();
   if(destroys>=3){status="cleanup_pending";reason="destroy_request_limit";return;}
   ++destroys;b.event("destroy_enter");bool accepted=b.destroy(raw_owned);b.event(accepted?"destroy_return_true":"destroy_return_false");
+  destroy_accepted=accepted;
   status="cleanup_pending";reason="destroy_requested_retirement_unverified";
  }
  template<class B> bool prepare(B& b) {

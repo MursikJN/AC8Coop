@@ -1,0 +1,274 @@
+{
+  "generated_utc": "2026-10-23T01:19:20.335199+00:00",
+  "scope": "Offline stock AI observation, no replacement, original writes or network test; not a TZ.",
+  "image_base": "0x140000000",
+  "binary_sha256": "51510e2a520565dbe81fb0d569e95cd4393077acaaa859371489b80b8128829f",
+  "static_private_root": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\baxter-orders-20261023",
+  "static_files": [
+    {
+      "path": "147ed98e0.json",
+      "bytes": 3463,
+      "sha256": "008f951ee832e84516c1d689ae44ff820e70945dc09ac2032361d521e6dcb17e"
+    },
+    {
+      "path": "147ed9b50.json",
+      "bytes": 7374,
+      "sha256": "4beda1d6bbd0067a55a1e66481895650acc6de3c00963dc9e2313419b84c3daa"
+    },
+    {
+      "path": "build_index.py",
+      "bytes": 3069,
+      "sha256": "61a0eface8af0408e0d3097b0cb28aa93d531693a5cbb039a1626a17c5110d74"
+    },
+    {
+      "path": "check_contract.py",
+      "bytes": 1042,
+      "sha256": "6676d8ddb9113c45b3873d1c6caba499d5154a4fe9217d6f6be8e2c6e2aa4080"
+    },
+    {
+      "path": "check_enum.py",
+      "bytes": 2761,
+      "sha256": "70e198b6ae39b593045553716f462cd9a887cfecedcbe8d5140d801e54aa21c2"
+    },
+    {
+      "path": "confirmed-ranges.json",
+      "bytes": 170061,
+      "sha256": "a5ff54f614662e8d358213aa26e0856baf935be75f522d0e953f96de1cccc485"
+    },
+    {
+      "path": "contract-validation.json",
+      "bytes": 3824,
+      "sha256": "a95d9b00d49d1236583ad3d6b47479cf9d822a0eeaab6ef4c36ef073ae890131"
+    },
+    {
+      "path": "ghidra-first-pass.json",
+      "bytes": 90110,
+      "sha256": "c10fa23d8f8687e103d0d7eebeb90af4696d64c3d3829817f514566caf214bfc"
+    },
+    {
+      "path": "join-config.json",
+      "bytes": 3681,
+      "sha256": "7d35eef1cb0633950385fd1c527dffaca268ef6562ebb86f2f94abfb905fd409"
+    },
+    {
+      "path": "join-enum-descriptor.json",
+      "bytes": 278,
+      "sha256": "b420cb4057d729f166fe27de8dbbcba769f0d7faecba79c6df663e5c95beb2e2"
+    },
+    {
+      "path": "join-enum-getter.json",
+      "bytes": 1541,
+      "sha256": "aae9fd5882b3ac9ad3d8b6543ff10f055796f26e3a5f54d391b259c48b39377d"
+    },
+    {
+      "path": "join-enum-name.json",
+      "bytes": 487,
+      "sha256": "39ed83633f460ae9d6a7c26479fad207756c80a27ddd70efb99d4a3b72d51201"
+    },
+    {
+      "path": "join-enum-strings.json",
+      "bytes": 887,
+      "sha256": "174039db7a2772633070af985da7bd60200f6fc16760bb4959632e4d10908d52"
+    },
+    {
+      "path": "join-enum-validation.json",
+      "bytes": 947,
+      "sha256": "498487c47ad79e7000992b08f4b789b94bda1c1de43fdfcfecb82c6ecc04d982"
+    },
+    {
+      "path": "join-enum-values.json",
+      "bytes": 214,
+      "sha256": "d181efe06f56d87ebd4818e5ebe3fc3b158c0f6303f3a5b7ab0dca2a6d6311d3"
+    },
+    {
+      "path": "join_order_targets.py",
+      "bytes": 1835,
+      "sha256": "158727772f432b519b5601bb3263762bc103af7f0dd0d49e558758144b54b4b8"
+    },
+    {
+      "path": "order-execution.json",
+      "bytes": 1479,
+      "sha256": "288902aefa8c6ba5baab021e1c216df82f027a326d1515184bc377255610f589"
+    },
+    {
+      "path": "program-final.json",
+      "bytes": 1247,
+      "sha256": "f517cd41564381f48d2ac4238f24ee6635a770022aa569aa2a0a7be1a05c0302"
+    },
+    {
+      "path": "state-enum-descriptor.json",
+      "bytes": 727,
+      "sha256": "ce0b022d38925ecf9e522c79383b0f50d79a24ee02e8e9b39e7a97df1a0154ef"
+    },
+    {
+      "path": "state-enum-name.json",
+      "bytes": 487,
+      "sha256": "a9294bd5b37b5102aa36f0f057516aa9814893770b925ee3594bb72d6b983f5b"
+    },
+    {
+      "path": "state-enum-strings.json",
+      "bytes": 1287,
+      "sha256": "3057a8139289c67ee65a547b32d6a7973f9ff965d8ecb5ab283af43681ec6425"
+    },
+    {
+      "path": "state-enum-validation.json",
+      "bytes": 1390,
+      "sha256": "d1b66e6c5eb8922d8882d1bc53491bf8bd1b3d00b7e994d38dc09e2f4263d479"
+    },
+    {
+      "path": "state-enum-values.json",
+      "bytes": 727,
+      "sha256": "e3468d2a6a3e673ffa3660ace999e7bec030d73ce672a72d9092dccc7518dd6c"
+    },
+    {
+      "path": "summarize_pass.py",
+      "bytes": 1160,
+      "sha256": "ad2bcd9d9a978d14363d553a80c2eb9c835f6a29c59e7a6974c1a89dec906315"
+    },
+    {
+      "path": "validate_ranges.py",
+      "bytes": 745,
+      "sha256": "7276850bb53af9d24f59f923f66f1c617d10898bcc123d22ceef5c2d8ef40c17"
+    }
+  ],
+  "sessions": [
+    {
+      "private_root": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\mission6-runtime\\session-20261023-004421-375-a7360163",
+      "cleanup": {
+        "format": "ac8-mission6-observation-v1",
+        "started_utc": "2026-10-23T00:44:22.1269247Z",
+        "game": "C:\\Users\\Administrator\\Desktop\\ACE\\ac8-steam-coop-r31-compact\\lab-game\\Game\\Binaries\\Win64\\AceCombat8.exe",
+        "game_sha256": "51510E2A520565DBE81FB0D569E95CD4393077ACAAA859371489B80B8128829F",
+        "userdata": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\mission6-runtime\\session-20261023-004421-375-a7360163\\userdata",
+        "pid": 24060,
+        "exit_code": 0,
+        "offline_user_confirmed": true,
+        "network_isolation_os_verified": false,
+        "originals_written": false,
+        "proxy_removed": true,
+        "error": null,
+        "ended_utc": "2026-10-23T01:00:11.7844768Z"
+      },
+      "verified_observation_files": 457,
+      "files": [
+        {
+          "path": "session.json",
+          "bytes": 793,
+          "sha256": "48b0db8d43b6961cbe13162d56dd916632102f82a918f77426c32a0e30077cbc"
+        },
+        {
+          "path": "capture-profile.json",
+          "bytes": 3759,
+          "sha256": "8cedd3400f481cfd085388795937a9118fb4df90cb45ed8ef6daf69520fc85d0"
+        },
+        {
+          "path": "observations-manifest.json",
+          "bytes": 75903,
+          "sha256": "5c7e0d9b5a01e4dc496d49da586de8205c3ea4dafcbe8be34b35467a9fee7da4"
+        },
+        {
+          "path": "orders-analysis.json",
+          "bytes": 13852,
+          "sha256": "3d39ff53e7ffcf3c4253885442e2e13598f6783900a8c2e8f962337c2870519d"
+        },
+        {
+          "path": "analysis.json",
+          "bytes": 269204,
+          "sha256": "a3977efb8828862ab09dcfb0b5f3d7a0550b74f0ad1622022a6ef02bbedc1c3e"
+        },
+        {
+          "path": "input-markers.tsv",
+          "bytes": 670,
+          "sha256": "dbe3ada591d63f678b83e2fcd3888fdc26b63cd5c874431fbe590f01ba59acbd"
+        },
+        {
+          "path": "observations/orders.tsv",
+          "bytes": 251058,
+          "sha256": "f12c8a6449e67ebf1cb39e49464cb46308c516ad38eb55758d6c2c9ac722855f"
+        },
+        {
+          "path": "observations/timeline.tsv",
+          "bytes": 136582,
+          "sha256": "a04f5b1c63393256a89d9aa4d72183a66af9edde86b4e29341962f8a9599c7b5"
+        }
+      ]
+    },
+    {
+      "private_root": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\mission6-runtime\\session-20261023-010037-439-155d3694",
+      "cleanup": {
+        "format": "ac8-mission6-observation-v1",
+        "started_utc": "2026-10-23T01:00:38.1732316Z",
+        "game": "C:\\Users\\Administrator\\Desktop\\ACE\\ac8-steam-coop-r31-compact\\lab-game\\Game\\Binaries\\Win64\\AceCombat8.exe",
+        "game_sha256": "51510E2A520565DBE81FB0D569E95CD4393077ACAAA859371489B80B8128829F",
+        "userdata": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\mission6-runtime\\session-20261023-010037-439-155d3694\\userdata",
+        "pid": 19940,
+        "exit_code": 0,
+        "offline_user_confirmed": true,
+        "network_isolation_os_verified": false,
+        "originals_written": false,
+        "proxy_removed": true,
+        "error": null,
+        "ended_utc": "2026-10-23T01:18:53.2651644Z"
+      },
+      "verified_observation_files": 381,
+      "files": [
+        {
+          "path": "session.json",
+          "bytes": 793,
+          "sha256": "8cd6f7dbf20ce4861e83632fbf8f4505282f02a4ed3d0622e3ff1bd2bad8e0e7"
+        },
+        {
+          "path": "capture-profile.json",
+          "bytes": 3759,
+          "sha256": "1db5f279dbbdbd2b3a7074b4e6c4788c160c69e5f8b73b002a079496cad8282b"
+        },
+        {
+          "path": "observations-manifest.json",
+          "bytes": 63344,
+          "sha256": "f9f780d20c52cd9d96f685f5326454f214811449507f56f17ef9478249f85f22"
+        },
+        {
+          "path": "orders-analysis.json",
+          "bytes": 8241,
+          "sha256": "061d51dd6f38a7f8bd4ecdba26ea7adccf9026a536ba68414572766277edfc85"
+        },
+        {
+          "path": "analysis.json",
+          "bytes": 274442,
+          "sha256": "0ea8299849843ad4ac993c35868994a391ccd3743a58fd90b5f8664d5f2d3974"
+        },
+        {
+          "path": "order-targets-analysis.json",
+          "bytes": 13492,
+          "sha256": "dffae2efa2bd2d1c9b5800a0d35a0043c42a56627f602d076181a75e4dd8b8b1"
+        },
+        {
+          "path": "observations/orders.tsv",
+          "bytes": 483090,
+          "sha256": "4324f21630d8e8236fc8830a8ab696759b2a58f5dd253ae2e907e12596fe1dcf"
+        },
+        {
+          "path": "observations/timeline.tsv",
+          "bytes": 121394,
+          "sha256": "6a57bef6baec7d0609473f8b26dc6c10bc1b2fc7552e420f06f48515a39afc52"
+        }
+      ]
+    }
+  ],
+  "profile_manifests": [
+    {
+      "profile": "ac8-baxter-orders-v4",
+      "files_verified": 15,
+      "sha256": "8cedd3400f481cfd085388795937a9118fb4df90cb45ed8ef6daf69520fc85d0"
+    },
+    {
+      "profile": "ac8-baxter-orders-v5",
+      "files_verified": 15,
+      "sha256": "1db5f279dbbdbd2b3a7074b4e6c4788c160c69e5f8b73b002a079496cad8282b"
+    }
+  ],
+  "original_exe_sha256": "51510e2a520565dbe81fb0d569e95cd4393077acaaa859371489b80b8128829f",
+  "original_loader_absent": true,
+  "lab_loader_absent": true,
+  "limits": "Original EXE and loader checked; no full-install byte audit. Steam offline user-confirmed, not OS-enforced network isolation. No game or raw decompilation embedded."
+}

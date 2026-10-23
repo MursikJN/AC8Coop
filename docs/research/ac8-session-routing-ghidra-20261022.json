@@ -1,0 +1,957 @@
+{
+  "date": "2026-10-22",
+  "scope": "Offline static analysis via native GhidraMCP; no game execution, native calls, original writes or external sessions",
+  "artifact": {
+    "module": "AceCombat8.exe",
+    "sha256": "51510e2a520565dbe81fb0d569e95cd4393077acaaa859371489b80b8128829f",
+    "size": 555102832,
+    "image_base": "0x140000000",
+    "coordinates": "Function addresses below are RVA, Ghidra VA = image_base + RVA; field displacements are build-specific observations, not a callable ABI.",
+    "profile_label": "ac8-build25201480; Steam build ID not independently extracted",
+    "program_response": "evidence/session-routing-ghidra-20261022/responses/001-program.json"
+  },
+  "hypotheses": [
+    {
+      "id": "AC8-ROUTE-01",
+      "status": "partially confirmed statically",
+      "confirmed": "Room callback -> category/object-key registry -> weak object validation -> message descriptor type-ID map -> delegate broadcast. Sender metadata is stamped separately.",
+      "unknown": [
+        "Alternate ingress continuation",
+        "Transport ordering/delivery",
+        "Clock initialization and physics-specific stale-packet admission"
+      ],
+      "evidence": [
+        "evidence/session-routing-ghidra-20261022/responses/022-route-dispatch.json",
+        "evidence/session-routing-ghidra-20261022/responses/027-callback-broadcast.json",
+        "evidence/session-routing-ghidra-20261022/responses/033-ingress-delegate.json",
+        "evidence/session-routing-ghidra-20261022/responses/040-network-roster-build.json",
+        "evidence/session-routing-ghidra-20261022/responses/050-room-relay-subscription.json",
+        "evidence/session-routing-ghidra-20261022/responses/051-room-client.json",
+        "evidence/session-routing-ghidra-20261022/responses/056-route-callback-tables.json",
+        "evidence/session-routing-ghidra-20261022/responses/060-alternate-ingress.json",
+        "evidence/session-routing-ghidra-20261022/responses/061-route-bytes.json",
+        "evidence/session-routing-ghidra-20261022/responses/066-ingress-bytes.json"
+      ]
+    },
+    {
+      "id": "AC8-OWNER-01",
+      "status": "partially confirmed statically",
+      "confirmed": "Common local spawn chooses plane role 3 when System+0x1fa is nonzero, otherwise role 1; local ID comes from a converted room model, not an allocation counter. Remote role 2 established in prior phase.",
+      "unknown": [
+        "Full sender-to-plane authorization",
+        "Stable roster ownership/host migration",
+        "SteamID64-to-internal-ID mapping"
+      ],
+      "evidence": [
+        "evidence/session-routing-ghidra-20261022/responses/006-system-id-alloc.json",
+        "evidence/session-routing-ghidra-20261022/responses/017-campaign-shared-spawn-prep.json",
+        "evidence/session-routing-ghidra-20261022/responses/020-room-self-member.json",
+        "evidence/session-routing-ghidra-20261022/responses/030-self-member-convert.json",
+        "evidence/session-routing-ghidra-20261022/responses/054-local-member-use.json",
+        "evidence/session-routing-ghidra-20261022/responses/058-room-owner-id.json",
+        "evidence/session-routing-ghidra-20261022/responses/062-local-role-bytes.json"
+      ]
+    },
+    {
+      "id": "AC8-SESSION-01",
+      "status": "partially confirmed; named campaign waits are not peer barriers in the inspected Tick",
+      "confirmed": "GameInstance+0x910 system bootstrap, STRIX library setup, room callback installation, active-flag writes and common campaign spawn prerequisites. Tick states 1/5/6 advance without checking a second participant.",
+      "unknown": [
+        "Complete root initialization order",
+        "Campaign roster population/commit",
+        "Exact mapping of all completion callbacks to named library events",
+        "World travel and reconnect ordering"
+      ],
+      "evidence": [
+        "evidence/session-routing-ghidra-20261022/responses/002-join-complete.json",
+        "evidence/session-routing-ghidra-20261022/responses/007-network-context.json",
+        "evidence/session-routing-ghidra-20261022/responses/028-system-start.json",
+        "evidence/session-routing-ghidra-20261022/responses/031-system-ctor.json",
+        "evidence/session-routing-ghidra-20261022/responses/034-room-ready-a.json",
+        "evidence/session-routing-ghidra-20261022/responses/035-room-ready-b.json",
+        "evidence/session-routing-ghidra-20261022/responses/036-room-ready-c.json",
+        "evidence/session-routing-ghidra-20261022/responses/037-create-system-from-world.json",
+        "evidence/session-routing-ghidra-20261022/responses/043-facade-initialize.json",
+        "evidence/session-routing-ghidra-20261022/responses/045-campaign-state-tick.json",
+        "evidence/session-routing-ghidra-20261022/responses/046-world-init-step.json",
+        "evidence/session-routing-ghidra-20261022/responses/047-campaign-state-setter-slot.json",
+        "evidence/session-routing-ghidra-20261022/responses/063-campaign-tick-bytes.json"
+      ]
+    }
+  ],
+  "routing": {
+    "ingress": {
+      "setup_rva": "0x7502ce0",
+      "room_client_accessor_rva": "0xa44a8e0",
+      "subscription_rva": "0xa4af390",
+      "room_client_delegate_offset": "0x2d0",
+      "callback_rva": "0x751f220",
+      "table_va": "0x14cb7fc08",
+      "invoke_slot": "0x10",
+      "event_fields": {
+        "source_sharedptr": "0x08",
+        "message_sharedptr": "0x20"
+      }
+    },
+    "dispatcher_rva": "0x75034c0",
+    "source_stamp": {
+      "source_u32_offset": "0x08",
+      "message_u32_offset": "0x1c"
+    },
+    "key": "(uint64(message.byte[0x10]) << 56) | uint32(message[0x14])",
+    "registry": {
+      "owner": "network system at LiveGameInstance+0x910",
+      "offset": "0x2e0",
+      "key_bits": 64,
+      "value": "UObject weak reference",
+      "register_rva": "0x74b53f0",
+      "unregister_rva": "0x74b5310",
+      "object_key_offset": "0x28",
+      "duplicate_policy": "Return without replacing existing entry"
+    },
+    "type_dispatch": {
+      "descriptor_u32_offset": "0x48",
+      "network_object_map_offset": "0x38",
+      "stream_delegate_offset": "0x18",
+      "broadcast_rva": "0x74ced40",
+      "bound_physics_receiver_rva": "0x74bda10; binding established in prior aircraft-motion phase"
+    },
+    "exceptions": {
+      "category_override": "Type getter 0x52c4db0 forces category 1; exact message name not established",
+      "missing_object": "Only special type getter 0x52c3cf0 enters pending helper 0x74cc280; no generic physics queue demonstrated",
+      "alternate": "System+0x30 nonzero selects setup 0x7502500 and callback 0x751f7b0. That callback forwards event+0x20 via global delegate VA0x14dd9eca8, not directly to 0x75034c0; continuation unresolved"
+    },
+    "not_established": [
+      "Source ID equals target ID is not a demonstrated rule",
+      "No monotonic timestamp gate shown in dispatcher; cannot infer lack of lower-layer protection",
+      "Message object layout is not wire serialization"
+    ]
+  },
+  "ownership": {
+    "local_spawn_rva": "0x71ca650",
+    "role_owner": "ALivePlayerPlane",
+    "role_offset": "0xed8",
+    "role_width_bytes": 1,
+    "local_role_selection": "System.byte[0x1fa] != 0 ? 3 : 1",
+    "roles": [
+      {
+        "value": 1,
+        "observed_behavior": "local offline calculation"
+      },
+      {
+        "value": 2,
+        "observed_behavior": "remote reception; prior phase"
+      },
+      {
+        "value": 3,
+        "observed_behavior": "local calculation and network snapshot production"
+      }
+    ],
+    "enum_names": "Not established; these are not asserted to be Unreal ENetRole values",
+    "local_id": {
+      "getter_rva": "0x75039c0",
+      "room_model_accessor_rva": "0x52a4260",
+      "converter_rva": "0x5221670",
+      "width_bits": 32,
+      "origin": "model virtual +0x18",
+      "not": "Not a global counter allocator; not SteamID64"
+    },
+    "first_member": {
+      "getter_rva": "0x7503ab0",
+      "comparison_rva": "0x74c70c0",
+      "observation": "Compares local ID to first returned member ID. Roster order/authority/host migration are not proved."
+    },
+    "plane_key": "uint32(player ID) | 0x0200000000000000; assignment established in prior phase"
+  },
+  "session": {
+    "bootstrap_chain_rvas": [
+      "0x782fd60",
+      "0x780c030",
+      "0x7500670"
+    ],
+    "context_offset_in_game_instance": "0x910",
+    "bootstrap_guard_global_va": "0x14e4db638",
+    "library_getter_rva": "0x520ba40",
+    "library_name": "UStrixLibraryInterface",
+    "library_pointer_offset_in_system": "0x28",
+    "event_binding_rva": "0x5258880",
+    "named_events_present": [
+      "CreateRoomSuccess",
+      "JoinRoomSuccess"
+    ],
+    "event_mapping_limit": "Names verified in library binding strings, but exact relation to every delegate field/completion callback not fully established.",
+    "initial_flags": {
+      "constructor_rva": "0x75002a0",
+      "cleared_byte_offsets": [
+        "0x1f8",
+        "0x1f9",
+        "0x1fa"
+      ]
+    },
+    "completion_callbacks": [
+      {
+        "rva": "0x7502120",
+        "write": "byte +0x1fa = 1",
+        "broadcast_offset": "0xb0"
+      },
+      {
+        "rva": "0x7502180",
+        "write": "byte +0x1fa = 1",
+        "broadcast_offset": "0xc8",
+        "mode_choice": "System+0x30 chooses normal or alternate incoming callbacks"
+      },
+      {
+        "rva": "0x7502210",
+        "write": "word +0x1f9 = 0x0101",
+        "broadcast_offset": "0xe0"
+      }
+    ],
+    "manager_join_complete": {
+      "rva": "0x74cbc00",
+      "status_byte_offset": "0x4c8",
+      "success": 1,
+      "failure": 2,
+      "room_property_fetch_rvas": [
+        "0x75016d0",
+        "0x52a4050"
+      ],
+      "warning": "Completion alone does not prove roster/spawn readiness"
+    },
+    "health": {
+      "tick_rva": "0x74c0db0",
+      "room_closed": "Clear word System+0x1f9 and initiate stop/error path",
+      "stale_helper_rva": "0x74cdab0",
+      "warning": "Health counters and type-specific age handling 0x74e2fb0 are not proof of generic physics ordering"
+    },
+    "campaign_tick": {
+      "rva": "0x78e3fe0",
+      "state_byte_offset": "0x578",
+      "setter_slot": "0xa40",
+      "setter_rva": "0x78e4440",
+      "verified_slot_va": "0x14cbc6560",
+      "unconditional_transitions": [
+        {
+          "from": 1,
+          "to": 2,
+          "name_from_prior_enum": "WaitingNetworkInitialize"
+        },
+        {
+          "from": 5,
+          "to": 6,
+          "name_from_prior_enum": "WaitingTimeSync"
+        },
+        {
+          "from": 6,
+          "to": 7,
+          "name_from_prior_enum": "WaitingSpawnedPlayers"
+        },
+        {
+          "from": 8,
+          "to": 9,
+          "name_from_prior_enum": "WaitingSpawnedAIs"
+        }
+      ],
+      "limitation": "No peer-ready test inside these inspected Tick branches; does not exclude checks in other states or other modes."
+    }
+  },
+  "adapter_contract_proposal": {
+    "status": "Design constraints from analysis, not implemented",
+    "requirements": [
+      "Bind Steam peer to internal member ID and session generation explicitly",
+      "Assign identical category/ID across PCs and register weak object only after identity assignment",
+      "Separate local producer role 3 and remote receiver role 2; do not change a role byte without full lifecycle/ABI validation",
+      "Install verified per-type physics binding before admission; handle missing objects without assuming all packets are queued",
+      "Implement campaign barriers for roster, scene loading and initial objects; enum state names are insufficient",
+      "Specify sender ownership, clock baseline, old/duplicate/out-of-order policy and world-travel cleanup",
+      "Keep host mission/event authority separate from locally calculated plane motion"
+    ]
+  },
+  "next_offline_steps": [
+    "Trace global alternate-ingress delegate subscribers and threading before choosing adapter ingress",
+    "Recover roster population and exact world-travel register/unregister ordering",
+    "Recover sender admission and timestamp validation below/above dispatcher",
+    "Recover named library event-to-completion mappings, without invoking callbacks"
+  ],
+  "verification": "evidence/session-routing-ghidra-20261022/byte-and-instruction-verification.json",
+  "prior_motion_report": "docs/research/ac8-aircraft-motion-ghidra-20261022.json",
+  "responses": [
+    {
+      "id": "001-program",
+      "tool": "get_program_info",
+      "arguments": {},
+      "path": "evidence/session-routing-ghidra-20261022/responses/001-program.json",
+      "utc": "2026-10-22T00:30:46.662Z",
+      "is_error": false
+    },
+    {
+      "id": "002-join-complete",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474cbc00"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/002-join-complete.json",
+      "utc": "2026-10-22T00:30:49.478Z",
+      "is_error": false
+    },
+    {
+      "id": "003-system-send-loop",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x147503be0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/003-system-send-loop.json",
+      "utc": "2026-10-22T00:30:51.160Z",
+      "is_error": false
+    },
+    {
+      "id": "004-network-base-ctor",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474b5230"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/004-network-base-ctor.json",
+      "utc": "2026-10-22T00:30:53.883Z",
+      "is_error": false
+    },
+    {
+      "id": "005-campaign-init-gate",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1478e4fb0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/005-campaign-init-gate.json",
+      "utc": "2026-10-22T00:30:57.953Z",
+      "is_error": false
+    },
+    {
+      "id": "006-system-id-alloc",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1475039c0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/006-system-id-alloc.json",
+      "utc": "2026-10-22T00:31:39.359Z",
+      "is_error": false
+    },
+    {
+      "id": "007-network-context",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474c1a30"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/007-network-context.json",
+      "utc": "2026-10-22T00:31:41.325Z",
+      "is_error": false
+    },
+    {
+      "id": "008-world-network-tick",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1478deee0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/008-world-network-tick.json",
+      "utc": "2026-10-22T00:31:48.791Z",
+      "is_error": false
+    },
+    {
+      "id": "009-system-field-registration",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474b53f0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/009-system-field-registration.json",
+      "utc": "2026-10-22T00:31:50.475Z",
+      "is_error": false
+    },
+    {
+      "id": "010-room-callback",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474cb730"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/010-room-callback.json",
+      "utc": "2026-10-22T00:31:52.312Z",
+      "is_error": false
+    },
+    {
+      "id": "011-room-transition",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474ccd20"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/011-room-transition.json",
+      "utc": "2026-10-22T00:31:54.796Z",
+      "is_error": false
+    },
+    {
+      "id": "012-manager-ingress",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474c0db0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/012-manager-ingress.json",
+      "utc": "2026-10-22T00:32:01.915Z",
+      "is_error": false
+    },
+    {
+      "id": "013-system-roster-property",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1475016d0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/013-system-roster-property.json",
+      "utc": "2026-10-22T00:32:03.693Z",
+      "is_error": false
+    },
+    {
+      "id": "014-ingress-pump",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474cbf70"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/014-ingress-pump.json",
+      "utc": "2026-10-22T00:32:13.903Z",
+      "is_error": false
+    },
+    {
+      "id": "015-stale-health",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474cdab0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/015-stale-health.json",
+      "utc": "2026-10-22T00:32:16.416Z",
+      "is_error": false
+    },
+    {
+      "id": "016-system-lookup-context",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x147ee01c0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/016-system-lookup-context.json",
+      "utc": "2026-10-22T00:32:18.102Z",
+      "is_error": false
+    },
+    {
+      "id": "017-campaign-shared-spawn-prep",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1471ca650"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/017-campaign-shared-spawn-prep.json",
+      "utc": "2026-10-22T00:32:20.236Z",
+      "is_error": false
+    },
+    {
+      "id": "018-base-bind-receiver",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474b56f0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/018-base-bind-receiver.json",
+      "utc": "2026-10-22T00:32:58.116Z",
+      "is_error": false
+    },
+    {
+      "id": "019-room-member-count",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474c71d0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/019-room-member-count.json",
+      "utc": "2026-10-22T00:32:59.692Z",
+      "is_error": false
+    },
+    {
+      "id": "020-room-self-member",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1452a4260"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/020-room-self-member.json",
+      "utc": "2026-10-22T00:33:14.748Z",
+      "is_error": false
+    },
+    {
+      "id": "021-system-type",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x14520ba40"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/021-system-type.json",
+      "utc": "2026-10-22T00:33:16.522Z",
+      "is_error": false
+    },
+    {
+      "id": "022-route-dispatch",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1475034c0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/022-route-dispatch.json",
+      "utc": "2026-10-22T00:33:26.109Z",
+      "is_error": false
+    },
+    {
+      "id": "023-registry-lookup",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474cfa80"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/023-registry-lookup.json",
+      "utc": "2026-10-22T00:33:28.171Z",
+      "is_error": false
+    },
+    {
+      "id": "024-unregister",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474b5310"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/024-unregister.json",
+      "utc": "2026-10-22T00:33:30.289Z",
+      "is_error": false
+    },
+    {
+      "id": "025-message-reception",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474c0980"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/025-message-reception.json",
+      "utc": "2026-10-22T00:33:32.077Z",
+      "is_error": false
+    },
+    {
+      "id": "026-message-statistics",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474e2fb0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/026-message-statistics.json",
+      "utc": "2026-10-22T00:33:44.161Z",
+      "is_error": false
+    },
+    {
+      "id": "027-callback-broadcast",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474ced40"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/027-callback-broadcast.json",
+      "utc": "2026-10-22T00:33:47.338Z",
+      "is_error": false
+    },
+    {
+      "id": "028-system-start",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x147500670"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/028-system-start.json",
+      "utc": "2026-10-22T00:33:49.318Z",
+      "is_error": false
+    },
+    {
+      "id": "029-network-pending-entry",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474cc280"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/029-network-pending-entry.json",
+      "utc": "2026-10-22T00:33:51.308Z",
+      "is_error": false
+    },
+    {
+      "id": "030-self-member-convert",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x145221670"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/030-self-member-convert.json",
+      "utc": "2026-10-22T00:34:50.237Z",
+      "is_error": false
+    },
+    {
+      "id": "031-system-ctor",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1475002a0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/031-system-ctor.json",
+      "utc": "2026-10-22T00:34:52.056Z",
+      "is_error": false
+    },
+    {
+      "id": "032-transport-ingress-hook",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x147501f90"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/032-transport-ingress-hook.json",
+      "utc": "2026-10-22T00:34:53.839Z",
+      "is_error": false
+    },
+    {
+      "id": "033-ingress-delegate",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x14751f220"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/033-ingress-delegate.json",
+      "utc": "2026-10-22T00:35:13.459Z",
+      "is_error": false
+    },
+    {
+      "id": "034-room-ready-a",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x147502120"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/034-room-ready-a.json",
+      "utc": "2026-10-22T00:35:15.491Z",
+      "is_error": false
+    },
+    {
+      "id": "035-room-ready-b",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x147502180"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/035-room-ready-b.json",
+      "utc": "2026-10-22T00:35:17.331Z",
+      "is_error": false
+    },
+    {
+      "id": "036-room-ready-c",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x147502210"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/036-room-ready-c.json",
+      "utc": "2026-10-22T00:35:18.983Z",
+      "is_error": false
+    },
+    {
+      "id": "037-create-system-from-world",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x14780c030"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/037-create-system-from-world.json",
+      "utc": "2026-10-22T00:35:20.719Z",
+      "is_error": false
+    },
+    {
+      "id": "038-event-leaf-thunks",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x147502250",
+        "length": 160
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/038-event-leaf-thunks.json",
+      "utc": "2026-10-22T00:35:46.481Z",
+      "is_error": false
+    },
+    {
+      "id": "039-base-message-type",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1452c7490"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/039-base-message-type.json",
+      "utc": "2026-10-22T00:35:48.419Z",
+      "is_error": false
+    },
+    {
+      "id": "040-network-roster-build",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x147502ce0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/040-network-roster-build.json",
+      "utc": "2026-10-22T00:35:50.208Z",
+      "is_error": false
+    },
+    {
+      "id": "041-facade-name",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14bfd2900",
+        "length": 96
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/041-facade-name.json",
+      "utc": "2026-10-22T00:36:17.122Z",
+      "is_error": false
+    },
+    {
+      "id": "042-facade-boot",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x145248b80"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/042-facade-boot.json",
+      "utc": "2026-10-22T00:36:19.802Z",
+      "is_error": false
+    },
+    {
+      "id": "043-facade-initialize",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x145258880"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/043-facade-initialize.json",
+      "utc": "2026-10-22T00:36:21.691Z",
+      "is_error": false
+    },
+    {
+      "id": "044-room-property-model",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1452a4050"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/044-room-property-model.json",
+      "utc": "2026-10-22T00:36:23.369Z",
+      "is_error": false
+    },
+    {
+      "id": "045-campaign-state-tick",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1478e3fe0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/045-campaign-state-tick.json",
+      "utc": "2026-10-22T00:36:36.853Z",
+      "is_error": false
+    },
+    {
+      "id": "046-world-init-step",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x14782fd60"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/046-world-init-step.json",
+      "utc": "2026-10-22T00:36:38.621Z",
+      "is_error": false
+    },
+    {
+      "id": "047-campaign-state-setter-slot",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14cbc6560",
+        "length": 8
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/047-campaign-state-setter-slot.json",
+      "utc": "2026-10-22T00:37:04.626Z",
+      "is_error": false
+    },
+    {
+      "id": "048-system-message-events",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x14751d380"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/048-system-message-events.json",
+      "utc": "2026-10-22T00:37:06.397Z",
+      "is_error": false
+    },
+    {
+      "id": "049-room-create-join-request",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474c2180"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/049-room-create-join-request.json",
+      "utc": "2026-10-22T00:37:08.313Z",
+      "is_error": false
+    },
+    {
+      "id": "050-room-relay-subscription",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x14a4af390"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/050-room-relay-subscription.json",
+      "utc": "2026-10-22T00:37:54.055Z",
+      "is_error": false
+    },
+    {
+      "id": "051-room-client",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x14a44a8e0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/051-room-client.json",
+      "utc": "2026-10-22T00:37:55.975Z",
+      "is_error": false
+    },
+    {
+      "id": "052-interface-event-names",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14bfd2930",
+        "length": 640
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/052-interface-event-names.json",
+      "utc": "2026-10-22T00:38:21.846Z",
+      "is_error": false
+    },
+    {
+      "id": "053-owner-resolution",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474b6c90"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/053-owner-resolution.json",
+      "utc": "2026-10-22T00:38:23.655Z",
+      "is_error": false
+    },
+    {
+      "id": "054-local-member-use",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474c70c0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/054-local-member-use.json",
+      "utc": "2026-10-22T00:38:25.926Z",
+      "is_error": false
+    },
+    {
+      "id": "055-room-join-extra",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x147502500"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/055-room-join-extra.json",
+      "utc": "2026-10-22T00:38:27.804Z",
+      "is_error": false
+    },
+    {
+      "id": "056-route-callback-tables",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14cb7fc08",
+        "length": 48
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/056-route-callback-tables.json",
+      "utc": "2026-10-22T00:39:09.942Z",
+      "is_error": false
+    },
+    {
+      "id": "057-route-alt-callback-table",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14cb7fe80",
+        "length": 48
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/057-route-alt-callback-table.json",
+      "utc": "2026-10-22T00:39:11.541Z",
+      "is_error": false
+    },
+    {
+      "id": "058-room-owner-id",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x147503ab0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/058-room-owner-id.json",
+      "utc": "2026-10-22T00:39:13.599Z",
+      "is_error": false
+    },
+    {
+      "id": "059-create-complete-delegate",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14bf24bd0",
+        "length": 112
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/059-create-complete-delegate.json",
+      "utc": "2026-10-22T00:39:15.119Z",
+      "is_error": false
+    },
+    {
+      "id": "060-alternate-ingress",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x14751f7b0"
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/060-alternate-ingress.json",
+      "utc": "2026-10-22T00:42:07.955Z",
+      "is_error": false
+    },
+    {
+      "id": "061-route-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1475034c0",
+        "length": 4096
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/061-route-bytes.json",
+      "utc": "2026-10-22T00:42:32.376Z",
+      "is_error": false
+    },
+    {
+      "id": "062-local-role-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1471ca650",
+        "length": 4096
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/062-local-role-bytes.json",
+      "utc": "2026-10-22T00:42:33.534Z",
+      "is_error": false
+    },
+    {
+      "id": "063-campaign-tick-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1478e3fe0",
+        "length": 1104
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/063-campaign-tick-bytes.json",
+      "utc": "2026-10-22T00:42:35.441Z",
+      "is_error": false
+    },
+    {
+      "id": "064-register-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1474b53f0",
+        "length": 256
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/064-register-bytes.json",
+      "utc": "2026-10-22T00:42:36.795Z",
+      "is_error": false
+    },
+    {
+      "id": "065-flags-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x147502120",
+        "length": 256
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/065-flags-bytes.json",
+      "utc": "2026-10-22T00:42:38.271Z",
+      "is_error": false
+    },
+    {
+      "id": "066-ingress-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14751f220",
+        "length": 192
+      },
+      "path": "evidence/session-routing-ghidra-20261022/responses/066-ingress-bytes.json",
+      "utc": "2026-10-22T00:42:39.485Z",
+      "is_error": false
+    }
+  ],
+  "limitations": [
+    "Static reachability is not successful runtime use or a working co-op session",
+    "Ghidra automatic types do not validate exact ABI",
+    "Search-oriented response filenames may be wrong semantic guesses; conclusions use the recovered dataflow",
+    "Native MCP returned no errors in this batch; incomplete database xrefs/disassembly from earlier phases remain limitations",
+    "No mod behavior changes or integration performed in this research phase"
+  ]
+}

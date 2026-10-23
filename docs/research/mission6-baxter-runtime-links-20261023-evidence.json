@@ -1,0 +1,178 @@
+{
+  "generated_utc": "2026-10-23T00:37:09.309349+00:00",
+  "private_root": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\mission6-runtime\\session-20261023-000712-670-f985c541",
+  "binary_sha256": "51510E2A520565DBE81FB0D569E95CD4393077ACAAA859371489B80B8128829F",
+  "image_base": "0x140000000",
+  "address_note": "Static Ghidra VA only; runtime identities private and limited to this PID/session",
+  "pid": 26412,
+  "scope": "Stock offline AI observation; no replacement, original writes, network or coop acceptance",
+  "cleanup": {
+    "format": "ac8-mission6-observation-v1",
+    "started_utc": "2026-10-23T00:07:13.5683117Z",
+    "game": "C:\\Users\\Administrator\\Desktop\\ACE\\ac8-steam-coop-r31-compact\\lab-game\\Game\\Binaries\\Win64\\AceCombat8.exe",
+    "game_sha256": "51510E2A520565DBE81FB0D569E95CD4393077ACAAA859371489B80B8128829F",
+    "userdata": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\mission6-runtime\\session-20261023-000712-670-f985c541\\userdata",
+    "pid": 26412,
+    "exit_code": 0,
+    "offline_user_confirmed": true,
+    "network_isolation_os_verified": false,
+    "originals_written": false,
+    "proxy_removed": true,
+    "error": null,
+    "ended_utc": "2026-10-23T00:36:04.6909124Z"
+  },
+  "files": [
+    {
+      "path": "session.json",
+      "bytes": 793,
+      "sha256": "908635aa3236ccf191142ad730a33000924d6dd752f8b07c5bbcf867467215c3"
+    },
+    {
+      "path": "observations-manifest.json",
+      "bytes": 135188,
+      "sha256": "090701ce7ba632176b3cd1c9216466ce1032497e484491d2c5ce2e1cffaa767a"
+    },
+    {
+      "path": "baxter-analysis.json",
+      "bytes": 651928,
+      "sha256": "1fe4ded4f044849aba9327bdc81ab9770ee594a4a7cd2f944b642306b990d737"
+    },
+    {
+      "path": "operator-markers.txt",
+      "bytes": 558,
+      "sha256": "c1416f3c1291013b99792d89c233c95ae1719fa396ad71b6aeca17894b58d8bb"
+    },
+    {
+      "path": "wingman-keybindings.png",
+      "bytes": 607194,
+      "sha256": "0a05f5c0f37c1dd271453c2ead3c9f77bfcab680c16f1ae615782234cbb4e886"
+    },
+    {
+      "path": "ghidra-baxter-check.json",
+      "bytes": 17942,
+      "sha256": "88a531b9920853f49d1dbfd631f658d5253782e3338d70fbceeb1640c0d28bec"
+    },
+    {
+      "path": "ghidra-baxter-extra.json",
+      "bytes": 9985,
+      "sha256": "be7c4258a4096de963f4016980488bec0feb941e72c8aca9ca8029af7791707a"
+    },
+    {
+      "path": "order-instruction-validation.json",
+      "bytes": 1980,
+      "sha256": "dee21f0b196453247bd5afc507abcf9de8e9db9e0f280043198feea08a68fc37"
+    },
+    {
+      "path": "runtime/Mods/Mission6Capture/Scripts/main.lua",
+      "bytes": 5221,
+      "sha256": "022a921d72982b22017b3dfe45d66080bd2fa2d076c054ae9c8b7b9f014ba678"
+    },
+    {
+      "path": "runtime/Mods/Mission6Capture/Scripts/baxter.lua",
+      "bytes": 1159,
+      "sha256": "a650f3dbe4eed3ba525f501ebcd8d371334dd9e3898b7f2cb01753b64bbe5ce4"
+    },
+    {
+      "path": "observations/snapshot-00259.tsv",
+      "bytes": 27559,
+      "sha256": "a5bcb0ac1315f03da672612be0941f0109094ab861caba3318a39adb5040e2da"
+    },
+    {
+      "path": "observations/snapshot-00267.tsv",
+      "bytes": 65563,
+      "sha256": "6735f2b10d59bd1f387df3f1f92eaa8e37dbbcdb8db61d10012063b87842e260"
+    },
+    {
+      "path": "observations/snapshot-00275.tsv",
+      "bytes": 192014,
+      "sha256": "c48708fb9e26846291319bbdb7ca5a579f35966a09e131ba50a3dc6c8d7ad481"
+    },
+    {
+      "path": "observations/snapshot-00279.tsv",
+      "bytes": 4212,
+      "sha256": "ab348e137bbc3593659990009df4ba95a06505e018a7df0eec1e1222df22f492"
+    },
+    {
+      "path": "observations/snapshot-00289.tsv",
+      "bytes": 4212,
+      "sha256": "91c363c0e612daae2dac944285876748a989d2c32b605fd64c642cfb8c031c89"
+    },
+    {
+      "path": "observations/snapshot-00301.tsv",
+      "bytes": 4219,
+      "sha256": "5cfe29ed7ef8b10ec77806f3ff18f66639fce58207b8c387c2761f65d457730b"
+    },
+    {
+      "path": "observations/snapshot-00311.tsv",
+      "bytes": 4219,
+      "sha256": "82c0e91f456a43a8023d6eaa7ec0a94c7124e8c07e7144b61bb66568d022eaf1"
+    },
+    {
+      "path": "observations/snapshot-00319.tsv",
+      "bytes": 4211,
+      "sha256": "01164bc186de549f53efd612befd3e0637ea2c3f25076ea527a4d1575c7da345"
+    },
+    {
+      "path": "observations/snapshot-00327.tsv",
+      "bytes": 4211,
+      "sha256": "cb4368728f74404fdef9859662b80da56bd566ab43584effda1b36304597c60d"
+    },
+    {
+      "path": "observations/snapshot-00763.tsv",
+      "bytes": 1632757,
+      "sha256": "3c2c3919d42cf7154c1ce3769979b02f7f6507c152fa330994ccb51de9d6d8fe"
+    },
+    {
+      "path": "observations/snapshot-00765.tsv",
+      "bytes": 11789,
+      "sha256": "0d70e02f2ce8fd11261052c3236852de00862023989de7953879f4b5d20f8577"
+    },
+    {
+      "path": "observations/snapshot-00767.tsv",
+      "bytes": 15395,
+      "sha256": "25ac0cef82ae1d24cd812fa65525a207f4dddea06760ce7007f16d655feeff12"
+    },
+    {
+      "path": "observations/snapshot-00769.tsv",
+      "bytes": 9808,
+      "sha256": "b7804de535d10b3157b0521a27b96f5b859931bb8312d00aabf365840619b8ba"
+    },
+    {
+      "path": "observations/snapshot-00775.tsv",
+      "bytes": 3190752,
+      "sha256": "5de4dccebed9a74de28cb00360dd23c0c42c72bcd5adb6107df9ff0794d8027a"
+    }
+  ],
+  "samples": 813,
+  "accepted_samples": 576,
+  "event_links": 227,
+  "event_keys": 114,
+  "event_types": {
+    "LiveAIEngagementOrder": 75,
+    "LiveUnitMoveActor": 46,
+    "LiveSetIsInvincibleFromWingman": 5,
+    "LiveWingmanJoinOrLeaveExecution": 8,
+    "LiveWingmanHUDLocatorForceDisplay": 6,
+    "LiveWingmanHUDContainerForceDisplay": 6,
+    "LivePilotIDStatement": 47,
+    "LiveAIChangePilotRankExecution": 4,
+    "LiveDestroyUnitExecution": 23,
+    "LiveUnitMoveExit": 1,
+    "LiveInputWingmanStateStatement": 6
+  },
+  "observations_manifest_verified": 814,
+  "tests": {
+    "collector": 19,
+    "analyzer": 2,
+    "launcher_rejections": 4,
+    "status": "PASS"
+  },
+  "limitations": [
+    "No per-action native parameters decoded",
+    "No command/native state transition observed",
+    "Blank BoolProperty watch values excluded; ordinary snapshots unaffected",
+    "Cross-file references not atomic/execution trace",
+    "Empty Ghidra disassemble results excluded; saved PE bytes independently matched",
+    "No original whole-installation hash inventory claimed"
+  ]
+}

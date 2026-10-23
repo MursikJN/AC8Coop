@@ -17,6 +17,8 @@ def verify(path):
   header=(ROOT/'native/adapter_bootstrap_contract.h').read_text()
   pause=re.search(r'pause_update_fingerprint\[\]="([0-9a-f]+)"',header)[1]
   pairs=[(0x79163f0,pause)]+[(int(r,16),s)for r,s in re.findall(r'(0x[0-9a-f]+),"([0-9a-f]+)"',(ROOT/'native/menu_route_contract.h').read_text())]
+  for rva,name in [(0x7916407,'pause_reason_shift_fingerprint'),(0x7916417,'pause_override_branch_fingerprint')]:
+   pairs.append((rva,re.search(name+r'\[\]="([0-9a-f]+)"',header)[1]))
   checks=[]
   for rva,fingerprint in pairs:
    assert len(fingerprint)==32,(hex(rva),'incorrect fingerprint length')

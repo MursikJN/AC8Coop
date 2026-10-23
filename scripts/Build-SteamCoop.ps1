@@ -6,7 +6,7 @@ $vswhere=Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/v
 $vs=& $vswhere -latest -prerelease -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
 if(!$vs){throw 'MSVC missing'};$dev=Join-Path $vs 'Common7/Tools/VsDevCmd.bat';$src=Join-Path $repo 'native';$headers=Join-Path $repo 'packages/valve-headers-d534'
 $lines=@('@echo off',('call "'+$dev+'" -no_logo -arch=x64 -host_arch=x64'),'if not %errorlevel%==0 exit /b %errorlevel%')
-$units=@('steam_coop_tests','guest_pilot_tests','mission_pause_lease_tests');if($Revision -ne 'r27'){$units+='cinema_sync_tests'};if($Revision -in @('r29','r30','r31')){$units+='session_policy_tests'};if($Revision -in @('r30','r31')){$units+='owner_flight_tests'};if($Revision -eq 'r31'){$units+=@('plane_initial_state_tests','plane_flight_state_tests','plane_flight_tests','owner_native_tests','owner_world_readiness_tests')}
+$units=@('steam_coop_tests','guest_pilot_tests','mission_pause_lease_tests');if($Revision -ne 'r27'){$units+='cinema_sync_tests'};if($Revision -in @('r29','r30','r31')){$units+='session_policy_tests'};if($Revision -in @('r30','r31')){$units+='owner_flight_tests'};if($Revision -eq 'r31'){$units+=@('plane_initial_state_tests','plane_flight_state_tests','plane_flight_tests','owner_native_tests','owner_world_readiness_tests','owner_sound_readiness_tests','owner_template_tests','owner_lifetime_tests','owner_cleanup_tests')}
 if(!$SkipTests){foreach($unit in $units){
  $defines=if($unit -eq 'guest_pilot_tests'){' /DAC8_STEAM_COOP_R27 /DAC8_MISSION_SYNC_R26'}else{''}
  $lines+=('cl /nologo /std:c++17 /EHsc /W4 /WX /O2 /MT'+$defines+' "'+$src+'/'+$unit+'.cpp" /Fe:"'+$out+'/'+$unit+'.exe" /Fo:"'+$out+'/'+$unit+'.obj"')

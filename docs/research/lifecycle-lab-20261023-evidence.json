@@ -1,0 +1,122 @@
+{
+  "format": "ac8-lifecycle-evidence-v1",
+  "session": "pair-20261023-020403",
+  "evidence_root": "private lifecycle-lab/pair-20261023-020403",
+  "game_build": 25201480,
+  "native_assertions": 842,
+  "protocol_trial": {
+    "result": "PASS",
+    "protocol": 8,
+    "transport": "native TCP loopback",
+    "checks": [
+      "mission_change_resets_ready_and_rejects_stale",
+      "delayed_intro_and_expired_commit",
+      "natural_finish_waits_peer_two_votes_and_old_scene",
+      "hangar_new_ready_loadout_reset_single_sortie_delayed_load",
+      "flight_disconnect_stops",
+      "lobby_safe_disconnect_or_cancel",
+      "loading_safe_disconnect_or_cancel",
+      "cancel_safe_disconnect_or_cancel"
+    ],
+    "gameplay_tested": false
+  },
+  "live_pair": {
+    "format": "ac8-lifecycle-pair-v1",
+    "started_utc": "2026-10-23T02:04:03.0551992Z",
+    "host_pid": 26792,
+    "guest_pid": 15680,
+    "host_exit": 0,
+    "guest_exit": 3,
+    "proxy_removed": true,
+    "originals_written": false,
+    "transport": "loopback",
+    "game_adapter": "read-only-observation",
+    "error": null,
+    "ended_utc": "2026-10-23T02:16:02.7333272Z"
+  },
+  "observations": {
+    "host_main_menu": "visual confirmed",
+    "host_quality": "LOW via UI",
+    "host_fps": "30 via UI and INI",
+    "guest_main_menu": false,
+    "guest_transport": "connected/protocol8/phase0",
+    "oom_sources": [
+      "PowerShell System.OutOfMemoryException TextWriter",
+      "game insufficient video memory dialog",
+      "game Error01 dialog"
+    ],
+    "memory_kib": {
+      "total_ram": 16698504,
+      "free_ram": 3572372,
+      "total_virtual": 62353664,
+      "free_virtual": 124436
+    },
+    "gameplay_tested": false,
+    "main_menu_observer_validated": false,
+    "launcher_guest_seed_fix_live_tested": false
+  },
+  "files": [
+    {
+      "path": "native/shared_session_local_bridge.cpp",
+      "sha256": "98FA8E9ECA79D645E3FB403B7BC170A5DA9A66B1AF66A792337044C1B4874547"
+    },
+    {
+      "path": "coop/lifecycle_lab.py",
+      "sha256": "92E295C37550E20A8E89193DD64FA1028465BBCCA4009E15C0682C7F51216C17"
+    },
+    {
+      "path": "scripts/Build-LifecycleLab.ps1",
+      "sha256": "A35D93D8A162C9F949DCF142FE7CB75D82AAB14DB0E2E4291E2F684954E745CC"
+    },
+    {
+      "path": "scripts/Start-LifecyclePair.ps1",
+      "sha256": "636CD0D092661A2D3D2BBA78465F3FE0792D9A55C093D7EDB9F24510F6ED8BB5"
+    },
+    {
+      "path": "probe/LifecycleLab/Scripts/main.lua",
+      "sha256": "3C98837867609A905FB7052C5F08915343B637DDD52031309829EA1A0FE79AE6"
+    },
+    {
+      "path": "docs/research/lifecycle-lab-20261023.md",
+      "sha256": "7F1E80F72CFBBF075C619CEBB856C1F790854A13340DD832BFD4AAF3347EE5A0"
+    },
+    {
+      "path": "build/lifecycle-lab/ac8_lifecycle_lab.dll",
+      "sha256": "E0BE8A96D919C7B3EDA86966C51ACF49E0F2B015DBB66FEF7F21A66515E05479"
+    },
+    {
+      "path": "build/lifecycle-trial-01/result.json",
+      "sha256": "525B26D4A612A914E3C66EDCFF8553AE6B84078D297B0EE106021A62550E3501"
+    }
+  ],
+  "private_files": [
+    {
+      "path": "pair.json",
+      "sha256": "D84EB5F5AD8BA51043D8827DBA7723B3EFBE0AD18BE5EFBC344C2F5C2FBEBBCD"
+    },
+    {
+      "path": "profile-manifest.json",
+      "sha256": "8C5F9D5D47F5DD256CACA8238DD1AE8E1FCAE75148985B4CCE7C0BAA43D31F5B"
+    },
+    {
+      "path": "start-guest",
+      "sha256": "2A003E59B9B36DBAE02798EE1CBA45D2B1F6384167DFE800957D0F494366DE69"
+    },
+    {
+      "path": "host/shared-session-status.tsv",
+      "sha256": "59A049FA28B29E67271053E8D85A30F984C3ACDB1383C2249A17700E0AA67E01"
+    },
+    {
+      "path": "guest/shared-session-status.tsv",
+      "sha256": "89A4B7067B214D154B6B14B0C1923EAB37261337BBFA02011C0146D0FD7FEB4D"
+    },
+    {
+      "path": "host/runtime/UE4SS.log",
+      "sha256": "E9272BDEF82D26A9A1534A3B6A97F0C8F7FA87F58DCE83079A0FEB8560A2BF68"
+    },
+    {
+      "path": "guest/runtime/UE4SS.log",
+      "sha256": "1EBDCB2AA35EB736F8BB5E8D0D171A8B191F49A9C46C8C58CB4CD4192A3D035A"
+    }
+  ]
+}

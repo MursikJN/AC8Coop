@@ -1,0 +1,75 @@
+{
+  "scope": "Offline static analysis through native GhidraMCP; no game execution",
+  "image_sha256": "51510e2a520565dbe81fb0d569e95cd4393077acaaa859371489b80b8128829f",
+  "image_base": "0x140000000",
+  "address_coordinates": "All function addresses below are RVA; add image_base for Ghidra VA, never assume runtime VA",
+  "evidence_directory": "evidence/aircraft-motion-ghidra-20261022",
+  "hypotheses": [
+    {"id":"AC8-MOVE-01","question":"Does game-specific message state reach the aircraft flight simulation?","criterion":"Connected producer, type-checked receiver, decoder and flight-state consumer, with instruction checks","status":"confirmed static path; execution not tested"},
+    {"id":"AC8-MOVE-02","question":"Are scheduling, identity and role constraints present?","criterion":"Read scheduling arithmetic, message-header writes and producer/consumer role conditions","status":"partially confirmed; full ownership admission and receive ordering unresolved"},
+    {"id":"AC8-MOVE-03","question":"Can campaign use this path?","criterion":"Campaign calls shared remote-player spawn code and shared player class has the movement path; complete session initialization must be established separately","status":"candidate for adaptation; plug-in campaign co-op not proven"}
+  ],
+  "functions": {
+    "campaign_spawn":"0x78e48e0",
+    "common_remote_player_loop":"0x71cb3e0",
+    "remote_player_resolve":"0x71cd2d0",
+    "remote_controller_pawn_spawn":"0x71cc490",
+    "player_tick_with_role_branch":"0x7d639c0",
+    "network_object_creation":"0x7d6ed30",
+    "player_physics_producer":"0x7d6ee70",
+    "snapshot_pack":"0x74d8380",
+    "stream_registration":"0x74bb4c0",
+    "stream_registration_helper":"0x74b5770",
+    "snapshot_clone_and_send":"0x74bc5e0",
+    "scheduled_dirty_send":"0x74a08b0",
+    "sender_wrapper":"0x74b59f0",
+    "strix_sender":"0xa44c440",
+    "physics_type_getter":"0x52c6a00",
+    "physics_type_initializer":"0x53290d0",
+    "physics_type_name_constructor":"0x523e5c0",
+    "type_checked_receive":"0x74bda10",
+    "received_state_consistency_check":"0x74b7770",
+    "snapshot_decode":"0x74d8c00",
+    "remote_flight_consumer_and_smoothing":"0x7d6f0c0",
+    "flight_transform_update":"0x4d33880"
+  },
+  "observed_layout": {
+    "warning":"Observed memory layout for this exact artifact; not a wire format, complete class definition, callable ABI or approved hook signature",
+    "player_network_object_pointer":"player + 0xed0, validated cast to LiveNetworkPlayerPlane",
+    "player_role_byte":"player + 0xed8; static vtable at VA 0x14cc01cc8; slot 0xc38 tests role != 2, slot 0xc40 tests role == 3",
+    "network_physics_pointer":"network object + 0x98",
+    "physics_snapshot_fields":[
+      {"offset":"0x8","width":8,"meaning":"adjusted clock timestamp; peer-clock initialization not established"},
+      {"offset":"0x18","width":1,"meaning":"dirty flag used by scheduler"},
+      {"offset":"0x19","width":1,"meaning":"force flag used by scheduler"},
+      {"offset":"0x20","width":12,"meaning":"normalized 3D direction derived from flight vector; not a quaternion or full velocity magnitude"},
+      {"offset":"0x2c","width":12,"meaning":"three signed int32 position components after game axis/sign conversion and scale 10"},
+      {"offset":"0x38","width":12,"meaning":"three float orientation components after quaternion conversion and angle scaling"},
+      {"offset":"0x44","width":4,"meaning":"flight-state value; exact enum semantics unresolved"},
+      {"offset":"0x48","width":4,"meaning":"scalar from flight-engine + 0x1f0, restored to engine + 0x1f0/+0xb0; speed interpretation inferred"},
+      {"offset":"0x50/0x60/0x70","meaning":"optional lists of additional flight state, maneuver state and FlightEngineInput; exact wire serializer unresolved"}
+    ]
+  },
+  "scheduling": {
+    "configured_branch_interval_ms":80,
+    "clock_ticks_per_second":10000000,
+    "dirty_flag_required_for_regular_send":true,
+    "force_flag_can_bypass_interval":true,
+    "actual_live_rate_verified":false
+  },
+  "smoothing": {
+    "position_correction":"distance-limited correction with direction and frame delta; complete formula and tuning not reconstructed",
+    "orientation_blend_factor":"min(frame_delta * 6, 1), quaternion sign selection and normalization in observed branch",
+    "large_error_branch_present":true,
+    "visual_quality_verified":false
+  },
+  "conclusion": {
+    "observed_model":"Producer computes local flight state and sends snapshots including input; remote plane restores state and corrects its flight simulation. This is not proof of host-authoritative input simulation or deterministic lockstep.",
+    "native_movement_adapter_promising":true,
+    "native_strix_session_over_steam_lobby_proven":false,
+    "native_unreal_netdriver_movement_path_proven":false,
+    "campaign_two_pc_flight_proven":false,
+    "implementation_changed":false,
+    "unresolved":["full receive routing and stale-packet policy","session and object-ID initialization","peer clock epoch","game-thread and object lifetime contracts","wire serialization and delivery mode","Baxter role replacement and mission events","AI, damage, weapons, save and restart replication"]
+  }
+}

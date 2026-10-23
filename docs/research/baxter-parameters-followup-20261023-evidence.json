@@ -1,0 +1,223 @@
+{
+  "generated_utc": "2026-10-23T01:49:19.755703+00:00",
+  "scope": "B6-P offline stock-AI command and action-parameter research; no TZ change",
+  "image_base": "0x140000000",
+  "binary_sha256": "51510e2a520565dbe81fb0d569e95cd4393077acaaa859371489b80b8128829f",
+  "static_private_root": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\baxter-parameters-followup-20261023",
+  "static_files": [
+    {
+      "path": "146d8c4a0.json",
+      "bytes": 661,
+      "sha256": "a1f16b57f9e669468dedc5e3feda8b94de7130beae20ea3ba8ccedf97fc7a522"
+    },
+    {
+      "path": "14706ef20.json",
+      "bytes": 1541,
+      "sha256": "d2314fcf39e7d622d26628247dcf361cbca9aee65a144d990a444eb40063170f"
+    },
+    {
+      "path": "1473ff0d0.json",
+      "bytes": 2751,
+      "sha256": "a8e8608f26d9b7d95b1a48be0af2654aee3319c386cb156428db871edc248da0"
+    },
+    {
+      "path": "14740ed30.json",
+      "bytes": 3666,
+      "sha256": "866310add250466be375b7852a4918a11ffed6365e78732fa1d8772943755a3e"
+    },
+    {
+      "path": "147eba1b0.json",
+      "bytes": 2923,
+      "sha256": "ebd02323eb097934db2e7b253a805400758760f2ebf47ee7e3f44df9529d76f4"
+    },
+    {
+      "path": "147ebc140.json",
+      "bytes": 1032,
+      "sha256": "767912e9e6a9cee2bcfd73b26ac2f8b995eb3bfe78ec67e4a2dfdcadbb11c02a"
+    },
+    {
+      "path": "147ebc1f0.json",
+      "bytes": 538,
+      "sha256": "11bd775a6a02b22d32f40d1df55500244156eeba8769dbb42ed95be7517e96aa"
+    },
+    {
+      "path": "147ec4730.json",
+      "bytes": 852,
+      "sha256": "a5503e3e269a7be1e014ee27e3eaa07f8c55eaa295acbd854c335b84fc631a7c"
+    },
+    {
+      "path": "analyze.py",
+      "bytes": 2015,
+      "sha256": "6cac42182860d41b0a16ba8f4fcb3a0b2811936de176ff768a865f47a09772d2"
+    },
+    {
+      "path": "class-getter-0.json",
+      "bytes": 680,
+      "sha256": "0563e9aa9967b0398550de506bfc573688de1472f3767619c6b961cd668cd7e4"
+    },
+    {
+      "path": "class-getter-1.json",
+      "bytes": 680,
+      "sha256": "94379c0feae27b65030af099c018ba66d133de0538146a7948c53587d10b3b54"
+    },
+    {
+      "path": "class-lea-candidates.json",
+      "bytes": 249,
+      "sha256": "18b0bad3248463dcf33494783d56d002729785cddee6a2b1a778e038c581d769"
+    },
+    {
+      "path": "class-strings.json",
+      "bytes": 293,
+      "sha256": "87f2c08dd03aabda17a88a3597b3263430c6635ab04820ba41e0587074aa4d0b"
+    },
+    {
+      "path": "ctor-0.json",
+      "bytes": 670,
+      "sha256": "92ee127572da6b99beaa07e747ecad233d89b5bb986eac11ab85b101e1fbcd7b"
+    },
+    {
+      "path": "ctor-1.json",
+      "bytes": 346,
+      "sha256": "0851dc4d688e25fabef5a0c89719670fe99abeb866624839423d3966fe78d28c"
+    },
+    {
+      "path": "final-summary.txt",
+      "bytes": 5130,
+      "sha256": "bc18ac4cec641f4c5ad800655fceb6132e414764fdaf8a739993bc15cd836765"
+    },
+    {
+      "path": "final-verification.json",
+      "bytes": 622,
+      "sha256": "24f21dfdc0e0ff18b0fb661ed8ce91db74f0bb7286c2aedac221637836896b99"
+    },
+    {
+      "path": "finalize.py",
+      "bytes": 3006,
+      "sha256": "d6d72acf425cf43a5471e2d36afa78e5d9983f0811e9bc1d5b200b67da488e28"
+    },
+    {
+      "path": "getters.json",
+      "bytes": 16857,
+      "sha256": "ca1cf96e1908cd3cca2142339c29863e6b3c264ecce215a8223c6e3c02c6fcdc"
+    },
+    {
+      "path": "input-enum-descriptor.json",
+      "bytes": 278,
+      "sha256": "08a50b006405279af6b7dafdf47cec110b8210940213effce5bf5c7ac7efa967"
+    },
+    {
+      "path": "input-enum-name.json",
+      "bytes": 687,
+      "sha256": "ee0bef61da2adc01e04c4d7bde0c5f7e65aaf25eeda79a372de25c67f8535620"
+    },
+    {
+      "path": "input-enum-strings.json",
+      "bytes": 1567,
+      "sha256": "520e80e25b9c7dab63e2560edc72b4895b3127e6285db41422c6625de5624ff3"
+    },
+    {
+      "path": "input-enum-table.json",
+      "bytes": 342,
+      "sha256": "60e01df74cc9f39a6432817afa97259e91c8c793de50408d1aa1e31ae6982348"
+    },
+    {
+      "path": "input-vtable.json",
+      "bytes": 406,
+      "sha256": "2bdc3726e7e5566cf39fdd55dce5cda72563f3272d42a11a304860d6696653f5"
+    },
+    {
+      "path": "inspect_ranges.py",
+      "bytes": 830,
+      "sha256": "23145c946ed6e5d3a15fe097372fe2529509fc5d91cf1ad01f8cf45ad69e4152"
+    },
+    {
+      "path": "inspect_runtime.py",
+      "bytes": 692,
+      "sha256": "a726afa25bd8af395b24a84f1f1c258c41240161bdee5e3c8fe60c15cced4429"
+    },
+    {
+      "path": "inv-vtable.json",
+      "bytes": 406,
+      "sha256": "8a8eafa6228b7a0930fb693515382918e108baa9571c6ceb133f1bce24cea3cc"
+    },
+    {
+      "path": "live-summary.txt",
+      "bytes": 5130,
+      "sha256": "7527f754b977bf4b3c3735271418a1bc5424e05b1b2600d936a1983c09f9ddc3"
+    },
+    {
+      "path": "pe_strings.py",
+      "bytes": 1766,
+      "sha256": "ee34ead7ff9757bf308589c4b72b1ce8a0efc7b7bb9ef70e920156998616e701"
+    },
+    {
+      "path": "program.json",
+      "bytes": 1247,
+      "sha256": "f517cd41564381f48d2ac4238f24ee6635a770022aa569aa2a0a7be1a05c0302"
+    },
+    {
+      "path": "readers.json",
+      "bytes": 91431,
+      "sha256": "19c2905c1532cae45c9e2ce9a10291ef0897f4ebe37781f9de650a6c45cdb427"
+    },
+    {
+      "path": "system-apply.json",
+      "bytes": 32001,
+      "sha256": "dd11ec97040e3410e897aec129e047577cba1ae413efe8d858a11fd07c694ea2"
+    },
+    {
+      "path": "validate.py",
+      "bytes": 2231,
+      "sha256": "767e7b0d2cb446156abbece60c8ba0eaff6c19df194779929a266d44293b5ae3"
+    },
+    {
+      "path": "validation.json",
+      "bytes": 7746,
+      "sha256": "04055315dd239294297d4e703d18e22e2a994c3fd8733b6550d1eeaeb9ad2752"
+    }
+  ],
+  "runtime_private_root": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\mission6-runtime\\session-20261023-012826-631-d6a4d631",
+  "runtime_files": [
+    {
+      "path": "session.json",
+      "bytes": 793,
+      "sha256": "6e54eec8022507d6ba3e688e63feedd2c077406b5d64f09561dd85f518342d2c"
+    },
+    {
+      "path": "capture-profile.json",
+      "bytes": 3759,
+      "sha256": "88952dda67a6c51be93ac91bc1b749105937553debbef81a1ff32be9c51b732f"
+    },
+    {
+      "path": "input-markers.tsv",
+      "bytes": 708,
+      "sha256": "45fb6f3ea2edf6f4b0d4dfe8fedb92db875229d1a48a68e38d6f57192624195c"
+    },
+    {
+      "path": "followup-analysis.json",
+      "bytes": 50131,
+      "sha256": "06b9c4edec2185beb4ceee906c62a56e5e977ed0fd1669548bb7face93424996"
+    },
+    {
+      "path": "observations-manifest.json",
+      "bytes": 90218,
+      "sha256": "4c079627cab5100fea7f16ff4f694c490361648eae3dbb45b22da0e56e393d27"
+    }
+  ],
+  "verification": {
+    "result": "PASS",
+    "generated_utc": "2026-10-23T01:49:19.755703+00:00",
+    "observations_verified": 543,
+    "profile_files_verified": 15,
+    "original_exe_sha256": "51510e2a520565dbe81fb0d569e95cd4393077acaaa859371489b80b8128829f",
+    "original_loader_absent": true,
+    "lab_loader_absent": true,
+    "exit_code": 0,
+    "ended_utc": "2026-10-23T01:47:42.5817463Z",
+    "accepted_native_samples": 183,
+    "partial_tail": 0,
+    "accepted_snapshots": 169,
+    "change_groups": 14,
+    "note": "No full original-install byte audit. Offline user-confirmed, OS isolation unverified. No network or player replacement test."
+  }
+}

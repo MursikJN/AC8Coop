@@ -1,5 +1,7 @@
 // Exact-build host adapter. This attaches to the already committed player role;
 // it never spawns a plane, captures the host's trajectory, or releases AI ticks.
+#include "owner_template_identity.h"
+#include "owner_identity_capture.h"
 namespace pilot_engine {
 uintptr_t image=0;DWORD thread=0;std::wstring directory;const char*reason="not_bound";
 struct Id{uintptr_t p=0;int32_t index=-1,serial=0;};
@@ -15,11 +17,18 @@ bool slot(int32_t index,uintptr_t&at){uintptr_t chunks=0,chunk=0;int32_t n=0,cou
  return index>=0&&read(image+0xdc60cd0+0x24,n)&&index<n&&n<=0x1000000&&read(image+0xdc60cd0+0x2c,count)&&index/65536<count&&
   read(image+0xdc60cd0+0x10,chunks)&&read(chunks+uintptr_t(index/65536)*8,chunk)&&(at=chunk+uintptr_t(index&65535)*24)!=0;
 }
-bool identity(uintptr_t p,Id&out,bool mint=false){int32_t index=-1,serial=0;uint32_t flags=0;uintptr_t at=0,actual=0;
- if(!read(p+12,index)||!slot(index,at)||!read(at,actual)||actual!=p||!read(at+16,serial)||!read(p+8,flags)||(flags&0x60000010))return false;
- if(!serial&&mint){using Mint=int32_t(__fastcall*)(uintptr_t,int32_t);const auto assigned=reinterpret_cast<Mint>(image+0x1aae560)(image+0xdc60cd0,index);if(!read(at+16,serial)||serial!=assigned)return false;}if(serial<=0)return false;
- out={p,index,serial};return true;
+const char*identity_error="not_checked";
+struct IdentityAccess{
+ template<class T>bool read(uintptr_t p,T&v){return pilot_engine::read(p,v);}
+ bool slot(int32_t i,uintptr_t&at){return pilot_engine::slot(i,at);}
+ int32_t mint(int32_t i){using Mint=int32_t(__fastcall*)(uintptr_t,int32_t);return reinterpret_cast<Mint>(image+0x1aae560)(image+0xdc60cd0,i);}
+};
+bool identity_as(uintptr_t p,Id&out,bool mint,ac8owner::IdentityKind kind){
+ IdentityAccess access;return ac8owner::capture_identity(access,p,out,mint,kind,identity_error);
 }
+bool identity(uintptr_t p,Id&out,bool mint=false){return identity_as(p,out,mint,ac8owner::IdentityKind::instance);}
+bool cdo_identity(uintptr_t p,Id&out,bool mint=false){return identity_as(p,out,mint,ac8owner::IdentityKind::cdo);}
+bool same_cdo(const Id&i){Id now;return cdo_identity(i.p,now)&&i.index==now.index&&i.serial==now.serial;}
 bool same(const Id&i){Id now;return identity(i.p,now)&&i.index==now.index&&i.serial==now.serial;}
 bool retired(const Id&i){uintptr_t at=0,p=0;int32_t serial=0;return slot(i.index,at)&&read(at,p)&&read(at+16,serial)&&(p!=i.p||serial!=i.serial);}
 bool in_world(const Id&i){uintptr_t level=0,w=0;return same(i)&&read(i.p+0x20,level)&&read(level+0xc0,w)&&w==world.p;}

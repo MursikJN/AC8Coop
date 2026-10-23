@@ -1,0 +1,346 @@
+{
+  "format": "ac8-disconnect-stop-evidence-v1",
+  "runs": [
+    {
+      "session": "pair-20261023-070722",
+      "host_pid": 14424,
+      "guest_pid": 17260,
+      "exit_codes": [
+        0,
+        0
+      ],
+      "proxy_removed": true
+    },
+    {
+      "session": "pair-20261023-072357",
+      "host_pid": 24408,
+      "guest_pid": 10884,
+      "exit_codes": [
+        0,
+        0
+      ],
+      "proxy_removed": true
+    }
+  ],
+  "initial_attempt": "v3 failed: override2; no engine pause",
+  "verified": {
+    "confirmation_seconds": 1.6880000000019209,
+    "steady_interval_seconds": 8,
+    "additional_steady_interval_seconds": 39,
+    "game_time_delta": 0,
+    "position_delta": 0,
+    "hud_timer_both_screenshots": "02:50:47",
+    "native_pause": {
+      "held": 1,
+      "flags": 32,
+      "applied": 32,
+      "paused": 1,
+      "override": 2
+    }
+  },
+  "profile_files_verified": 9,
+  "sources": [
+    {
+      "path": "probe/LifecycleLab/Scripts/main.lua",
+      "sha256": "815da5d647db67ba2250ca88045fa531c46dc76231441a9e4d0088de56762e24"
+    },
+    {
+      "path": "probe/LifecycleLab/Scripts/disconnect_stop.lua",
+      "sha256": "c9df645837b8ef37b0cc3c594c1a74d23b9a69b85fbf255c0dd9ef7cb33c937d"
+    },
+    {
+      "path": "native/mission_sync_pause.cpp",
+      "sha256": "9860ea649bd3942a89b25dffc18852dbf42b95afb4afa80dab61b7cb019079db"
+    },
+    {
+      "path": "native/mission_pause_lease.h",
+      "sha256": "7337714bba64cf279b2dbf39124056e9c788d9e98e60c4d3f068a860c61bb296"
+    },
+    {
+      "path": "native/adapter_bootstrap_contract.h",
+      "sha256": "4d7e962cd1cb9244f5e9d20fead502d8f73291f410df7e10f098bf4921eaab0a"
+    },
+    {
+      "path": "native/mission_pause_lease_tests.cpp",
+      "sha256": "4739fb4941fa03f3d3001adb2b82ae1fa669f02bf4c635f13b1089d9aa6b8314"
+    },
+    {
+      "path": "scripts/Build-MissionPause.ps1",
+      "sha256": "5993cfbe8c9c4263b4f234f624c303889b0e21470f2d434dc9ae9539c0c7bff3"
+    },
+    {
+      "path": "scripts/verify_adapter_fingerprints.py",
+      "sha256": "a3c440003fd4333a65c3be37a5a8d1dde539cba8b741a5533504190da10175c7"
+    },
+    {
+      "path": "scripts/Start-LifecyclePair.ps1",
+      "sha256": "9e12c0318c50cd2220df91a1ee7b24ae90dc71340e2111c9885ed4f12ae4ce18"
+    },
+    {
+      "path": "scripts/Prepare-LifecycleStop.ps1",
+      "sha256": "6ed6e1a6209d7ef0d56d72846d64606fe31a07ac378efd5b1fbbfe3527e593f7"
+    },
+    {
+      "path": "coop/lifecycle_live.py",
+      "sha256": "95082d0191bd70bf38426a76025dcd86d2abbd93eceee0bd3d8256ad2266492b"
+    },
+    {
+      "path": "tests/test_lifecycle_disconnect_stop.py",
+      "sha256": "749de50d86c442dc38d7e309e3ba538bb66c13e0782309f94aada13d8eeff2e6"
+    }
+  ],
+  "files": [
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\hangar-ready.png",
+      "sha256": "252c234b9a8784569e6d698e6a860df766d6d591ab71929bf555fb67227a6d40",
+      "size": 99985
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\hangar-visual-confirmation.json",
+      "sha256": "0a405bcae1c030a77d07efef68657b708cf4c71762d82884bf2c6e17975fb81d",
+      "size": 95
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\live-checks.jsonl",
+      "sha256": "1b60c81a64e272b3d1d31b1c8eb8b736fe8639bfdfd45b11292afc08dfdbf239",
+      "size": 11358
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\pair.json",
+      "sha256": "0f177394b0a1426aa96be1fc4dd8b0c26a236310c548d104774c13a7bc82b2bb",
+      "size": 788
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\pause-ghidra-analysis.json",
+      "sha256": "3f73ccfa955e278741c8295f5f56900dd775081bad586b355005b76ef6797133",
+      "size": 9996
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\pause-instructions.txt",
+      "sha256": "e606ce6c78fa4181c34a76c66726cfc02a255fe134dbb4b7107ee5bae149ccdf",
+      "size": 3136
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\profile-manifest.json",
+      "sha256": "e00db4d69e9673732bbbacc0a6ad7a224b3db0aa7f6d350165c25baa36bc9a4c",
+      "size": 1337
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\guest\\lab-commands.jsonl",
+      "sha256": "d9d50e8f6ee9983552ac3a54c1bde39696ec7224b3f8eec2a7a7d5effabffac7",
+      "size": 2973
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\guest\\local-transport.log",
+      "sha256": "a2f0ea4365db1f3ece3838fc5ce79cf99cb769d7bd573f91af25657f6e6749f8",
+      "size": 669
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\guest\\shared-session-command.tsv",
+      "sha256": "9f332d5426cb3cb0dcfcba19f76fc353b38e7fe3fe9c524e54abc54c03a957d2",
+      "size": 63
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\guest\\shared-session-status.tsv",
+      "sha256": "10c09b23c54d36e794f49a0a82d405954c1a9460a0b6bc8629027e410ce7f06b",
+      "size": 761
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\host\\disconnect-stop-events.tsv",
+      "sha256": "1fcfa66054837811b4ca1aadd9862cc648f74067c2cf82fc58a2ef1e720886cb",
+      "size": 2749
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\host\\game-observation.tsv",
+      "sha256": "7a7206d05dc32df088c7d13773a4864b17411b2de148c570b100b5caa98b016b",
+      "size": 737
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\host\\game-transitions.tsv",
+      "sha256": "b035f03fdac0a8527b3776554b4929d7e63699e8714e21b1216d452975aebd5b",
+      "size": 16291
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\host\\lab-commands.jsonl",
+      "sha256": "82777c558f75bc2d2f91dc07379d3ba2c177ba60262011c2668622b84e59b14b",
+      "size": 3705
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\host\\local-transport.log",
+      "sha256": "9dcd23ce28bc4e9b2feeade78577f219596a64163cb6e3d00d05630b5f3029c9",
+      "size": 1379
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\host\\mission-pause-request.tsv",
+      "sha256": "7ca5995e451845a3a9dc2e8371d13a2334a1dd25dc4eaceb43b04f163f219df7",
+      "size": 105
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\host\\mission-pause-status.tsv",
+      "sha256": "a3fee1d6b87c2be649027df2f245c4aadd2971445ae4b10dd69ae613683570a9",
+      "size": 164
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\host\\mission-sync-events.tsv",
+      "sha256": "3732edf740bc1bdbc3cbc61a9bf339053bc5caa410529d82948fd810c007d4ab",
+      "size": 7294
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\host\\shared-session-command.tsv",
+      "sha256": "bde9a12862036964c18f24adaeaf6e0a257dd373fc76f9909b01c39bf430a19f",
+      "size": 63
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\host\\shared-session-status.tsv",
+      "sha256": "2d31bbbeccba34938444ee6962183e987b05f28a432fd990bb5a5b982b473811",
+      "size": 772
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-070722\\host\\widget-details.tsv",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\flight-before-loss.png",
+      "sha256": "2ab632539dda52466cc2898b2fae7309946a951f1eea990ad75fee3bcd636294",
+      "size": 47209
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\flight-held-a.png",
+      "sha256": "f716ff46e857c5cceb08beff4ff499cbfb5c655b1255edee4bf2f89938f794de",
+      "size": 55594
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\flight-held-b.png",
+      "sha256": "e00e851ce3346476a12a2ad478bd14a5bb1402f0799df742196fdb65d28d61dc",
+      "size": 55449
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\hangar-ready.png",
+      "sha256": "0204985150b14f926162c73c674acf5c01ac0f24bd733414c9bea554ff27dc82",
+      "size": 99305
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\hangar-visual-confirmation.json",
+      "sha256": "bbb9747fbeb0985d60e035782746ea26b2e267747cab9d0ed8305d647a8dc39e",
+      "size": 95
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\held-native-a.tsv",
+      "sha256": "cd6ad2d1c0d695910860fa8414fceeb6b3cf59ec26a63d5ac3740067f6348533",
+      "size": 166
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\held-native-b.tsv",
+      "sha256": "ff7fd953855238d06e669f0df696adb9f31aa7a1734fd3cc5e3a4ba911cb62fc",
+      "size": 166
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\held-observation-a.tsv",
+      "sha256": "fcdb1fa79c7f8519cc4da462cc3f2d07dae77e9dd0ce7e2b5f065fccfaedc0d4",
+      "size": 718
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\held-observation-b.tsv",
+      "sha256": "82746c1ce018bbe4fa9808bf887f63569e5366217109ce85270e9b1d0217a716",
+      "size": 718
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\live-checks.jsonl",
+      "sha256": "e384bf3fac02c724e2bb4ad2981f55f4b4db18d47388f9722eac3bc80a87afa6",
+      "size": 17256
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\pair.json",
+      "sha256": "1f8d8cf8ddb02b07d5161adee3bc5c8c732d6d24b10c3a68262afb675904f63a",
+      "size": 788
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\profile-manifest.json",
+      "sha256": "7ff4b7254ebf0e66fb068011ee67cfafbff6c3531401da923a02d91a1ae294cc",
+      "size": 1337
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\guest\\lab-commands.jsonl",
+      "sha256": "110660de3584637a1e91cd9d9ad2263da0b6509f97b80dcbad37cfb8447f85a6",
+      "size": 2972
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\guest\\local-transport.log",
+      "sha256": "f8131520ebaca8babf830307f0ba5bf62e32451b7c4da86b876c77c4b9a22ebd",
+      "size": 669
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\guest\\shared-session-command.tsv",
+      "sha256": "5affde20cac15b6e31682d0f9aeda7c2be1d0eb20a6dca1d853c00b990afbdec",
+      "size": 63
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\guest\\shared-session-status.tsv",
+      "sha256": "6b6f8117cd60ddfc4c55a93396868bc0e8d3f496cf4ca06a417f55708dc482c8",
+      "size": 761
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\host\\disconnect-stop-events.tsv",
+      "sha256": "bd44f17fdfb6bdf186075be45e567a66ac11ea54db42a2ac2c1ecb86fa13c57d",
+      "size": 139
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\host\\game-observation.tsv",
+      "sha256": "e52f6d92793545eef0e0f5d8e479a411aed6060c0bd8209f339bde6c8544c203",
+      "size": 718
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\host\\game-transitions.tsv",
+      "sha256": "984b484195968ab81105aa11668b184bf2e70fa88e3f272ac117a32bbd3fa8b9",
+      "size": 16880
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\host\\lab-commands.jsonl",
+      "sha256": "ccda555524a67ab421f501faa928006cea745127180bd0aa41590a39dbb3b8d5",
+      "size": 3703
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\host\\local-transport.log",
+      "sha256": "7e211ac6f7075f1095c7ac2bd59f6a9e339329a134d0667aaca2c866706c558f",
+      "size": 1379
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\host\\mission-pause-request.tsv",
+      "sha256": "06ef1bb021005e0897f89c0202ed25a3cadb1da37c921a7eb28f099e5bbd44ce",
+      "size": 105
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\host\\mission-pause-status.tsv",
+      "sha256": "2634d5cd7658eb4a17baeb016285615b4aac27a7495157ef1803bb01507c4ba7",
+      "size": 166
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\host\\mission-sync-events.tsv",
+      "sha256": "cd4fb75ddc20875065e47cf805fe568099b8c3bbab6fa60d744a91f02e432afa",
+      "size": 7294
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\host\\shared-session-command.tsv",
+      "sha256": "5d29b56d1b997228ae203b741fc3e7a14f2ce20634f9f84a133ea35488b858df",
+      "size": 63
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\host\\shared-session-status.tsv",
+      "sha256": "6e063f04a43e12bbfbf43e578d9f5d9283f0e166a7c00f9d74a4234b32a8d198",
+      "size": 772
+    },
+    {
+      "path": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\lifecycle-lab\\pair-20261023-072357\\host\\widget-details.tsv",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    }
+  ],
+  "limits": [
+    "One actual host world, headless native TCP guest",
+    "No real guest renderer/Steam test",
+    "No production kit update",
+    "No full original tree audit",
+    "No live release or level travel test"
+  ]
+}

@@ -1,0 +1,941 @@
+{
+  "date": "2026-10-22",
+  "scope": {
+    "game_executed": false,
+    "original_files_modified": false,
+    "external_sessions": false,
+    "native_game_calls": false,
+    "method": "Native GhidraMCP plus independent read-only PE/Capstone analysis",
+    "ue4ss": "Not used: runtime is outside requested scope"
+  },
+  "artifact": {
+    "module": "AceCombat8.exe",
+    "sha256": "51510e2a520565dbe81fb0d569e95cd4393077acaaa859371489b80b8128829f",
+    "size": 555102832,
+    "image_base": "0x140000000",
+    "address_rule": "All function coordinates are RVA; Ghidra VA = image base + RVA. Fields are build-specific object offsets, not a verified ABI or wire format.",
+    "build_label": "ac8-build25201480; Steam build ID not independently extracted",
+    "program_response": "evidence/admission-roster-ghidra-20261022/responses/001-program.json"
+  },
+  "hypotheses": [
+    {
+      "id": "AC8-ADMISSION-01",
+      "status": "Partially recovered; no complete sender-to-flight-plane authorization established",
+      "facts": [
+        "Profile-to-member binding is conditional on existing profile and unassigned member ID.",
+        "Physics handler type-checks message, optionally reports movement inconsistency, then copies sender metadata and snapshot.",
+        "The inspected room event emitter forwards source and message without comparing source against a plane target."
+      ],
+      "unknowns": [
+        "Authority enforced by server/transport before callback",
+        "Exact ownership policy for aircraft after reconnect or travel",
+        "Complete authenticated Steam peer to internal member mapping"
+      ],
+      "evidence": [
+        "evidence/admission-roster-ghidra-20261022/responses/002-physics-handler.json",
+        "evidence/admission-roster-ghidra-20261022/responses/006-physics-validation.json",
+        "evidence/admission-roster-ghidra-20261022/responses/016-violation-report.json",
+        "evidence/admission-roster-ghidra-20261022/responses/021-profile-insert-id.json",
+        "evidence/admission-roster-ghidra-20261022/responses/028-roster-member-refresh.json",
+        "evidence/admission-roster-ghidra-20261022/responses/038-room-incoming-event.json",
+        "evidence/admission-roster-ghidra-20261022/responses/045-physics-handler-bytes.json",
+        "evidence/admission-roster-ghidra-20261022/responses/047-member-binding-bytes.json",
+        "evidence/admission-roster-ghidra-20261022/responses/055-profile-map-id-branch.json"
+      ]
+    },
+    {
+      "id": "AC8-ORDER-01",
+      "status": "Application snapshot mutation order confirmed statically; transport guarantees unresolved",
+      "facts": [
+        "Physics receiver does not gate snapshot copy on return value of consistency check.",
+        "Timestamp and payload overwrite one stored snapshot after a successful message type check.",
+        "No monotonic timestamp/sequence/duplicate admission gate found in the inspected dispatcher/handler/decoder/consumer chain."
+      ],
+      "unknowns": [
+        "Wire delivery channel/reliability and retransmission",
+        "Lower-layer duplicate suppression and ordering",
+        "Full behavior of equal/older timestamp in end-to-end session"
+      ],
+      "evidence": [
+        "evidence/admission-roster-ghidra-20261022/responses/002-physics-handler.json",
+        "evidence/admission-roster-ghidra-20261022/responses/006-physics-validation.json",
+        "evidence/admission-roster-ghidra-20261022/responses/007-flight-consumer.json",
+        "evidence/admission-roster-ghidra-20261022/responses/045-physics-handler-bytes.json",
+        "evidence/admission-roster-ghidra-20261022/responses/046-physics-check-bytes.json"
+      ],
+      "prior_evidence": [
+        "evidence/session-routing-ghidra-20261022/responses/022-route-dispatch.json",
+        "evidence/aircraft-motion-ghidra-20261022/decompiled/047-plane-buffer.c"
+      ]
+    },
+    {
+      "id": "AC8-ROSTER-01",
+      "status": "Static population dataflow recovered from configuration through selector profiles and room member refresh to campaign spawn; runtime campaign completion not verified",
+      "facts": [
+        "Configured slot count is separate from actual room member count.",
+        "Selector collection is created from network manager configuration, indexed by slot and keyed by an opaque profile string.",
+        "Room refresh binds room member IDs and user data into existing selectors.",
+        "Campaign shared spawn reads slot count and resolves member ID by selector slot."
+      ],
+      "unknowns": [
+        "Exact root event ordering and deadlines across world travel",
+        "Default/rejoin cleanup for previously assigned IDs",
+        "How campaign UI prepares a valid two-player configuration",
+        "Whether the recovered lifecycle executes in the current mod"
+      ],
+      "evidence": [
+        "evidence/admission-roster-ghidra-20261022/responses/004-member-by-index.json",
+        "evidence/admission-roster-ghidra-20261022/responses/005-local-roster-index.json",
+        "evidence/admission-roster-ghidra-20261022/responses/009-roster-prepare-a.json",
+        "evidence/admission-roster-ghidra-20261022/responses/010-roster-prepare-b.json",
+        "evidence/admission-roster-ghidra-20261022/responses/011-player-profile-access.json",
+        "evidence/admission-roster-ghidra-20261022/responses/021-profile-insert-id.json",
+        "evidence/admission-roster-ghidra-20261022/responses/022-profile-index-assignment.json",
+        "evidence/admission-roster-ghidra-20261022/responses/023-roster-population.json",
+        "evidence/admission-roster-ghidra-20261022/responses/024-runtime-roster-u32.json",
+        "evidence/admission-roster-ghidra-20261022/responses/026-campaign-pre-spawn.json",
+        "evidence/admission-roster-ghidra-20261022/responses/027-profile-initialize.json",
+        "evidence/admission-roster-ghidra-20261022/responses/028-roster-member-refresh.json",
+        "evidence/admission-roster-ghidra-20261022/responses/031-roster-key-strings.json",
+        "evidence/admission-roster-ghidra-20261022/responses/032-member-name-key.json",
+        "evidence/admission-roster-ghidra-20261022/responses/033-plane-property-keys.json",
+        "evidence/admission-roster-ghidra-20261022/responses/034-member-query.json",
+        "evidence/admission-roster-ghidra-20261022/responses/035-profile-refresh-entry.json",
+        "evidence/admission-roster-ghidra-20261022/responses/037-network-profile-type.json",
+        "evidence/admission-roster-ghidra-20261022/responses/039-selector-message-register.json",
+        "evidence/admission-roster-ghidra-20261022/responses/040-profile-setup-subscribe.json",
+        "evidence/admission-roster-ghidra-20261022/responses/041-roster-setup-subscribe.json",
+        "evidence/admission-roster-ghidra-20261022/responses/043-roster-config-source.json",
+        "evidence/admission-roster-ghidra-20261022/responses/044-campaign-spawn-read.json"
+      ]
+    }
+  ],
+  "admission": {
+    "physics_handler_rva": "0x74bda10",
+    "physics_type_getter_rva": "0x52c6a00",
+    "consistency": {
+      "function_rva": "0x74b7770",
+      "reported_code": 3,
+      "report_rva": "0x74cc3e0",
+      "reporting_observation": "Records/notifies via 0x74e2cc0 and 0x74cc610; exact enum meaning and final enforcement not established",
+      "result_handling": "Return register is immediately overwritten after call; no branch on result before snapshot copy."
+    },
+    "source_metadata_offset_in_message": "0x1c",
+    "target_object_id_offset_in_message": "0x14",
+    "ownership_boundary": "Delivery identity and object-key routing are distinct from authority; no global conclusion about protocol security follows from the bounded trace.",
+    "room_emitter": {
+      "rva": "0xa4b3920",
+      "event_offset": "0x2d0",
+      "behavior": "Forwards source/message shared pointers to event virtual slot +0x18; no plane-specific comparison in this routine."
+    }
+  },
+  "ordering": {
+    "storage_owner": "LiveNetworkPlayerPlane",
+    "stored_snapshot_pointer_offset": "0x98",
+    "timestamp_offset_in_snapshot": "0x08",
+    "validated_instruction_sequence": [
+      {
+        "rva": "0x74bdb39",
+        "operation": "call movement consistency check"
+      },
+      {
+        "rva": "0x74bdb3e",
+        "operation": "mov rax, [incoming+8], overwriting return value"
+      },
+      {
+        "rva": "0x74bdb4d",
+        "operation": "mov [stored+8], rax"
+      }
+    ],
+    "consumer_rva": "0x7d6f0c0",
+    "decode_rva": "0x74d8c00",
+    "inference": "If an older valid Physics object reaches this receiver, the shown local copy path has no monotonic timestamp rejection before replacing stored state. This is a static conditional inference, not a tested network replay.",
+    "not_claimed": [
+      "Actual UDP/TCP mode",
+      "Guaranteed delivery or lack thereof",
+      "A working exploit",
+      "Observed jitter or packet loss",
+      "No protection anywhere in STRIX"
+    ]
+  },
+  "roster": {
+    "contexts": {
+      "network_manager_in_game_instance": "0x928",
+      "selector_manager_in_game_instance": "0x958",
+      "configuration_event_source_in_game_instance": "0x918",
+      "strix_system_in_game_instance": "0x910"
+    },
+    "configuration": {
+      "source_accessor_rva": "0x74c1af0",
+      "subscribe_rva": "0x74c2180",
+      "config_source_delegates": [
+        {
+          "offset": "0x58",
+          "callback": "0x74c5b00"
+        },
+        {
+          "offset": "0x70",
+          "callback": "0x74c5e00"
+        }
+      ],
+      "slot_count_offset": "0x3d8",
+      "input_count_offset": "0x10",
+      "roster_map_offset": "0x410",
+      "config_a_array_pointer": "0x20",
+      "config_a_array_count": "0x28",
+      "config_a_array_stride": "0xc0",
+      "manager_roster_entry_stride": "0xb8",
+      "warning": "Exact names of config events/types and full caller ordering not established; configured slot count is not asserted to equal room members."
+    },
+    "selector_population": {
+      "subscribe_rva": "0x74a0a00",
+      "config_source_delegate_offset": "0xe8",
+      "callback_rva": "0x74a1990",
+      "create_condition": "callback boolean == 0",
+      "create_rva": "0x74a3f70",
+      "selector_factory_rva": "0x74b0180",
+      "selector_type": "LiveAircraftSelector",
+      "selector_type_getter_rva": "0x6d4b770",
+      "selector_map_offset": "0x40",
+      "selector_slot_index_offset": "0x30",
+      "selector_member_id_offset": "0x2c",
+      "profile_key_offset_in_selector": "0x38",
+      "network_selector_pointer_offset": "0x188",
+      "network_selector_type": "LiveNetworkAircraftSelector",
+      "network_selector_type_getter_rva": "0x6f0af40"
+    },
+    "room_refresh": {
+      "subscribe_rva": "0x74a0d40",
+      "strix_system_delegate_offset": "0xc8",
+      "callback_rva": "0x74a1a00",
+      "condition": "On success, store channel/room key in selector-manager+0x28 and call 0x74a33b0",
+      "refresh_rva": "0x74a33b0",
+      "query_rva": "0x52a4770",
+      "room_member_stride": "0x30",
+      "member_id_offset": "0x00",
+      "user_data_offset": "0x18",
+      "profile_key_name": "userid",
+      "display_name_key": "username",
+      "key_format": "Opaque string. Not established to equal SteamID64, account nickname, or a stable cross-build identifier."
+    },
+    "bind": {
+      "rva": "0x74a35e0",
+      "requirements": [
+        "Profile key exists in selector-manager+0x40",
+        "selector.member_id(+0x2c) == -1"
+      ],
+      "writes": [
+        "member ID to selector+0x2c",
+        "display name string to selector+0x48",
+        "uint64(memberID) | 0x0200000000000000 to network_selector+0x28"
+      ],
+      "lifecycle": "Calls network-selector virtual slot +0x2b8 after key assignment, then sets selector+0x28=1",
+      "limits": [
+        "A repeated call for an already assigned selector does not reassign its ID in this branch.",
+        "This network object is the hangar selector, not the flight network plane."
+      ]
+    },
+    "properties": {
+      "updater_rva": "0x74a1ac0",
+      "member_property_reader_rva": "0x74c8700",
+      "facade_member_accessor_rva": "0x52a4480",
+      "keys": [
+        {
+          "name": "airset.aircraftId",
+          "selector_offset": "0x78"
+        },
+        {
+          "name": "airset.aircraftLevel",
+          "selector_offset": "0x7c"
+        },
+        {
+          "name": "airset.bannerId",
+          "selector_offset": "0x80"
+        }
+      ],
+      "note": "Additional properties exist; not all have been semantically mapped."
+    },
+    "campaign_consumer": {
+      "callback_rva": "0x78e48e0",
+      "common_spawn_rva": "0x71cb3e0",
+      "count_source": "network-manager+0x3d8",
+      "local_profile_key_source": "GameInstance+0x8e0 -> +0xfd0 string",
+      "local_member_lookup_rva": "0x74a5cf0",
+      "member_by_slot_rva": "0x74a5ae0",
+      "member_by_slot_behavior": "Find selector with selector+0x30 == slot and return selector+0x2c; return -1 if absent",
+      "spawn_remote_rva": "0x71cd2d0",
+      "condition": "Resolved member ID differs from local member ID",
+      "risk": "Invalid/missing selector IDs and incorrect configured slot count cannot be treated as a valid two-player roster."
+    }
+  },
+  "alternate_ingress": {
+    "previous_gap": "Continuation of global delegate VA0x14dd9eca8",
+    "subscriber_setup_rva": "0x81471a0",
+    "delegate_table_va": "0x14cc866c0",
+    "invoke_slot": "0x60",
+    "wrapper_rva": "0x817fd30",
+    "continuation_rva": "0x81482b0",
+    "manager_accessor_rva": "0x813af80",
+    "behavior": "Continuation tests six explicit message type getters 0x52be810/730/650/570/4b0/3d0 and calls six 0x814f... handlers. It does not show the normal 0x75034c0 movement dispatcher.",
+    "limit": "Exact type names and complete alternate path reachability remain unestablished; this is not proof of an alternate campaign Physics transport.",
+    "evidence": [
+      "evidence/admission-roster-ghidra-20261022/responses/012-alternate-ingress-subscriber.json",
+      "evidence/admission-roster-ghidra-20261022/responses/013-alt-delegate-table.json",
+      "evidence/admission-roster-ghidra-20261022/responses/017-alternate-dispatch.json",
+      "evidence/admission-roster-ghidra-20261022/responses/020-alt-message-bridge.json"
+    ]
+  },
+  "adapter_requirements": {
+    "status": "Derived design requirements, not implemented",
+    "items": [
+      "Maintain explicit session generation, authenticated peer-to-member binding and aircraft ownership map.",
+      "Create selector slots, bind current members and commit a consistent roster before campaign spawn.",
+      "Treat selector and in-flight network objects as separate lifecycles; clean old registry entries across stage transitions.",
+      "Specify application policy for old/duplicate states if reusing the native receiver over a different transport.",
+      "Do not treat movement consistency report code 3 as packet rejection or bypass it.",
+      "Enforce common roster/load readiness separately from the unconditional campaign Tick transitions found earlier."
+    ]
+  },
+  "next_offline_steps": [
+    "Trace configuration source broadcasts to establish exact event order and two-player campaign preparation.",
+    "Recover selector cleanup/unbind behavior before reconnect and ID reuse.",
+    "Identify lower STRIX relay/transport dispatch virtual targets and timestamp/sequence enforcement.",
+    "Recover receiver registration lifetimes for selector versus flight object."
+  ],
+  "verification": "evidence/admission-roster-ghidra-20261022/byte-and-instruction-verification.json",
+  "mcp_errors": [
+    {
+      "id": "003-state-buffer",
+      "args": {
+        "address": "0x147d6ee00"
+      },
+      "error": [
+        {
+          "type": "text",
+          "text": "Error executing tool decompile_function_by_address: [FUNCTION_NOT_FOUND] No function found at or containing 147d6ee00"
+        }
+      ],
+      "meaning": "No positive semantic conclusion based on this failed decompilation."
+    },
+    {
+      "id": "053-selector-constructor",
+      "args": {
+        "address": "0x146d510b0"
+      },
+      "error": [
+        {
+          "type": "text",
+          "text": "Error executing tool decompile_function_by_address: [FUNCTION_NOT_FOUND] No function found at or containing 146d510b0"
+        }
+      ],
+      "meaning": "No positive semantic conclusion based on this failed decompilation."
+    },
+    {
+      "id": "056-selector-real-constructor",
+      "args": {
+        "address": "0x147496400"
+      },
+      "error": [
+        {
+          "type": "text",
+          "text": "Error executing tool decompile_function_by_address: [FUNCTION_NOT_FOUND] No function found at or containing 147496400"
+        }
+      ],
+      "meaning": "No positive semantic conclusion based on this failed decompilation."
+    }
+  ],
+  "metadata_limitations": [
+    "030 returned an empty callers list; raw RIP candidates then located callback registration. Empty xrefs/callers do not prove no callers.",
+    "053 constructor thunk and 056 branch target could not be decompiled; saved bytes establish the branch only, not default selector field values.",
+    "003 was an unsuccessful exploratory address query; no state-buffer conclusion is drawn from it.",
+    "Search filenames are hypotheses, not recovered game symbols."
+  ],
+  "responses": [
+    {
+      "id": "001-program",
+      "tool": "get_program_info",
+      "arguments": {},
+      "utc": "2026-10-22T00:48:00.289Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/001-program.json",
+      "is_error": false
+    },
+    {
+      "id": "002-physics-handler",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474bda10"
+      },
+      "utc": "2026-10-22T00:48:19.711Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/002-physics-handler.json",
+      "is_error": false
+    },
+    {
+      "id": "003-state-buffer",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x147d6ee00"
+      },
+      "utc": "2026-10-22T00:48:21.124Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/003-state-buffer.json",
+      "is_error": true
+    },
+    {
+      "id": "004-member-by-index",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a5ae0"
+      },
+      "utc": "2026-10-22T00:48:22.819Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/004-member-by-index.json",
+      "is_error": false
+    },
+    {
+      "id": "005-local-roster-index",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a5cf0"
+      },
+      "utc": "2026-10-22T00:48:24.780Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/005-local-roster-index.json",
+      "is_error": false
+    },
+    {
+      "id": "006-physics-validation",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474b7770"
+      },
+      "utc": "2026-10-22T00:48:47.583Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/006-physics-validation.json",
+      "is_error": false
+    },
+    {
+      "id": "007-flight-consumer",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x147d6f0c0"
+      },
+      "utc": "2026-10-22T00:48:50.044Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/007-flight-consumer.json",
+      "is_error": false
+    },
+    {
+      "id": "008-message-receiver-bind",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474b56f0"
+      },
+      "utc": "2026-10-22T00:48:51.756Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/008-message-receiver-bind.json",
+      "is_error": false
+    },
+    {
+      "id": "009-roster-prepare-a",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474c5b00"
+      },
+      "utc": "2026-10-22T00:49:26.574Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/009-roster-prepare-a.json",
+      "is_error": false
+    },
+    {
+      "id": "010-roster-prepare-b",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474c5e00"
+      },
+      "utc": "2026-10-22T00:49:28.613Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/010-roster-prepare-b.json",
+      "is_error": false
+    },
+    {
+      "id": "011-player-profile-access",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474c1870"
+      },
+      "utc": "2026-10-22T00:49:30.508Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/011-player-profile-access.json",
+      "is_error": false
+    },
+    {
+      "id": "012-alternate-ingress-subscriber",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1481471a0"
+      },
+      "utc": "2026-10-22T00:49:32.422Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/012-alternate-ingress-subscriber.json",
+      "is_error": false
+    },
+    {
+      "id": "013-alt-delegate-table",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14cc866c0",
+        "length": 104
+      },
+      "utc": "2026-10-22T00:49:45.363Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/013-alt-delegate-table.json",
+      "is_error": false
+    },
+    {
+      "id": "014-offline-roster-build",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474c9340"
+      },
+      "utc": "2026-10-22T00:49:47.104Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/014-offline-roster-build.json",
+      "is_error": false
+    },
+    {
+      "id": "015-profile-configuration",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a7f50"
+      },
+      "utc": "2026-10-22T00:49:48.921Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/015-profile-configuration.json",
+      "is_error": false
+    },
+    {
+      "id": "016-violation-report",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474cc3e0"
+      },
+      "utc": "2026-10-22T00:49:50.744Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/016-violation-report.json",
+      "is_error": false
+    },
+    {
+      "id": "017-alternate-dispatch",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x14817fd30"
+      },
+      "utc": "2026-10-22T00:50:16.066Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/017-alternate-dispatch.json",
+      "is_error": false
+    },
+    {
+      "id": "018-network-roster-build",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474c95c0"
+      },
+      "utc": "2026-10-22T00:50:17.846Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/018-network-roster-build.json",
+      "is_error": false
+    },
+    {
+      "id": "019-roster-profile-get",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a5f20"
+      },
+      "utc": "2026-10-22T00:50:19.390Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/019-roster-profile-get.json",
+      "is_error": false
+    },
+    {
+      "id": "020-alt-message-bridge",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1481482b0"
+      },
+      "utc": "2026-10-22T00:50:32.164Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/020-alt-message-bridge.json",
+      "is_error": false
+    },
+    {
+      "id": "021-profile-insert-id",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a35e0"
+      },
+      "utc": "2026-10-22T00:50:34.172Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/021-profile-insert-id.json",
+      "is_error": false
+    },
+    {
+      "id": "022-profile-index-assignment",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a3f70"
+      },
+      "utc": "2026-10-22T00:50:36.161Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/022-profile-index-assignment.json",
+      "is_error": false
+    },
+    {
+      "id": "023-roster-population",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a1ac0"
+      },
+      "utc": "2026-10-22T00:50:38.766Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/023-roster-population.json",
+      "is_error": false
+    },
+    {
+      "id": "024-runtime-roster-u32",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474c8700"
+      },
+      "utc": "2026-10-22T00:51:23.530Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/024-runtime-roster-u32.json",
+      "is_error": false
+    },
+    {
+      "id": "025-profile-constructor",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474b0180"
+      },
+      "utc": "2026-10-22T00:51:25.068Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/025-profile-constructor.json",
+      "is_error": false
+    },
+    {
+      "id": "026-campaign-pre-spawn",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1478e48e0"
+      },
+      "utc": "2026-10-22T00:51:26.623Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/026-campaign-pre-spawn.json",
+      "is_error": false
+    },
+    {
+      "id": "027-profile-initialize",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a1990"
+      },
+      "utc": "2026-10-22T00:51:55.598Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/027-profile-initialize.json",
+      "is_error": false
+    },
+    {
+      "id": "028-roster-member-refresh",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a33b0"
+      },
+      "utc": "2026-10-22T00:51:57.279Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/028-roster-member-refresh.json",
+      "is_error": false
+    },
+    {
+      "id": "029-player-profile-type",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x146d4b770"
+      },
+      "utc": "2026-10-22T00:51:59.101Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/029-player-profile-type.json",
+      "is_error": false
+    },
+    {
+      "id": "030-profile-entry-calls",
+      "tool": "get_function_calls",
+      "arguments": {
+        "address": "0x1474a1990",
+        "direction": "callers",
+        "limit": 30
+      },
+      "utc": "2026-10-22T00:52:40.500Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/030-profile-entry-calls.json",
+      "is_error": false
+    },
+    {
+      "id": "031-roster-key-strings",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14cb7b330",
+        "length": 32
+      },
+      "utc": "2026-10-22T00:52:41.828Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/031-roster-key-strings.json",
+      "is_error": false
+    },
+    {
+      "id": "032-member-name-key",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14befe940",
+        "length": 24
+      },
+      "utc": "2026-10-22T00:52:43.163Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/032-member-name-key.json",
+      "is_error": false
+    },
+    {
+      "id": "033-plane-property-keys",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14cb7b410",
+        "length": 120
+      },
+      "utc": "2026-10-22T00:52:44.643Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/033-plane-property-keys.json",
+      "is_error": false
+    },
+    {
+      "id": "034-member-query",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1452a4770"
+      },
+      "utc": "2026-10-22T00:52:46.309Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/034-member-query.json",
+      "is_error": false
+    },
+    {
+      "id": "035-profile-refresh-entry",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a1a00"
+      },
+      "utc": "2026-10-22T00:53:41.356Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/035-profile-refresh-entry.json",
+      "is_error": false
+    },
+    {
+      "id": "036-local-id-entry",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a1a40"
+      },
+      "utc": "2026-10-22T00:53:43.018Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/036-local-id-entry.json",
+      "is_error": false
+    },
+    {
+      "id": "037-network-profile-type",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x146f0af40"
+      },
+      "utc": "2026-10-22T00:53:44.929Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/037-network-profile-type.json",
+      "is_error": false
+    },
+    {
+      "id": "038-room-incoming-event",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x14a4b3920"
+      },
+      "utc": "2026-10-22T00:53:53.136Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/038-room-incoming-event.json",
+      "is_error": false
+    },
+    {
+      "id": "039-selector-message-register",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a0d40"
+      },
+      "utc": "2026-10-22T00:53:54.722Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/039-selector-message-register.json",
+      "is_error": false
+    },
+    {
+      "id": "040-profile-setup-subscribe",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a0a00"
+      },
+      "utc": "2026-10-22T00:54:08.112Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/040-profile-setup-subscribe.json",
+      "is_error": false
+    },
+    {
+      "id": "041-roster-setup-subscribe",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474c2180"
+      },
+      "utc": "2026-10-22T00:54:09.866Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/041-roster-setup-subscribe.json",
+      "is_error": false
+    },
+    {
+      "id": "042-profile-type-name",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14c5761d2",
+        "length": 100
+      },
+      "utc": "2026-10-22T00:54:33.833Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/042-profile-type-name.json",
+      "is_error": false
+    },
+    {
+      "id": "043-roster-config-source",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474c1af0"
+      },
+      "utc": "2026-10-22T00:54:35.691Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/043-roster-config-source.json",
+      "is_error": false
+    },
+    {
+      "id": "044-campaign-spawn-read",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1471cb3e0"
+      },
+      "utc": "2026-10-22T00:54:37.620Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/044-campaign-spawn-read.json",
+      "is_error": false
+    },
+    {
+      "id": "045-physics-handler-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1474bda10",
+        "length": 768
+      },
+      "utc": "2026-10-22T00:55:02.836Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/045-physics-handler-bytes.json",
+      "is_error": false
+    },
+    {
+      "id": "046-physics-check-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1474b7770",
+        "length": 800
+      },
+      "utc": "2026-10-22T00:55:04.220Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/046-physics-check-bytes.json",
+      "is_error": false
+    },
+    {
+      "id": "047-member-binding-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1474a35e0",
+        "length": 768
+      },
+      "utc": "2026-10-22T00:55:05.575Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/047-member-binding-bytes.json",
+      "is_error": false
+    },
+    {
+      "id": "048-profile-create-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1474a4240",
+        "length": 220
+      },
+      "utc": "2026-10-22T00:55:07.003Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/048-profile-create-bytes.json",
+      "is_error": false
+    },
+    {
+      "id": "049-roster-refresh-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1474a33b0",
+        "length": 512
+      },
+      "utc": "2026-10-22T00:55:08.372Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/049-roster-refresh-bytes.json",
+      "is_error": false
+    },
+    {
+      "id": "050-roster-count-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1474c5b00",
+        "length": 128
+      },
+      "utc": "2026-10-22T00:55:09.775Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/050-roster-count-bytes.json",
+      "is_error": false
+    },
+    {
+      "id": "051-member-index-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1474a5ae0",
+        "length": 400
+      },
+      "utc": "2026-10-22T00:55:11.519Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/051-member-index-bytes.json",
+      "is_error": false
+    },
+    {
+      "id": "052-incoming-event-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14a4b3920",
+        "length": 320
+      },
+      "utc": "2026-10-22T00:55:12.880Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/052-incoming-event-bytes.json",
+      "is_error": false
+    },
+    {
+      "id": "053-selector-constructor",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x146d510b0"
+      },
+      "utc": "2026-10-22T00:55:43.193Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/053-selector-constructor.json",
+      "is_error": true
+    },
+    {
+      "id": "054-selector-ctor-thunk",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x146d510b0",
+        "length": 112
+      },
+      "utc": "2026-10-22T00:55:58.384Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/054-selector-ctor-thunk.json",
+      "is_error": false
+    },
+    {
+      "id": "055-profile-map-id-branch",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1474a35e0",
+        "length": 304
+      },
+      "utc": "2026-10-22T00:55:59.980Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/055-profile-map-id-branch.json",
+      "is_error": false
+    },
+    {
+      "id": "056-selector-real-constructor",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x147496400"
+      },
+      "utc": "2026-10-22T00:56:11.243Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/056-selector-real-constructor.json",
+      "is_error": true
+    },
+    {
+      "id": "057-selector-constructor-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x147496400",
+        "length": 768
+      },
+      "utc": "2026-10-22T00:56:22.206Z",
+      "path": "evidence/admission-roster-ghidra-20261022/responses/057-selector-constructor-bytes.json",
+      "is_error": false
+    }
+  ]
+}

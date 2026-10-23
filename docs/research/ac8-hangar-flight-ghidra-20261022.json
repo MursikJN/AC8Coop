@@ -1,0 +1,848 @@
+{
+  "date": "2026-10-22",
+  "scope": {
+    "mode": "offline static native GhidraMCP + independent PE/Capstone verification",
+    "game_executed": false,
+    "native_game_calls": false,
+    "original_writes": false,
+    "external_sessions": false,
+    "mod_code_changed": false
+  },
+  "artifact": {
+    "module": "AceCombat8.exe",
+    "size": 555102832,
+    "sha256": "51510e2a520565dbe81fb0d569e95cd4393077acaaa859371489b80b8128829f",
+    "image_base": "0x140000000",
+    "coordinates": "Function coordinates are RVA. Ghidra VA = base + RVA; field offsets are observed build layout, not validated call ABI.",
+    "build_profile": "ac8-build25201480; Steam build ID not independently re-extracted",
+    "program_info": "evidence/hangar-flight-contract-ghidra-20261022/responses/001-program.json"
+  },
+  "contract": "docs/research/ac8-hangar-flight-contract-20261022.md",
+  "hypotheses": [
+    {
+      "id": "AC8-HANDOFF-01",
+      "status": "Static dataflow and adapter pre/postconditions specified; automatic runtime campaign handoff not proved",
+      "confirmed": [
+        "Native GameInstance creates member manager at +0x958 and initializes its configuration subscription.",
+        "Member profiles survive a network-selector detach pass and are needed by campaign shared spawn.",
+        "Local and remote roles align with owner-local plane state production and remote reception."
+      ],
+      "remaining": [
+        "Concrete ABI/threading/BeginPlay ordering",
+        "Actual campaign triggering of matching-room cleanup",
+        "Guest local controller must preserve Baxter story role, not start independent protagonist logic"
+      ],
+      "evidence": [
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/008-local-spawn-roles.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/016-hangar-exit-candidate.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/017-stage-exit-candidate.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/025-plane-network-type.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/026-selector-network-class.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/028-gameinstance-context-init.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/034-config-source-class.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/035-selector-manager-class.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/037-config-class-name.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/038-selector-manager-name.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/044-local-role-write.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/045-remote-role-write.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/046-owner-role-gates.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/047-local-sender-gate-slot.json"
+      ]
+    },
+    {
+      "id": "AC8-CLEANUP-01",
+      "status": "Cleanup scopes and key-reuse hazard recovered statically",
+      "confirmed": [
+        "Member leave only clears selector active byte.",
+        "Five room callback handles are removed separately from configuration handle.",
+        "Network-selector detach unregisters then nulls network pointer without clearing member profiles.",
+        "Full selector termination calls detach and clears member map.",
+        "Plane lifecycle path unregisters before virtual C70 release; concrete leaf clears +0xed0.",
+        "Registry unregister erases by key without checking value identity; duplicate register does not replace old entry.",
+        "Full context reset clears session manager pointers and is distinct from stage handoff."
+      ],
+      "remaining": [
+        "Complete configuration callback removal after +0x108 subscription",
+        "Precise gameplay lifecycle invocation order",
+        "Memory reclamation by GC is not inferred from nulling pointer"
+      ],
+      "evidence": [
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/002-selector-unsubscribe.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/004-selector-leave.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/005-network-unregister.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/009-world-cleanup.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/010-selector-destroy.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/013-selector-clear-target.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/014-player-network-detach.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/018-full-cleanup-caller.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/022-player-detach-slot.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/024-player-detach-thunk.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/039-selector-detach-bytes.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/040-selector-terminate-bytes.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/041-unsubscribe-bytes.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/042-unregister-key-bytes.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/043-player-release-bytes.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/048-register-duplicate-bytes.json"
+      ]
+    },
+    {
+      "id": "AC8-LOCALFLIGHT-01",
+      "status": "User decision fixed and current code gap verified; migration not implemented",
+      "target": "Each PC immediately simulates its own plane; only remote plane consumes partner snapshots. Host owns mission/AI/objective/confirmed damage and transitions.",
+      "current": "r29 guest_pilot_bridge applies guest input on host; guest_pilot_view explicitly uses authoritative host snapshots only.",
+      "native_support": "Role 3 produces local snapshots; role 2 consumes remote state. This is not asserted to be Unreal ENetRole or implemented server reconciliation.",
+      "remaining": [
+        "Guest local flight engine/controller/camera implementation",
+        "Authenticated guest-state transport and host receiver integration",
+        "Mission-event authority and validated correction policy"
+      ],
+      "sources": [
+        "native/guest_pilot_bridge.cpp",
+        "probe/AC8CoopRecon/Scripts/guest_pilot_view.lua"
+      ],
+      "evidence": [
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/008-local-spawn-roles.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/024-player-detach-thunk.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/044-local-role-write.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/045-remote-role-write.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/046-owner-role-gates.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/047-local-sender-gate-slot.json"
+      ]
+    }
+  ],
+  "contexts": {
+    "game_instance_918": {
+      "type": "LiveMatchmakerManager",
+      "getter_rva": "0x6eb9720",
+      "name_va": "0x14c7d3c62",
+      "evidence": [
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/028-gameinstance-context-init.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/034-config-source-class.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/037-config-class-name.json"
+      ]
+    },
+    "game_instance_958": {
+      "type": "LiveMissionRoomMemberManager",
+      "getter_rva": "0x6efcac0",
+      "initialize_rva": "0x74a0a00",
+      "name_va": "0x14c873552",
+      "evidence": [
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/028-gameinstance-context-init.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/035-selector-manager-class.json",
+        "evidence/hangar-flight-contract-ghidra-20261022/responses/038-selector-manager-name.json"
+      ]
+    },
+    "selector_network_type": "LiveNetworkAircraftSelector",
+    "flight_network_type": "LiveNetworkPlayerPlane",
+    "warning": "These objects use the same category/member key prefix in different stages; they are not interchangeable."
+  },
+  "cleanup": {
+    "leave_rva": "0x74a1a90",
+    "leave_effect": "Find selector.member_id+0x2c and set selector+0x28=0. Does not clear its member ID or network pointer in this body.",
+    "detach_room_callbacks": {
+      "rva": "0x74a13e0",
+      "handles_in_member_manager": [
+        "0x118",
+        "0x120",
+        "0x128",
+        "0x110",
+        "0x130"
+      ],
+      "system_delegates": [
+        "0xc8",
+        "0x188",
+        "0x1a0",
+        "0x1b8",
+        "0x1d0"
+      ],
+      "limitation": "Configuration handle +0x108 is not processed here."
+    },
+    "detach_network_selectors": {
+      "rva": "0x74a4b10",
+      "enumerate_map_offset": "0x40",
+      "network_pointer_offset": "0x188",
+      "effects": [
+        "unregister current nonnull selector network object",
+        "set selector+0x188=0"
+      ],
+      "preserves": "Profile map, member ID, slot and loadout are not cleared by this body.",
+      "not_proved": "Actual UObject memory destruction/GC"
+    },
+    "full_selector_termination": {
+      "wrapper_rva": "0x74a0bf0",
+      "wrapper_bytes": "e9eb31f014",
+      "resolved_target_rva": "0x1c3a3de0",
+      "label": "TerminateAircraftSelector",
+      "effects": [
+        "Call 0x74a4b10",
+        "Clear map +0x40",
+        "Reset additional bookkeeping"
+      ],
+      "warning": "Different from preserving profile data for native campaign spawn; not an ordinary handoff replacement."
+    },
+    "known_detach_callers": [
+      {
+        "rva": "0x756ad30",
+        "label": "DebugBootMenuWidget Cleanup",
+        "interpretation": "Debug path; not evidence of campaign auto cleanup"
+      },
+      {
+        "rva": "0x81974c0",
+        "label": "MatchingRootWidget Cleanup",
+        "interpretation": "Matching UI cleanup path; exact campaign invocation still unproved"
+      }
+    ],
+    "plane_detach": {
+      "rva": "0x7d24a40",
+      "active_lifecycle_condition": "(byte[this+0x5d] & 0x0c)==8",
+      "effects": [
+        "unregister this+0xed0 if nonnull",
+        "virtual call +0xc70"
+      ],
+      "concrete_release_slot_va": "0x14cc02938",
+      "concrete_release_rva": "0x7c43cf0",
+      "concrete_release_bytes": "48c781d00e000000000000c3",
+      "concrete_release_effect": "Set plane+0xed0=0 and return",
+      "limitation": "This does not validate calling the lifecycle manually."
+    },
+    "registry": {
+      "unregister_rva": "0x74b5310",
+      "object_key_offset": "0x28",
+      "registry_owner": "system GameInstance+0x910",
+      "registry_offset": "0x2e0",
+      "erase_rva": "0x2807fa0",
+      "hazard": "Erase is by key, without checking current value equals deleting object. Late old cleanup can erase new object with reused key.",
+      "duplicate_register_rva": "0x74b53f0",
+      "duplicate_policy": "Keep existing entry; no replacement."
+    },
+    "full_context_cleanup": {
+      "rva": "0x78df820",
+      "caller_rva": "0x78df3d0",
+      "effects": [
+        "Room callbacks + selector termination",
+        "Clear GameInstance+0x958",
+        "Clear GameInstance+0x928",
+        "Clear GameInstance+0x910"
+      ],
+      "warning": "Do not use full reset as normal hangar-to-flight transfer; it discards session contexts."
+    }
+  },
+  "flight_roles": {
+    "field": "plane+0xed8",
+    "local_native_assignment": "System+0x1fa nonzero -> role 3, otherwise 1",
+    "remote_native_assignment": 2,
+    "host_pc": {
+      "host_plane": "local producer 3",
+      "guest_plane": "remote receiver 2"
+    },
+    "guest_pc": {
+      "host_plane": "remote receiver 2",
+      "guest_plane": "local producer 3"
+    },
+    "not_implemented": "Role/controller/world/physics migration in r29. Bytes alone are not a supported patch."
+  },
+  "contract_stages": [
+    {
+      "stage": "prepare",
+      "postconditions": [
+        "Exactly two coherent selector slots",
+        "Distinct authenticated member IDs and opaque profile keys",
+        "Host story unit and Baxter role mapped consistently"
+      ]
+    },
+    {
+      "stage": "hangar",
+      "postconditions": [
+        "Loadouts and ready tied to same revision",
+        "Host selects mission/difficulty/AI group",
+        "Each participant controls only own supported loadout"
+      ]
+    },
+    {
+      "stage": "commit",
+      "postconditions": [
+        "Host locks roster and loadout revision",
+        "Both ACK same session/generation/stage",
+        "No stale configuration event admitted"
+      ]
+    },
+    {
+      "stage": "detach",
+      "postconditions": [
+        "Old room callbacks quiescent or rejected by generation",
+        "Old selector network keys absent",
+        "Selector profiles still usable or explicitly reconstructed after travel",
+        "No pending old key-based unregister can touch replacement"
+      ]
+    },
+    {
+      "stage": "spawn",
+      "postconditions": [
+        "New world references validated",
+        "One local and one remote player plane per PC",
+        "Two host AI and no AI duplicate for Baxter",
+        "ID assigned before native registration; expected type and weak reference validated"
+      ]
+    },
+    {
+      "stage": "flight_ready",
+      "postconditions": [
+        "Both scene/object/camera/initial state ready",
+        "Initial owned and remote states exchanged",
+        "No unilateral start on timeout"
+      ]
+    },
+    {
+      "stage": "flight",
+      "postconditions": [
+        "Local input advances local flight immediately",
+        "Authenticated owner snapshots go only to partner representation",
+        "Host mission authority preserved",
+        "Old/duplicate/foreign-generation snapshots rejected by adapter policy"
+      ]
+    }
+  ],
+  "unclosed_items": [
+    "No full native call ABI signature or thread validation",
+    "No proof that matching UI lifecycle auto-runs in campaign",
+    "Configuration source callback +0x108 final lifetime incomplete",
+    "No dynamic guest-local Baxter controller/camera trial",
+    "No demonstrated wire ordering, event replication or co-op flight"
+  ],
+  "verification": "evidence/hangar-flight-contract-ghidra-20261022/byte-and-instruction-verification.json",
+  "mcp_errors": [
+    {
+      "id": "003-selector-reset",
+      "arguments": {
+        "address": "0x1474a0bf0"
+      },
+      "response": [
+        {
+          "type": "text",
+          "text": "Error executing tool decompile_function_by_address: [FUNCTION_NOT_FOUND] No function found at or containing 1474a0bf0"
+        }
+      ],
+      "recovery": "Read wrapper in 006; derived JMP target successfully decompiled in 013"
+    },
+    {
+      "id": "023-player-virtual-detach",
+      "arguments": {
+        "address": "0x147c43cf0"
+      },
+      "response": [
+        {
+          "type": "text",
+          "text": "Error executing tool decompile_function_by_address: [FUNCTION_NOT_FOUND] No function found at or containing 147c43cf0"
+        }
+      ],
+      "recovery": "Vtable slot read in 022 and leaf bytes read in 024 establish pointer clearing without decompiler"
+    }
+  ],
+  "source_boundaries": [
+    "030 is a separate generic actor lifecycle table slot and does not establish automatic invocation of the recovered plane lifecycle.",
+    "029 only reads selector data; it is not used as proof of hangar-to-flight triggering.",
+    "028 includes shared control-flow tails and compiler/decompiler artifacts; conclusions restricted to explicit constructor/getter/store/init calls independently verified."
+  ],
+  "responses": [
+    {
+      "id": "001-program",
+      "tool": "get_program_info",
+      "arguments": {},
+      "utc": "2026-10-22T01:06:32.320Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/001-program.json",
+      "is_error": false
+    },
+    {
+      "id": "002-selector-unsubscribe",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a13e0"
+      },
+      "utc": "2026-10-22T01:06:34.903Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/002-selector-unsubscribe.json",
+      "is_error": false
+    },
+    {
+      "id": "003-selector-reset",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a0bf0"
+      },
+      "utc": "2026-10-22T01:06:37.568Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/003-selector-reset.json",
+      "is_error": true
+    },
+    {
+      "id": "004-selector-leave",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a1a90"
+      },
+      "utc": "2026-10-22T01:06:39.480Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/004-selector-leave.json",
+      "is_error": false
+    },
+    {
+      "id": "005-network-unregister",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474b5310"
+      },
+      "utc": "2026-10-22T01:06:41.443Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/005-network-unregister.json",
+      "is_error": false
+    },
+    {
+      "id": "006-selector-clear-thunk",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1474a0bf0",
+        "length": 192
+      },
+      "utc": "2026-10-22T01:07:13.922Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/006-selector-clear-thunk.json",
+      "is_error": false
+    },
+    {
+      "id": "007-network-base-reset",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474c0980"
+      },
+      "utc": "2026-10-22T01:07:15.809Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/007-network-base-reset.json",
+      "is_error": false
+    },
+    {
+      "id": "008-local-spawn-roles",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1471ca650"
+      },
+      "utc": "2026-10-22T01:07:18.253Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/008-local-spawn-roles.json",
+      "is_error": false
+    },
+    {
+      "id": "009-world-cleanup",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1478df820"
+      },
+      "utc": "2026-10-22T01:07:45.552Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/009-world-cleanup.json",
+      "is_error": false
+    },
+    {
+      "id": "010-selector-destroy",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a4b10"
+      },
+      "utc": "2026-10-22T01:07:47.578Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/010-selector-destroy.json",
+      "is_error": false
+    },
+    {
+      "id": "011-selector-rebuild",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474a4480"
+      },
+      "utc": "2026-10-22T01:07:49.791Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/011-selector-rebuild.json",
+      "is_error": false
+    },
+    {
+      "id": "012-flight-cleanup",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1471ca2f0"
+      },
+      "utc": "2026-10-22T01:07:51.958Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/012-flight-cleanup.json",
+      "is_error": false
+    },
+    {
+      "id": "013-selector-clear-target",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x15c3a3de0"
+      },
+      "utc": "2026-10-22T01:08:17.384Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/013-selector-clear-target.json",
+      "is_error": false
+    },
+    {
+      "id": "014-player-network-detach",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x147d24a40"
+      },
+      "utc": "2026-10-22T01:08:19.243Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/014-player-network-detach.json",
+      "is_error": false
+    },
+    {
+      "id": "015-gamemode-network-detach",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1474de040"
+      },
+      "utc": "2026-10-22T01:08:21.503Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/015-gamemode-network-detach.json",
+      "is_error": false
+    },
+    {
+      "id": "016-hangar-exit-candidate",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x14756ad30"
+      },
+      "utc": "2026-10-22T01:09:01.880Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/016-hangar-exit-candidate.json",
+      "is_error": false
+    },
+    {
+      "id": "017-stage-exit-candidate",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1481974c0"
+      },
+      "utc": "2026-10-22T01:09:04.284Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/017-stage-exit-candidate.json",
+      "is_error": false
+    },
+    {
+      "id": "018-full-cleanup-caller",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1478df3d0"
+      },
+      "utc": "2026-10-22T01:09:06.303Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/018-full-cleanup-caller.json",
+      "is_error": false
+    },
+    {
+      "id": "019-stage-cleanup-label",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14cb85bc8",
+        "length": 56
+      },
+      "utc": "2026-10-22T01:09:24.893Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/019-stage-cleanup-label.json",
+      "is_error": false
+    },
+    {
+      "id": "020-other-cleanup-label",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14cc8aad8",
+        "length": 54
+      },
+      "utc": "2026-10-22T01:09:26.448Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/020-other-cleanup-label.json",
+      "is_error": false
+    },
+    {
+      "id": "021-selector-clear-label",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14cb7b3d8",
+        "length": 52
+      },
+      "utc": "2026-10-22T01:09:28.143Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/021-selector-clear-label.json",
+      "is_error": false
+    },
+    {
+      "id": "022-player-detach-slot",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14cc02938",
+        "length": 8
+      },
+      "utc": "2026-10-22T01:09:30.820Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/022-player-detach-slot.json",
+      "is_error": false
+    },
+    {
+      "id": "023-player-virtual-detach",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x147c43cf0"
+      },
+      "utc": "2026-10-22T01:10:10.349Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/023-player-virtual-detach.json",
+      "is_error": true
+    },
+    {
+      "id": "024-player-detach-thunk",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x147c43cf0",
+        "length": 80
+      },
+      "utc": "2026-10-22T01:11:09.324Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/024-player-detach-thunk.json",
+      "is_error": false
+    },
+    {
+      "id": "025-plane-network-type",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x146f0d260"
+      },
+      "utc": "2026-10-22T01:11:11.600Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/025-plane-network-type.json",
+      "is_error": false
+    },
+    {
+      "id": "026-selector-network-class",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x146f0af40"
+      },
+      "utc": "2026-10-22T01:11:13.722Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/026-selector-network-class.json",
+      "is_error": false
+    },
+    {
+      "id": "027-local-pawn-setup",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1471e5500"
+      },
+      "utc": "2026-10-22T01:11:16.293Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/027-local-pawn-setup.json",
+      "is_error": false
+    },
+    {
+      "id": "028-gameinstance-context-init",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1478dbc90"
+      },
+      "utc": "2026-10-22T01:12:24.897Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/028-gameinstance-context-init.json",
+      "is_error": false
+    },
+    {
+      "id": "029-selector-preserve-consumer",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x1478084b0"
+      },
+      "utc": "2026-10-22T01:12:27.176Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/029-selector-preserve-consumer.json",
+      "is_error": false
+    },
+    {
+      "id": "030-plane-endplay-slot",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14cc02080",
+        "length": 8
+      },
+      "utc": "2026-10-22T01:12:50.351Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/030-plane-endplay-slot.json",
+      "is_error": false
+    },
+    {
+      "id": "031-network-plane-register-slot",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14c88c238",
+        "length": 8
+      },
+      "utc": "2026-10-22T01:12:52.407Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/031-network-plane-register-slot.json",
+      "is_error": false
+    },
+    {
+      "id": "032-gameinstance-init-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1478dcc20",
+        "length": 192
+      },
+      "utc": "2026-10-22T01:12:54.110Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/032-gameinstance-init-bytes.json",
+      "is_error": false
+    },
+    {
+      "id": "033-stage-detach-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x148197560",
+        "length": 96
+      },
+      "utc": "2026-10-22T01:12:55.734Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/033-stage-detach-bytes.json",
+      "is_error": false
+    },
+    {
+      "id": "034-config-source-class",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x146eb9720"
+      },
+      "utc": "2026-10-22T01:13:20.070Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/034-config-source-class.json",
+      "is_error": false
+    },
+    {
+      "id": "035-selector-manager-class",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x146efcac0"
+      },
+      "utc": "2026-10-22T01:13:22.292Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/035-selector-manager-class.json",
+      "is_error": false
+    },
+    {
+      "id": "036-local-player-configure",
+      "tool": "decompile_function_by_address",
+      "arguments": {
+        "address": "0x147d4ad20"
+      },
+      "utc": "2026-10-22T01:13:24.129Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/036-local-player-configure.json",
+      "is_error": false
+    },
+    {
+      "id": "037-config-class-name",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14c7d3c62",
+        "length": 100
+      },
+      "utc": "2026-10-22T01:13:33.253Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/037-config-class-name.json",
+      "is_error": false
+    },
+    {
+      "id": "038-selector-manager-name",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14c873552",
+        "length": 100
+      },
+      "utc": "2026-10-22T01:13:36.584Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/038-selector-manager-name.json",
+      "is_error": false
+    },
+    {
+      "id": "039-selector-detach-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1474a4ca0",
+        "length": 96
+      },
+      "utc": "2026-10-22T01:13:38.454Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/039-selector-detach-bytes.json",
+      "is_error": false
+    },
+    {
+      "id": "040-selector-terminate-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x15c3a3e60",
+        "length": 160
+      },
+      "utc": "2026-10-22T01:13:40.167Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/040-selector-terminate-bytes.json",
+      "is_error": false
+    },
+    {
+      "id": "041-unsubscribe-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1474a142f",
+        "length": 160
+      },
+      "utc": "2026-10-22T01:13:42.205Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/041-unsubscribe-bytes.json",
+      "is_error": false
+    },
+    {
+      "id": "042-unregister-key-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1474b5310",
+        "length": 176
+      },
+      "utc": "2026-10-22T01:14:39.214Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/042-unregister-key-bytes.json",
+      "is_error": false
+    },
+    {
+      "id": "043-player-release-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x147d24a40",
+        "length": 112
+      },
+      "utc": "2026-10-22T01:14:41.367Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/043-player-release-bytes.json",
+      "is_error": false
+    },
+    {
+      "id": "044-local-role-write",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1471ca900",
+        "length": 64
+      },
+      "utc": "2026-10-22T01:14:43.347Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/044-local-role-write.json",
+      "is_error": false
+    },
+    {
+      "id": "045-remote-role-write",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1471cc750",
+        "length": 64
+      },
+      "utc": "2026-10-22T01:14:46.730Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/045-remote-role-write.json",
+      "is_error": false
+    },
+    {
+      "id": "046-owner-role-gates",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x146dc5800",
+        "length": 32
+      },
+      "utc": "2026-10-22T01:15:44.783Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/046-owner-role-gates.json",
+      "is_error": false
+    },
+    {
+      "id": "047-local-sender-gate-slot",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x14cc02900",
+        "length": 16
+      },
+      "utc": "2026-10-22T01:15:46.708Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/047-local-sender-gate-slot.json",
+      "is_error": false
+    },
+    {
+      "id": "048-register-duplicate-bytes",
+      "tool": "read_memory",
+      "arguments": {
+        "address": "0x1474b53f0",
+        "length": 224
+      },
+      "utc": "2026-10-22T01:15:48.442Z",
+      "path": "evidence/hangar-flight-contract-ghidra-20261022/responses/048-register-duplicate-bytes.json",
+      "is_error": false
+    }
+  ]
+}

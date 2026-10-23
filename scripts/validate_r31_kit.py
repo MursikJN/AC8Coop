@@ -21,11 +21,17 @@ def validate(archive,output):
    key=i.filename.lower();assert key not in seen;seen.add(key)
    assert not i.is_dir();assert ((i.external_attr>>16)&0o170000)!=0o120000,'ZIP symlink'
   z.extractall(extraction)
- kit=extraction/'ac8-steam-coop-r31';m=json.loads((kit/'lobby-manifest.json').read_text())
+ roots=list(extraction.iterdir());assert len(roots)==1 and roots[0].is_dir(),'Expected one kit root'
+ kit=roots[0];assert kit.name in ('ac8-steam-coop-r31','ac8-steam-coop-r31-local-stage1');m=json.loads((kit/'lobby-manifest.json').read_text())
  expected={f['path']for f in m['files']}|{'lobby-manifest.json'}
  actual={p.relative_to(kit).as_posix()for p in kit.rglob('*')if p.is_file()};assert actual==expected,'Unlisted/missing file'
  assert m['protocol']==8 and m['pilot_protocol']==3 and m['owner_native']and m['isolated_lab_required']and m['automatic_reports']
- assert m['owner_world_readiness']==1 and m['kit_update']=='cinema-2'and m['cinema_metadata']==1 and m['native_shutdown']==1 and m['adapter_bootstrap']==1 and m['menu_lifetime']==1 and m['engine_call_trace']==1 and m['lab_storage_policy']==3 and m['archive_layout']=='paks-junction-v1'and m['shared_archives_read_locked']
+ assert m['owner_world_readiness']==1 and m['kit_update']in ('cinema-2','local-stage1')and m['cinema_metadata']==1 and m['native_shutdown']==1 and m['adapter_bootstrap']==1 and m['menu_lifetime']==1 and m['engine_call_trace']==1 and m['lab_storage_policy']==3 and m['archive_layout']=='paks-junction-v1'and m['shared_archives_read_locked']
+ if m['kit_update']=='local-stage1':assert m['local_model_stage']==1 and m['owner_sound_readiness']==1 and 'LOCAL-MODEL-TEST-RU.md'in expected
+ if m.get('local_model_patch')=='cleanup-1':assert m['owner_tick_cleanup']==1 and m['owner_cleanup_gc_gate']==1
+ if m.get('local_model_patch')in ('start-1','cdo-1','lifetime-1','cleanup-1'):assert m['owner_camera_receipt']==1
+ if m.get('local_model_patch')in ('cdo-1','lifetime-1','cleanup-1'):assert m['owner_template_identity']==1 and m['helper_preparation_timeout_ms']==60000
+ if m.get('local_model_patch')in ('lifetime-1','cleanup-1'):assert m['owner_template_retention']==1 and m['owner_dependency_identity']==1
  assert not m['game_tested']and not m['owner_runtime_tested']and not m['first_shared_flight_ready']
  lua=LuaRuntime(unpack_returned_tuples=True);compiled=0;text_scanned=0
  for f in m['files']:

@@ -1,0 +1,523 @@
+{
+  "time_utc": "2026-10-22T00:02:07.313506+00:00",
+  "scope": "offline static research; no target execution or native calls",
+  "image_sha256": "51510e2a520565dbe81fb0d569e95cd4393077acaaa859371489b80b8128829f",
+  "image_size": 555102832,
+  "image_base": "0x140000000",
+  "build_id_label": 25201480,
+  "build_id_label_source": "existing project profile; not independently extracted as a Steam depot ID from EXE",
+  "engine_base_version": {
+    "major": 5,
+    "minor": 4,
+    "patch": 3,
+    "status": "confirmed by initializer constants and three uint16 formatter reads",
+    "evidence": [
+      "responses/008-version_exec.json",
+      "responses/009-engine_version_getter.json",
+      "responses/200-recheck-022-engine_version_initialize.json",
+      "responses/240-engine_version_formatter.json"
+    ],
+    "limitation": "engine fork changes, exact ABI, and branch/changelist are not established"
+  },
+  "player_path": {
+    "create_player_exec_rva": "0x4460490",
+    "create_player_native_rva": "0x447e020",
+    "local_player_creation_rva": "0x444bfd0",
+    "possess_exec_rva": "0x4352da0",
+    "possess_native_rva": "0x4354890",
+    "authority_guard_message_va": "0x14bcb12f0",
+    "guest_role_camera_and_AI_replacement_verified": false
+  },
+  "mission_path": {
+    "campaign_state_dispatch_rva": "0x78e4440",
+    "state_byte_offset": "0x578",
+    "state_offset_owner": "ALiveCampaignGameMode this pointer in observed static setter; no complete class layout or runtime ABI validation",
+    "enum_entries": [
+      {
+        "name": "ELiveGameModePhaseState::SyncPhaseStart",
+        "value": 9,
+        "name_rva": "0xc9b6b08",
+        "table_rva": "0xc9bfe30",
+        "bytes": "086b9b4c010000000900000000000000"
+      },
+      {
+        "name": "ELiveGameModePhaseState::InGame",
+        "value": 10,
+        "name_rva": "0xc9b6b30",
+        "table_rva": "0xc9bfe40",
+        "bytes": "306b9b4c010000000a00000000000000"
+      },
+      {
+        "name": "ELiveGameModePhaseState::IGCStart",
+        "value": 7,
+        "name_rva": "0xc9b6b50",
+        "table_rva": "0xc9bfe10",
+        "bytes": "506b9b4c010000000700000000000000"
+      },
+      {
+        "name": "ELiveGameModePhaseState::WatingForIGCEnd",
+        "value": 8,
+        "name_rva": "0xc9b6b78",
+        "table_rva": "0xc9bfe20",
+        "bytes": "786b9b4c010000000800000000000000"
+      },
+      {
+        "name": "ELiveGameModePhaseState::WaitingForFadeOut",
+        "value": 5,
+        "name_rva": "0xc9b6ba8",
+        "table_rva": "0xc9bfdf0",
+        "bytes": "a86b9b4c010000000500000000000000"
+      },
+      {
+        "name": "ELiveGameModePhaseState::Process",
+        "value": 6,
+        "name_rva": "0xc9b6bd8",
+        "table_rva": "0xc9bfe00",
+        "bytes": "d86b9b4c010000000600000000000000"
+      },
+      {
+        "name": "ELiveGameModePhaseState::WatingForRadioSync",
+        "value": 3,
+        "name_rva": "0xc9b6c00",
+        "table_rva": "0xc9bfdd0",
+        "bytes": "006c9b4c010000000300000000000000"
+      },
+      {
+        "name": "ELiveGameModePhaseState::WaitingForIGCStart",
+        "value": 4,
+        "name_rva": "0xc9b6c30",
+        "table_rva": "0xc9bfde0",
+        "bytes": "306c9b4c010000000400000000000000"
+      },
+      {
+        "name": "ELiveGameModePhaseState::WaitingForRadioQueueEmpty",
+        "value": 1,
+        "name_rva": "0xc9b6c60",
+        "table_rva": "0xc9bfdb0",
+        "bytes": "606c9b4c010000000100000000000000"
+      },
+      {
+        "name": "ELiveGameModePhaseState::WaitingForRadioInterval",
+        "value": 2,
+        "name_rva": "0xc9b6c98",
+        "table_rva": "0xc9bfdc0",
+        "bytes": "986c9b4c010000000200000000000000"
+      },
+      {
+        "name": "ELiveGameModePhaseState::None",
+        "value": 0,
+        "name_rva": "0xc9b6d00",
+        "table_rva": "0xc9bfda0",
+        "bytes": "006d9b4c010000000000000000000000"
+      },
+      {
+        "name": "ELiveGameModePhaseState::Max",
+        "value": 10,
+        "name_rva": "0xc9b6fe8",
+        "table_rva": "0xc9bfe50",
+        "bytes": "e86f9b4c010000000a00000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::InitializeReplay",
+        "value": 28,
+        "name_rva": "0xcb53018",
+        "table_rva": "0xcb4e870",
+        "bytes": "1830b54c010000001c00000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::WaitingReplayInitialize",
+        "value": 29,
+        "name_rva": "0xcb53040",
+        "table_rva": "0xcb4e880",
+        "bytes": "4030b54c010000001d00000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::SyncEvaluation",
+        "value": 26,
+        "name_rva": "0xcb53070",
+        "table_rva": "0xcb4e850",
+        "bytes": "7030b54c010000001a00000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::Ended",
+        "value": 27,
+        "name_rva": "0xcb53098",
+        "table_rva": "0xcb4e860",
+        "bytes": "9830b54c010000001b00000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::MAX",
+        "value": 31,
+        "name_rva": "0xcb530b8",
+        "table_rva": "0xcb4e8b0",
+        "bytes": "b830b54c010000001f00000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::Replay",
+        "value": 30,
+        "name_rva": "0xcb530e8",
+        "table_rva": "0xcb4e890",
+        "bytes": "e830b54c010000001e00000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::LastState",
+        "value": 30,
+        "name_rva": "0xcb53108",
+        "table_rva": "0xcb4e8a0",
+        "bytes": "0831b54c010000001e00000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::WaitGameStart",
+        "value": 20,
+        "name_rva": "0xcb53128",
+        "table_rva": "0xcb4e7f0",
+        "bytes": "2831b54c010000001400000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::GamePlaying",
+        "value": 21,
+        "name_rva": "0xcb53150",
+        "table_rva": "0xcb4e800",
+        "bytes": "5031b54c010000001500000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::CallStartMatch",
+        "value": 18,
+        "name_rva": "0xcb53170",
+        "table_rva": "0xcb4e7d0",
+        "bytes": "7031b54c010000001200000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::PostMinigameIGC",
+        "value": 19,
+        "name_rva": "0xcb53198",
+        "table_rva": "0xcb4e7e0",
+        "bytes": "9831b54c010000001300000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::IGCEnding",
+        "value": 24,
+        "name_rva": "0xcb531c0",
+        "table_rva": "0xcb4e830",
+        "bytes": "c031b54c010000001800000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::CinemaEnding",
+        "value": 25,
+        "name_rva": "0xcb531e0",
+        "table_rva": "0xcb4e840",
+        "bytes": "e031b54c010000001900000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::GameTerminating",
+        "value": 22,
+        "name_rva": "0xcb53208",
+        "table_rva": "0xcb4e810",
+        "bytes": "0832b54c010000001600000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::WaitingIGCEndingStart",
+        "value": 23,
+        "name_rva": "0xcb53230",
+        "table_rva": "0xcb4e820",
+        "bytes": "3032b54c010000001700000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::CinemaOpening",
+        "value": 12,
+        "name_rva": "0xcb53260",
+        "table_rva": "0xcb4e770",
+        "bytes": "6032b54c010000000c00000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::MissionTitle",
+        "value": 13,
+        "name_rva": "0xcb53288",
+        "table_rva": "0xcb4e780",
+        "bytes": "8832b54c010000000d00000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::CinemaPreOpening",
+        "value": 10,
+        "name_rva": "0xcb532b0",
+        "table_rva": "0xcb4e750",
+        "bytes": "b032b54c010000000a00000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::PreMissionTitle",
+        "value": 11,
+        "name_rva": "0xcb532d8",
+        "table_rva": "0xcb4e760",
+        "bytes": "d832b54c010000000b00000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::IGCOpening",
+        "value": 16,
+        "name_rva": "0xcb53300",
+        "table_rva": "0xcb4e7b0",
+        "bytes": "0033b54c010000001000000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::WaitingIGCOpeningEnd",
+        "value": 17,
+        "name_rva": "0xcb53320",
+        "table_rva": "0xcb4e7c0",
+        "bytes": "2033b54c010000001100000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::PreWaitingIGCOpeningStart",
+        "value": 14,
+        "name_rva": "0xcb53350",
+        "table_rva": "0xcb4e790",
+        "bytes": "5033b54c010000000e00000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::WaitingIGCOpeningStart",
+        "value": 15,
+        "name_rva": "0xcb53380",
+        "table_rva": "0xcb4e7a0",
+        "bytes": "8033b54c010000000f00000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::WaitingLoadMap",
+        "value": 4,
+        "name_rva": "0xcb533b0",
+        "table_rva": "0xcb4e6f0",
+        "bytes": "b033b54c010000000400000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::WaitingTimeSync",
+        "value": 5,
+        "name_rva": "0xcb533d8",
+        "table_rva": "0xcb4e700",
+        "bytes": "d833b54c010000000500000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::LoadPlayerPlane",
+        "value": 2,
+        "name_rva": "0xcb53400",
+        "table_rva": "0xcb4e6d0",
+        "bytes": "0034b54c010000000200000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::SpawnPlayerPlane",
+        "value": 3,
+        "name_rva": "0xcb53428",
+        "table_rva": "0xcb4e6e0",
+        "bytes": "2834b54c010000000300000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::WaitingSpawnedAIs",
+        "value": 8,
+        "name_rva": "0xcb53450",
+        "table_rva": "0xcb4e730",
+        "bytes": "5034b54c010000000800000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::TeleportPlayers",
+        "value": 9,
+        "name_rva": "0xcb53478",
+        "table_rva": "0xcb4e740",
+        "bytes": "7834b54c010000000900000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::WaitingSpawnedPlayers",
+        "value": 6,
+        "name_rva": "0xcb534a0",
+        "table_rva": "0xcb4e710",
+        "bytes": "a034b54c010000000600000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::SpawnAIs",
+        "value": 7,
+        "name_rva": "0xcb534d0",
+        "table_rva": "0xcb4e720",
+        "bytes": "d034b54c010000000700000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::None",
+        "value": 0,
+        "name_rva": "0xcb53580",
+        "table_rva": "0xcb4e6b0",
+        "bytes": "8035b54c010000000000000000000000"
+      },
+      {
+        "name": "ELiveGameModeState::WaitingNetworkInitialize",
+        "value": 1,
+        "name_rva": "0xcb535a0",
+        "table_rva": "0xcb4e6c0",
+        "bytes": "a035b54c010000000100000000000000"
+      }
+    ],
+    "dispatch": [
+      {
+        "state": 2,
+        "name": "LoadPlayerPlane",
+        "vtable_byte_offset": "0xc60",
+        "handler_rva": "0x71da360",
+        "note": "static dispatch branch verified; runtime reachability not tested"
+      },
+      {
+        "state": 3,
+        "name": "SpawnPlayerPlane",
+        "vtable_byte_offset": "0xc70",
+        "handler_rva": "0x78e48e0",
+        "note": "static dispatch branch verified; runtime reachability not tested"
+      },
+      {
+        "state": 7,
+        "name": "SpawnAIs",
+        "vtable_byte_offset": "0xc80",
+        "handler_rva": "0x78e4c80",
+        "note": "static dispatch branch verified; runtime reachability not tested"
+      },
+      {
+        "state": 9,
+        "name": "TeleportPlayers",
+        "vtable_byte_offset": "0xc90",
+        "handler_rva": "0x16b0eb0",
+        "note": "no-op in this vtable"
+      },
+      {
+        "state": 10,
+        "name": "CinemaPreOpening",
+        "vtable_byte_offset": "0xca0",
+        "handler_rva": "0x78e52f0",
+        "note": "static dispatch branch verified; runtime reachability not tested"
+      },
+      {
+        "state": 12,
+        "name": "CinemaOpening",
+        "vtable_byte_offset": "0xca0",
+        "handler_rva": "0x78e52f0",
+        "note": "static dispatch branch verified; runtime reachability not tested"
+      },
+      {
+        "state": 18,
+        "name": "CallStartMatch",
+        "vtable_byte_offset": "0xd08",
+        "handler_rva": "0x78e6dd0",
+        "note": "static dispatch branch verified; runtime reachability not tested"
+      },
+      {
+        "state": 20,
+        "name": "WaitGameStart",
+        "vtable_byte_offset": "0xd40",
+        "handler_rva": "0x78e74b0",
+        "note": "static dispatch branch verified; runtime reachability not tested"
+      },
+      {
+        "state": 21,
+        "name": "GamePlaying",
+        "vtable_byte_offset": "0xd50",
+        "handler_rva": "0x78e7710",
+        "note": "static dispatch branch verified; runtime reachability not tested"
+      }
+    ],
+    "linear_runtime_sequence_verified": false
+  },
+  "network": {
+    "confirmed_classes": [
+      "StrixNetworkFacade",
+      "LiveNetworkManager",
+      "LiveNetworkPlayerPlane",
+      "LiveNetworkGameObject",
+      "LiveNetworkBaseObject"
+    ],
+    "handler_registration_rva": "0x74d74f0",
+    "messages": [
+      {
+        "name": "FLiveMessageSelectedTarget",
+        "namespace": "jp.co.soft_gear.strix.server.ext.message.game",
+        "type_getter_rva": "0x52c3420",
+        "type_descriptor_initialize_rva": "0x530cce0",
+        "type_name_constructor_rva": "0x526f900",
+        "plane_callback_rva": "0x74dab30"
+      },
+      {
+        "name": "FLiveMessageLockedTarget",
+        "namespace": "jp.co.soft_gear.strix.server.ext.message.game",
+        "type_getter_rva": "0x52c3340",
+        "type_descriptor_initialize_rva": "0x530c450",
+        "type_name_constructor_rva": "0x526ff00",
+        "plane_callback_rva": "0x74dacd0"
+      }
+    ],
+    "UE_NetDriver_campaign_path_verified": false,
+    "pose_replication_packet_format_verified": false,
+    "delivery_or_shared_flight_verified": false
+  },
+  "function_evidence": {
+    "0x4460490": [
+      "responses/003-createplayer_exec.json",
+      "responses/130-createplayer_bytes.json"
+    ],
+    "0x447e020": [
+      "responses/004-createplayer_impl.json"
+    ],
+    "0x444bfd0": [
+      "responses/021-create_local_player.json",
+      "responses/131-create_local_player_bytes.json"
+    ],
+    "0x4352da0": [
+      "responses/005-possess_exec.json"
+    ],
+    "0x4354890": [
+      "responses/006-possess_impl.json"
+    ],
+    "0x78e4440": [
+      "responses/053-campaign-vslot-328.json",
+      "responses/113-gamemode_state_setter.json",
+      "responses/132-campaign_dispatch_bytes.json"
+    ],
+    "0x71da360": [
+      "responses/207-recheck-117-campaign-load_player_plane.json"
+    ],
+    "0x78e48e0": [
+      "responses/118-campaign-spawn_player_plane.json"
+    ],
+    "0x78e4c80": [
+      "responses/208-recheck-119-campaign-spawn_ai.json"
+    ],
+    "0x78e52f0": [
+      "responses/121-campaign-opening_cinema.json"
+    ],
+    "0x78e6dd0": [
+      "responses/123-campaign-start_match_candidate.json"
+    ],
+    "0x78e74b0": [
+      "responses/135-campaign-wait_game_start.json"
+    ],
+    "0x78e7710": [
+      "responses/136-campaign-game_playing.json"
+    ],
+    "0x74d74f0": [
+      "responses/094-039-network_player_vtable-slot87.json",
+      "responses/133-network_callbacks_bytes.json"
+    ],
+    "0x74dab30": [
+      "responses/103-network_getter_callback.json"
+    ],
+    "0x74dacd0": [
+      "responses/104-network_position_callback.json"
+    ],
+    "0x74cbc00": [
+      "responses/015-network_join_room.json",
+      "responses/134-room_join_bytes.json"
+    ],
+    "0x520b990": [
+      "responses/019-strix_class.json"
+    ]
+  },
+  "mcp_memory_file_crosschecks": 20,
+  "original_unchanged": true,
+  "copy_unchanged": true,
+  "native_signatures_or_callable_ABI_verified": false,
+  "limitations": [
+    "Focused analysis; most functions are loader-created placeholders without global analysis",
+    "Indirect virtual calls and thunk pseudocode do not establish runtime calling contracts",
+    "Enum numbers do not prove a linear runtime progression",
+    "No UE4SS process, protected online session, multiplayer connection, or game launch",
+    "Native Codex MCP connection cached a project-lock failure during parallel attachment; research uses recorded real stdio MCP sessions and releases them on completion"
+  ]
+}

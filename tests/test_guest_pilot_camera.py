@@ -71,6 +71,14 @@ class CameraTests(unittest.TestCase):
   self.run_lua("S=module.new(view,H.api);S.attach(H.pc,function()return H.pose end,{preview=true});local external=obj();H.pc.target=external;S.stop('changed');assert(H.pc.target==external and H.pc.bAutoManageActiveCameraTarget and not H.pc.bShouldPerformFullTickWhenPaused)")
  def test_camera_cleanup_restores_flags_after_world_travel(self):
   self.run_lua("S=module.new(view,H.api);S.attach(H.pc,function()return H.pose end,{preview=true});H.world=obj();S.stop('travel');assert(H.pc.bAutoManageActiveCameraTarget and not H.pc.bShouldPerformFullTickWhenPaused and H.destroyed==1)")
+ def test_restore_noop_blocks_camera_destroy(self):
+  self.run_lua("S=module.new(view,H.api);S.attach(H.pc,function()return H.pose end,{preview=true});H.pc.SetViewTargetWithBlend=function()end;assert(not pcall(S.stop,'test'));assert(not S.active and not S.cleanup_requested and H.destroyed==0 and S.camera==H.last)")
+ def test_missing_restore_target_blocks_camera_destroy(self):
+  self.run_lua("S=module.new(view,H.api);S.attach(H.pc,function()return H.pose end,{preview=true});H.pawn.valid=false;assert(not pcall(S.stop,'test'));assert(H.destroyed==0 and not S.cleanup_requested)")
+ def test_camera_stop_repeat_does_not_destroy_twice(self):
+  self.run_lua("S=module.new(view,H.api);S.attach(H.pc,function()return H.pose end,{preview=true});S.stop('first');S.stop('repeat');assert(H.destroyed==1 and H.cancelled==1 and S.cleanup_requested and H.pc.target==H.pawn)")
+ def test_successful_destroy_request_is_not_retirement(self):
+  self.run_lua("S=module.new(view,H.api);S.attach(H.pc,function()return H.pose end,{preview=true});H.last.K2_DestroyActor=function()H.destroyed=H.destroyed+1 end;S.stop('test');assert(S.cleanup_requested and H.last.valid and H.pc.target==H.pawn and H.destroyed==1)")
  def test_live_observer_tracks_received_pose_and_returns_without_pausing(self):
   self.run_lua("H.paused=false;S=module.new(view,H.api);S.attach(H.pc,function()return H.pose end,{observer=true,duration=5});H.pose.position[1]=1000;H.now=4;H.callback();assert(S.active and H.last.position.X==-3200 and H.pc.Pawn==H.pawn);H.now=5;H.callback();assert(not S.active and S.reason=='observer_complete'and H.pc.target==H.pawn and not H.paused and H.destroyed==1)")
  def test_live_observer_requires_a_bounded_explicit_duration(self):

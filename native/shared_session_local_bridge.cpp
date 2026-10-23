@@ -1,4 +1,8 @@
 #include "shared_session_loopback.h"
+#ifdef AC8_SESSION_POLICY_R29
+#include "session_policy.h"
+static ac8session::Watchdog watchdog;
+#endif
 #include <atomic>
 #include <cstdio>
 #include <share.h>
@@ -33,6 +37,12 @@ static void status(const Loopback&link,const char*phase){
 #ifdef AC8_MISSION_SYNC_R26
  fprintf(f,"mission_sync\t1\nloaded_mask\t%u\nvote_mask\t%u\nscene\t%u\nscene_exit\t%u\ngeneration\t%u\ncommit_mask\t%u\nrelease_at\t%llu\nlocal_tick\t%llu\nscene_return\t%u\n",model.loaded,model.votes,model.scene,model.scene_exit,model.generation,model.committed,model.release_at,GetTickCount64(),model.scene_return);
  fprintf(f,"hangar_scene_supported\t1\n");
+#ifdef AC8_CINEMA_SYNC_R28
+ fprintf(f,"cinema_prepared\t%u\ncinema_finished\t%u\ncinema_state\t%u\ncinema_committed\t%u\ncinema_at\t%llu\n",model.cinema_prepared,model.cinema_finished,model.cinema_state,model.cinema_committed,model.cinema_at);
+#endif
+#ifdef AC8_SESSION_POLICY_R29
+ fprintf(f,"stop_reason\t%u\nrestart_id\t%u\nrestart_ack\t%u\nwatchdog_remaining\t%llu\nprotocol\t%u\n",unsigned(model.stop_reason),model.restart_id,model.restart_ack,watchdog.remaining(GetTickCount64()),protocol_version);
+#endif
 #endif
  fclose(f);MoveFileExW(temp,path,MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH);
 }
@@ -50,6 +60,12 @@ static bool request(Loopback&link){
  bool allowed=op==Op::ready||op==Op::select_mission||op==Op::loadout||(host&&adapter_enabled&&adapter_op);
 #ifdef AC8_MISSION_SYNC_R26
  allowed=allowed||op==Op::loaded||op==Op::vote_skip||op==Op::commit||(host&&(op==Op::begin_intro||op==Op::scene_ended||op==Op::scene_segment||op==Op::abort_session||op==Op::begin_flight_scene));
+#ifdef AC8_CINEMA_SYNC_R28
+ allowed=allowed||op==Op::cinema_prepared||op==Op::cinema_finished||op==Op::cinema_commit;
+#endif
+#ifdef AC8_SESSION_POLICY_R29
+ allowed=allowed||op==Op::cancel||op==Op::fault||op==Op::restart_ack||(host&&(op==Op::restart||op==Op::mission_result||op==Op::invalidate_ready));
+#endif
 #endif
  if(!allowed){acknowledged=values[0];reject=static_cast<unsigned>(Reject::stage);
 #ifdef AC8_MISSION_SYNC_R26
@@ -82,6 +98,12 @@ static DWORD WINAPI run(void*){
     bool allowed=f.op==Op::ready||f.op==Op::loadout;
 #ifdef AC8_MISSION_SYNC_R26
     allowed=allowed||f.op==Op::loaded||f.op==Op::vote_skip||f.op==Op::commit;
+#ifdef AC8_CINEMA_SYNC_R28
+    allowed=allowed||f.op==Op::cinema_prepared||f.op==Op::cinema_finished||f.op==Op::cinema_commit;
+#endif
+#ifdef AC8_SESSION_POLICY_R29
+    allowed=allowed||f.op==Op::cancel||f.op==Op::fault||f.op==Op::restart_ack;
+#endif
 #endif
     if(f.kind!=Kind::intent||!allowed)return false;
     guest_reject=static_cast<unsigned>(model.apply(1,f.op,f.args,f.epoch,f.revision));guest_ack=f.sequence;
@@ -107,6 +129,12 @@ static DWORD WINAPI run(void*){
   request(link);uint64_t now=GetTickCount64();
 #ifdef AC8_MISSION_SYNC_R26
   if(host&&link.connected&&model.tick(now))trace("barrier_tick",0,Op::loaded,0);
+#ifdef AC8_CINEMA_SYNC_R28
+  if(host&&link.connected&&model.cinema_tick(now))trace("cinema_tick",0,Op::cinema_prepared,0);
+#endif
+#ifdef AC8_SESSION_POLICY_R29
+  if(host&&watchdog.tick(model,now))trace("load_timeout",0,Op::cancel,0);
+#endif
 #endif
   if(host&&link.connected&&(published!=model.changes||published_ack!=guest_ack||now-publish_at>=300)){
    Frame frame=snapshot(model);frame.args[36]=static_cast<uint32_t>(guest_ack);frame.args[37]=static_cast<uint32_t>(guest_ack>>32);frame.args[38]=guest_reject;
@@ -129,6 +157,9 @@ static bool configure(){
  auto narrow=[](const wchar_t*s){std::string value;for(;*s;++s){if(*s>127)return std::string{};value+=static_cast<char>(*s);}return value;};
  uint64_t p=0;if(!decimal(narrow(port_text),p,65535)||!decimal(narrow(token_text),token,0x1fffffffffffffull)||!token||(!host&&!p))return false;port=static_cast<uint16_t>(p);
  model={};acknowledged=reject=0;guest_ack=guest_reject=0;pending_sequence=pending_request=confirmed=0;snapshot_received=false;stop_requested=false;
+#ifdef AC8_SESSION_POLICY_R29
+ watchdog={};
+#endif
  wchar_t path[32768]{};if(swprintf_s(path,L"%ls\\shared-session-command.tsv",output)<0)return false;DeleteFileW(path);
  worker=CreateThread(nullptr,0,run,nullptr,0,nullptr);return worker!=nullptr;
 }

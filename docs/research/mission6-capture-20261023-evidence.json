@@ -1,0 +1,202 @@
+{
+  "date": "2026-10-23",
+  "private_evidence": "C:\\Users\\Administrator\\.codex\\visualizations\\2026\\10\\20\\01a1584d-af0f-7d72-8611-ec65cbfc74e4\\ac8-research\\mission6-capture-20261023",
+  "manifest_sha256": "264b6667d54fa59790a6230e230b855c35b7a78056a0ecd98a58a81a2375c152",
+  "files": 51,
+  "module_sha256": "51510e2a520565dbe81fb0d569e95cd4393077acaaa859371489b80b8128829f",
+  "coordinates": "Ghidra VA; image base 0x140000000; no runtime address reuse",
+  "scope": {
+    "game_started": false,
+    "originals_written": false,
+    "network_session": false,
+    "runtime_verified": false
+  },
+  "validation": {
+    "complete_ranges": 26,
+    "edges": [
+      {
+        "source_rva": "0x74916a0",
+        "target_rva": "0x74919f0",
+        "op": "jmp",
+        "instruction": "0x1474916e3"
+      },
+      {
+        "source_rva": "0x74916a0",
+        "target_rva": "0x7492120",
+        "op": "call",
+        "instruction": "0x147491930"
+      },
+      {
+        "source_rva": "0x74919f0",
+        "target_rva": "0x78e9b40",
+        "op": "call",
+        "instruction": "0x147491a5c"
+      },
+      {
+        "source_rva": "0x74919f0",
+        "target_rva": "0x746d7e0",
+        "op": "call",
+        "instruction": "0x147491b13"
+      },
+      {
+        "source_rva": "0x74919f0",
+        "target_rva": "0x74721c0",
+        "op": "call",
+        "instruction": "0x147491b3d"
+      },
+      {
+        "source_rva": "0x74919f0",
+        "target_rva": "0x74937e0",
+        "op": "call",
+        "instruction": "0x147492041"
+      },
+      {
+        "source_rva": "0x746d7e0",
+        "target_rva": "0x746b9c0",
+        "op": "call",
+        "instruction": "0x14746d9a3"
+      },
+      {
+        "source_rva": "0x746b9c0",
+        "target_rva": "0x746bdf0",
+        "op": "jmp",
+        "instruction": "0x14746bde9"
+      },
+      {
+        "source_rva": "0x74721c0",
+        "target_rva": "0x746dbf0",
+        "op": "call",
+        "instruction": "0x1474722bd"
+      },
+      {
+        "source_rva": "0x7492250",
+        "target_rva": "0x7492120",
+        "op": "jmp",
+        "instruction": "0x14749271a"
+      },
+      {
+        "source_rva": "0x7493710",
+        "target_rva": "0x78ea200",
+        "op": "call",
+        "instruction": "0x14749379b"
+      },
+      {
+        "source_rva": "0x7493710",
+        "target_rva": "0x7492120",
+        "op": "jmp",
+        "instruction": "0x1474937ce"
+      },
+      {
+        "source_rva": "0x78e3fe0",
+        "target_rva": "0x74916a0",
+        "op": "call",
+        "instruction": "0x1478e4016"
+      },
+      {
+        "source_rva": "0x74aff90",
+        "target_rva": "0x7015c50",
+        "op": "call",
+        "instruction": "0x1474affb3"
+      },
+      {
+        "source_rva": "0x711e780",
+        "target_rva": "0x6ddd790",
+        "op": "call",
+        "instruction": "0x14711e791"
+      },
+      {
+        "source_rva": "0x78e6dd0",
+        "target_rva": "0x7490170",
+        "op": "jmp",
+        "instruction": "0x1478e6e1f"
+      }
+    ],
+    "names": {
+      "streaming-class-name.json": "LiveStreamingLoader",
+      "cinematics-class-name.json": "LiveCinematicsWorldSubsystem"
+    },
+    "excluded": "1474b2b70 has no PE range; only 8-byte mov/jmp thunk decoded. Ghidra folds tails; source boundaries taken from PE.",
+    "runtime_verified": false
+  },
+  "tests": {
+    "collector_and_summary": 12,
+    "launcher_rejections": 4,
+    "prepared_profile_preflight": "PASS"
+  },
+  "hypotheses": [
+    {
+      "id": "M6CAP-01",
+      "status": "observer prepared and autonomous tests pass; runtime pending"
+    },
+    {
+      "id": "M6CAP-02",
+      "status": "static loader/reset/callback edges confirmed; full mission-specific chronology pending"
+    },
+    {
+      "id": "M6CAP-03",
+      "status": "Mission007 configured data still pending"
+    }
+  ],
+  "sources": [
+    {
+      "path": "probe/Mission6Capture/Scripts/capture.lua",
+      "sha256": "6bccca253f2e7d7fc565b59fce7aead45ae2fb003d4fa47fd4f2b2a277e2867a"
+    },
+    {
+      "path": "probe/Mission6Capture/Scripts/main.lua",
+      "sha256": "e22b0e2e7da9a52ba3240682332085c83278c6ef3c747f68e8fe001cc71e8c17"
+    },
+    {
+      "path": "scripts/Prepare-Mission6Capture.ps1",
+      "sha256": "066bdca5d411559a5d2e30113a651b29c50325e8d29571c9e928bcf32ea2c92a"
+    },
+    {
+      "path": "scripts/Start-Mission6Capture.ps1",
+      "sha256": "29ec831d6c1d7b6230dba63bf27b7d17079cbdd58c225c60073ab6babc5917f2"
+    },
+    {
+      "path": "scripts/Test-Mission6Capture.ps1",
+      "sha256": "9ae6337c8ac8f9092676d0e6cb31397098b70d54e8ea2d12c98c83c2e225aeab"
+    },
+    {
+      "path": "scripts/summarize_mission6_capture.py",
+      "sha256": "bd5759cdaab5307d6cf98b51c3ee6de99fd7a7880b406d660ff8d56de2fea9ef"
+    },
+    {
+      "path": "tests/test_mission6_capture.py",
+      "sha256": "26945753d954cdf95d3c26e622f9b8eb4a411a428b5393c02cc8cb925c72abcf"
+    },
+    {
+      "path": "tests/test_mission6_capture_summary.py",
+      "sha256": "62d8d4acbc789777f244e61628e9b18775185bfe9ef0440f01943d5f528efd1c"
+    },
+    {
+      "path": "profiles/ac8-mission6-capture/capture-profile.json",
+      "sha256": "8aa3da811742bd69695d306407bd456b49701d74d4429c7ad6c08ad1c36708d2"
+    },
+    {
+      "path": "packages/ue4ss-3.0.1-1181-g83330635/ue4ss/UE4SS.dll",
+      "sha256": "ce5e3c46a920cc00b2817ac61e438c9162830290379d0b5b9c4dfc2b29459290"
+    },
+    {
+      "path": ".tools/research-sources/RE-UE4SS/UE4SS/src/LuaType/LuaUDataTable.cpp",
+      "sha256": "23023e939267d56103c3aedb09eace9ebf3442b75f487a4d036695fb4f0e5129"
+    },
+    {
+      "path": ".tools/research-sources/RE-UE4SS/UE4SS/src/LuaType/LuaTMap.cpp",
+      "sha256": "807d7f52c0d109f873070007f846d343db4dfbce7329c18c868b2b751fbbb422"
+    },
+    {
+      "path": ".tools/research-sources/RE-UE4SS/UE4SS/src/LuaType/LuaUScriptStruct.cpp",
+      "sha256": "90ff5cc7eee761d8f14d0f9a9041d52c6cecca0801748dd8b4aafa3d256b5fbb"
+    },
+    {
+      "path": ".tools/research-sources/RE-UE4SS/UE4SS/src/LuaType/LuaTArray.cpp",
+      "sha256": "99ab889c0718725af9b0cf7b5facdc437798bae46187a34bfdc94dff6a33175d"
+    },
+    {
+      "path": ".tools/research-sources/RE-UE4SS/assets/Mods/shared/Types.lua",
+      "sha256": "1c36b37a787894ead32887aa4ac09601da5c569295c898755b1c0f5f1060ccb3"
+    }
+  ]
+}

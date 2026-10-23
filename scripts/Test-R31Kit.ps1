@@ -17,6 +17,28 @@ foreach($dir in @($sourceBin,$sourceSteam,(Join-Path $source 'Game/Content/Paks'
 $manifestPath=Join-Path $fixture 'lobby-manifest.json';$m=Get-Content -LiteralPath $manifestPath -Raw|ConvertFrom-Json
 $m.game_sha256=(Get-FileHash (Join-Path $sourceBin 'AceCombat8.exe')).Hash;$m.steam_sha256=(Get-FileHash (Join-Path $sourceSteam 'steam_api64.dll')).Hash
 $m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8
+if($m.kit_update -eq 'local-stage1'){
+ if($m.local_model_patch -eq 'cleanup-1'){
+  $m.owner_tick_cleanup=0;$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8;Reject-Kit {Test-CoopKit $fixture};$m.owner_tick_cleanup=1
+  $m.owner_cleanup_gc_gate=0;$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8;Reject-Kit {Test-CoopKit $fixture};$m.owner_cleanup_gc_gate=1
+ }
+ if($m.local_model_patch -in @('lifetime-1','cleanup-1')){
+  $m.owner_template_retention=0;$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8;Reject-Kit {Test-CoopKit $fixture};$m.owner_template_retention=1
+  $m.owner_dependency_identity=0;$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8;Reject-Kit {Test-CoopKit $fixture};$m.owner_dependency_identity=1
+ }
+ if($m.local_model_patch -in @('start-1','cdo-1','lifetime-1','cleanup-1')){
+  $m.owner_camera_receipt=0;$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8;Reject-Kit {Test-CoopKit $fixture};$m.owner_camera_receipt=1
+ }
+ if($m.local_model_patch -in @('cdo-1','lifetime-1','cleanup-1')){
+  $m.owner_template_identity=0;$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8;Reject-Kit {Test-CoopKit $fixture};$m.owner_template_identity=1
+  $m.helper_preparation_timeout_ms=15000;$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8;Reject-Kit {Test-CoopKit $fixture};$m.helper_preparation_timeout_ms=60000
+ }
+ $m.local_model_stage=0;$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8;Reject-Kit {Test-CoopKit $fixture};$m.local_model_stage=1
+ $m.owner_sound_readiness=0;$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8;Reject-Kit {Test-CoopKit $fixture};$m.owner_sound_readiness=1
+ $allFiles=$m.files;$m.files=@($m.files|Where-Object {$_.path -ne 'LOCAL-MODEL-TEST-RU.md'});$m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8;Reject-Kit {Test-CoopKit $fixture};$m.files=$allFiles
+ $m|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $manifestPath -Encoding UTF8
+ Reject-Kit {& (Join-Path $fixture 'Start-SteamLobby.ps1') -ValidateOnly -Role host -LocalModelTest}
+}
 $before=@(Get-ChildItem -LiteralPath $source -Recurse -File|ForEach-Object {(Get-FileHash $_.FullName).Hash}) -join '|'
 & (Join-Path $fixture 'Prepare-CoopLab.ps1') -SourceGameDirectory $source -StorageMode Full|Out-Null
 $bin=Test-CoopLab -Root $fixture -Manifest $m

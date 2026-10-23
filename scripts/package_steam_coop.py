@@ -8,10 +8,12 @@ LUA=('steam_lobby_main','steam_lobby_services','steam_coop_role','steam_coop_pil
  'guest_slot_resolver','guest_player_asset','guest_role_adapter','guest_role_runtime','guest_role_marker','guest_pilot_view','guest_pilot_camera',
  'scene_codec','scene_client','scene_host','scene_visual_host','scene_engine','scene_clock','scene_transform','scene_visibility')
 def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest().upper()
-def prepare(revision='r27'):
+def prepare(revision='r27',local_stage1=False):
  assert revision in ('r27','r28','r29','r29-debug1','r29-debug2','r31')
+ assert not local_stage1 or revision=='r31'
  owner=revision=='r31';automatic=revision in ('r29-debug2','r31');diagnostic=revision in ('r29-debug1','r29-debug2','r31');native_revision='r29'if diagnostic and not owner else revision
  cinema=revision!='r27';policy=revision in ('r29','r29-debug1','r29-debug2','r31');PROFILE=ROOT/('profiles/ac8-steam-coop-'+revision)
+ if local_stage1:PROFILE=ROOT/'profiles/ac8-steam-coop-r31-local-stage1'
  if(PROFILE/'evidence').exists():raise ValueError('Do not replace a used profile')
  base=ROOT/'profiles/ac8-build25201480-r8';accepted=json.loads((base/'trial-manifest.json').read_text(encoding='utf-8-sig'));pinned={v['path'].replace('\\','/'):v['sha256']for v in accepted['files']}
  selected=('runtime/LICENSE','runtime/UE4SS.dll','runtime/UE4SS-settings.ini','runtime/Mods/mods.json','runtime/Mods/mods.txt','runtime/Mods/shared/UEHelpers/UEHelpers.lua','Collect-CoopLogs.ps1')
@@ -47,6 +49,9 @@ def prepare(revision='r27'):
   sources['CREDITS.md']=ROOT/'coop/CREDITS-R31.md'
  sources['Start-SteamLobby.ps1']=ROOT/'scripts/Start-SteamLobby.ps1'
  sources['README-RU.md']=ROOT/('coop/README-STEAM-COOP-'+revision.upper()+'-RU.md')
+ if local_stage1:
+  sources['README-RU.md']=ROOT/'coop/LOCAL-MODEL-TEST-RU.md'
+  sources['LOCAL-MODEL-TEST-RU.md']=ROOT/'coop/LOCAL-MODEL-TEST-RU.md'
  sources['loader/dwmapi.dll']=ROOT/'packages/ue4ss-3.0.1-1181-g83330635/dwmapi.dll'
  proxy_hash='93B9431A5A4F32C675D269C5DA1C9B3EC6F88552EC20C282AB435F411E9271FB';assert digest(sources['loader/dwmapi.dll'])==proxy_hash
  files=[]
@@ -72,8 +77,11 @@ def prepare(revision='r27'):
   lab_storage_policy=3 if owner else 0,lab_storage_default='compact'if owner else None,archive_layout='paks-junction-v1'if owner else None,shared_archives_read_locked=owner,
   scope=('Steam room + local stock F-14D simulation + owner-state transport + isolated client terrain/replicas + local cinematic barriers'if owner else'Steam room + mission barriers + input/pose transport + paused replica terrain loader candidate'+(' + local cinematic player candidates and per-clip two-peer completion barriers'if cinema else''))+'; not game validated',
   files=[dict(path=p.relative_to(PROFILE).as_posix(),sha256=digest(p))for p in sorted(files)])
+ if local_stage1:
+  manifest.update(kit_update='local-stage1',local_model_stage=1,local_model_patch='cleanup-1',owner_tick_cleanup=1,owner_cleanup_gc_gate=1,owner_template_retention=1,owner_dependency_identity=1,owner_template_identity=1,helper_preparation_timeout_ms=60000,owner_camera_receipt=1,owner_sound_readiness=1,scope='One-game local native aircraft experiment with loopback helper; offline contract tests passed; game physics, controls, camera and cleanup NOT runtime accepted')
  path=PROFILE/'lobby-manifest.json';path.write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8');files.append(path)
  archive=ROOT/('dist/ac8-steam-coop-'+revision+'-development.zip')
+ if local_stage1:archive=ROOT/'dist/ac8-steam-coop-r31-local-stage1.zip'
  archive.parent.mkdir(parents=True,exist_ok=True)
  with zipfile.ZipFile(archive,'w',zipfile.ZIP_DEFLATED)as z:
   for p in sorted(files):z.write(p,PROFILE.name+'/'+p.relative_to(PROFILE).as_posix())
@@ -81,4 +89,4 @@ def prepare(revision='r27'):
  print(json.dumps(dict(profile=str(PROFILE),archive=str(archive),sha256=digest(archive),files=len(files),game_launched=False,first_shared_flight_ready=False),ensure_ascii=False))
  return manifest
 if __name__=='__main__':
- parser=argparse.ArgumentParser();parser.add_argument('--revision',choices=('r27','r28','r29','r29-debug1','r29-debug2','r31'),default='r27');prepare(parser.parse_args().revision)
+ parser=argparse.ArgumentParser();parser.add_argument('--revision',choices=('r27','r28','r29','r29-debug1','r29-debug2','r31'),default='r27');parser.add_argument('--local-stage1',action='store_true');args=parser.parse_args();prepare(args.revision,args.local_stage1)

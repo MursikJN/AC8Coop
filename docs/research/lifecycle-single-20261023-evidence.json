@@ -1,0 +1,412 @@
+{
+  "format": "ac8-lifecycle-single-evidence-v1",
+  "date": "2026-10-23",
+  "private_root": "ac8-research/lifecycle-lab",
+  "sessions": [
+    {
+      "format": "ac8-lifecycle-pair-v1",
+      "started_utc": "2026-10-23T06:28:31.1904036Z",
+      "host_pid": 27712,
+      "guest_pid": 11200,
+      "host_exit": 0,
+      "guest_exit": 0,
+      "proxy_removed": true,
+      "originals_written": false,
+      "transport": "loopback",
+      "game_adapter": "read-only-observation",
+      "error": null,
+      "guest_kind": "headless_native_bridge",
+      "outcome": "both_processes_exited_zero",
+      "ended_utc": "2026-10-23T06:35:50.1422358Z"
+    },
+    {
+      "format": "ac8-lifecycle-pair-v1",
+      "started_utc": "2026-10-23T06:36:22.8188415Z",
+      "host_pid": 28420,
+      "guest_pid": 21804,
+      "host_exit": 0,
+      "guest_exit": 0,
+      "proxy_removed": true,
+      "originals_written": false,
+      "transport": "loopback",
+      "game_adapter": "read-only-observation",
+      "error": null,
+      "guest_kind": "headless_native_bridge",
+      "outcome": "both_processes_exited_zero",
+      "ended_utc": "2026-10-23T06:52:15.5910558Z"
+    }
+  ],
+  "profile_files_verified": 5,
+  "runtime_instances_verified": 2,
+  "lua_mock_tests": 4,
+  "native_trial": {
+    "result": "PASS",
+    "protocol": 8,
+    "transport": "native TCP loopback",
+    "checks": [
+      "mission_change_resets_ready_and_rejects_stale",
+      "delayed_intro_and_expired_commit",
+      "natural_finish_waits_peer_two_votes_and_old_scene",
+      "hangar_new_ready_loadout_reset_single_sortie_delayed_load",
+      "flight_disconnect_stops",
+      "lobby_safe_disconnect_or_cancel",
+      "loading_safe_disconnect_or_cancel",
+      "cancel_safe_disconnect_or_cancel"
+    ],
+    "gameplay_tested": false
+  },
+  "live_steps": [
+    {
+      "at": 1792737554.0693302,
+      "event": "step_started",
+      "data": "lobby"
+    },
+    {
+      "at": 1792737555.411471,
+      "event": "step_passed",
+      "data": "lobby"
+    },
+    {
+      "at": 1792737622.132977,
+      "event": "step_started",
+      "data": "begin"
+    },
+    {
+      "at": 1792737622.1621783,
+      "event": "step_passed",
+      "data": "begin"
+    },
+    {
+      "at": 1792737654.6920545,
+      "event": "step_started",
+      "data": "intro"
+    },
+    {
+      "at": 1792737669.9684787,
+      "event": "step_passed",
+      "data": "intro"
+    },
+    {
+      "at": 1792737697.8470335,
+      "event": "step_started",
+      "data": "briefing"
+    },
+    {
+      "at": 1792737706.2723992,
+      "event": "step_passed",
+      "data": "briefing"
+    },
+    {
+      "at": 1792737994.4979012,
+      "event": "step_started",
+      "data": "hangar"
+    },
+    {
+      "at": 1792738051.0920572,
+      "event": "step_started",
+      "data": "hangar_ready_retry"
+    },
+    {
+      "at": 1792738052.127656,
+      "event": "step_passed",
+      "data": "hangar_ready_retry"
+    },
+    {
+      "at": 1792738169.2499595,
+      "event": "step_started",
+      "data": "flight"
+    },
+    {
+      "at": 1792738178.9050412,
+      "event": "step_passed",
+      "data": "flight"
+    },
+    {
+      "at": 1792738237.6172287,
+      "event": "step_started",
+      "data": "disconnect"
+    },
+    {
+      "at": 1792738240.674677,
+      "event": "engine_after_disconnect",
+      "data": {
+        "state": {
+          "active": "1",
+          "briefing": "0",
+          "campaign": "0",
+          "controller": "LivePlayerController /Game/Maps/Ingame/Mission007/PL_Mission007.PL_Mission007:PersistentLevel.LivePlayerController_2147473005",
+          "difficulty": "0",
+          "flight": "1",
+          "hangar_aircraft": "0",
+          "hangar_squad": "0",
+          "hangar_standby": "0",
+          "hangar_top": "0",
+          "igc": "0",
+          "main_menu": "0",
+          "mission_select": "0",
+          "narrative": "0",
+          "paused": "0",
+          "pawn": "BP_PlayerPlane_PP0007_f18c_C /Game/Maps/Ingame/Mission007/PL_Mission007.PL_Mission007:PersistentLevel.BP_PlayerPlane_PP0007_f18c_C_2147454021",
+          "playing_cinema": "0",
+          "role": "host",
+          "utc": "1792738240",
+          "world": "World /Game/Maps/Ingame/Mission007/PL_Mission007.PL_Mission007",
+          "world_time": "32.064194703475",
+          "x": "300398.09719714",
+          "y": "74.000074452621",
+          "z": "599522.38628947"
+        },
+        "elapsed_game_time": 3.300017107278002,
+        "engine_automatically_held": false,
+        "limit": "Read-only lab has no automatic stop adapter; protocol stop is not world pause."
+      }
+    },
+    {
+      "at": 1792738240.6759493,
+      "event": "step_passed",
+      "data": "disconnect"
+    },
+    {
+      "at": 1792738430.176994,
+      "event": "harness_failure_audit",
+      "data": {
+        "step": "hangar",
+        "exception": "AssertionError",
+        "actual_ready_after_publication": "1",
+        "cause": "Guest ack arrived before host status file publication",
+        "fixed_in": "Pair.cmd waits host changes >= guest acknowledged changes",
+        "retry_step": "hangar_ready_retry",
+        "retry_result": "PASS"
+      }
+    },
+    {
+      "at": 1792738430.176994,
+      "event": "result_scope",
+      "data": {
+        "engine_route_observed": true,
+        "automatic_game_transition_adapter_tested": false,
+        "automatic_engine_stop_on_disconnect": false,
+        "guest_has_game_world": false,
+        "initial_sortie_is_refuelling": true,
+        "note": "Earlier disconnect step_passed refers only to protocol assertions; engine_after_disconnect records failed hold."
+      }
+    }
+  ],
+  "engine_route_observed": true,
+  "automatic_game_adapter_tested": false,
+  "guest_engine_present": false,
+  "harness_corrected_during_run": true,
+  "first_pass": "load_timeout; wrong LevelSequence-only readiness assumption and early begin",
+  "files": [
+    {
+      "path": "coop/lifecycle_lab.py",
+      "sha256": "E593F6B3F3617921312055069201337B1489E7684A1EA204688CCBCA73A24BA3"
+    },
+    {
+      "path": "coop/lifecycle_live.py",
+      "sha256": "675A8A3FE64914797A5DBB00D7528E1EB622F9930F209C89F99826355A17EEC7"
+    },
+    {
+      "path": "probe/LifecycleLab/Scripts/main.lua",
+      "sha256": "AD23D4BAC4F5D9CEF142BF05EDFF7830FB91183EBAA5028906B1071BB1E06697"
+    },
+    {
+      "path": "tests/test_lifecycle_observer.py",
+      "sha256": "B72FDE54AA76A036EE2FE7B143A3D7C0E41997ED099E021710BCFB772DB122A5"
+    },
+    {
+      "path": "scripts/Start-LifecyclePair.ps1",
+      "sha256": "5239D666B25D346D14ABE0F16019EA5A7982EBAE4F0273F16EB89FF3008B54A6"
+    },
+    {
+      "path": "docs/research/lifecycle-single-20261023.md",
+      "sha256": "24BF60A801738FA9A490AB730EAE0D9AD6F90898A05E4D22D6CE8C0904E60A2B"
+    },
+    {
+      "path": "build/lifecycle-trial-02/result.json",
+      "sha256": "525B26D4A612A914E3C66EDCFF8553AE6B84078D297B0EE106021A62550E3501"
+    }
+  ],
+  "private_files": [
+    {
+      "session": "pair-20261023-062831",
+      "path": "first-pass-finding.json",
+      "sha256": "FC4E917F2642E9DED5F724AB90E0F9068B93EAF0370EEE97D598DC70A6690351"
+    },
+    {
+      "session": "pair-20261023-062831",
+      "path": "live-checks.jsonl",
+      "sha256": "AF1BDD90BB217499EBA59869464AE5E3B38D954F35CD4C6C03327313F5209A07"
+    },
+    {
+      "session": "pair-20261023-062831",
+      "path": "pair.json",
+      "sha256": "80CB0747060E8041CD204CDA7B76C9ED05EAC874CF89B9DD4344AF55C35643F7"
+    },
+    {
+      "session": "pair-20261023-062831",
+      "path": "profile-manifest.json",
+      "sha256": "5F42E69CD60EE57F8BF05F093B4347D52236E9DD68432EB8D10D2B6AAB1B94BC"
+    },
+    {
+      "session": "pair-20261023-062831",
+      "path": "guest/lab-commands.jsonl",
+      "sha256": "DD1CA53298816FC3FAA3BFDFA3F60A375CE16231CC88BB80D9BB210BBC050497"
+    },
+    {
+      "session": "pair-20261023-062831",
+      "path": "guest/local-transport.log",
+      "sha256": "B8C67E4D594D94755772BF9109A8D8165BAEEC32F3FFB0F5E2FF1DB61FC51364"
+    },
+    {
+      "session": "pair-20261023-062831",
+      "path": "guest/shared-session-command.tsv",
+      "sha256": "52743ADDD986C34BB5AE0D8EA6667852F333212BE635BDB1638204074C9F109E"
+    },
+    {
+      "session": "pair-20261023-062831",
+      "path": "guest/shared-session-status.tsv",
+      "sha256": "0E08FA7C45367173FDE8D5FDA5A35691EBD8E900C11689F560002246854F6F68"
+    },
+    {
+      "session": "pair-20261023-062831",
+      "path": "host/game-observation.tsv",
+      "sha256": "5DCEE1C0E3A1D9247B2B7F89881DB444F342DDCB51EEB2D39DC064E8E19239AC"
+    },
+    {
+      "session": "pair-20261023-062831",
+      "path": "host/game-transitions.tsv",
+      "sha256": "C83E472703928538998333318BBD0502402A1DEBE8152D861940A7A728FB33E2"
+    },
+    {
+      "session": "pair-20261023-062831",
+      "path": "host/lab-commands.jsonl",
+      "sha256": "4B0D04357A8C60CD6DDCE5054801F46B40B26353B655B6431FE36CD3497567A9"
+    },
+    {
+      "session": "pair-20261023-062831",
+      "path": "host/local-transport.log",
+      "sha256": "70A7259E7286E778DD75CB848D29A2E77848977E2CB5ADE41CA878B35E1A9EED"
+    },
+    {
+      "session": "pair-20261023-062831",
+      "path": "host/mission-sync-events.tsv",
+      "sha256": "9AD691B2098EE1A9B116994662660411C453B878024FACFE36E934B604DDBF93"
+    },
+    {
+      "session": "pair-20261023-062831",
+      "path": "host/shared-session-command.tsv",
+      "sha256": "40782424A396C32A653618F8212A4E458FC29A864909D4E2868B15B37AA2BBD3"
+    },
+    {
+      "session": "pair-20261023-062831",
+      "path": "host/shared-session-status.tsv",
+      "sha256": "9318809EE4C6A99D9F506895DF746AEE1F78E8206B179F5B5778DF08374BB563"
+    },
+    {
+      "session": "pair-20261023-062831",
+      "path": "host/widget-details.tsv",
+      "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "after-disconnect.png",
+      "sha256": "196C02ABEA85A94D9DC7002110D288807FD02D076B803847177135A517EF0BC0"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "flight-active.png",
+      "sha256": "80412452871FEB867AF0859FDD036A0E188EB14E0EC454CF65734F246BBD68E8"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "flight-tutorial-held.png",
+      "sha256": "7254BBCFC27F30193D83F0A938989BA597FE67ED3AFB85467BB02CE4DB4C0D0C"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "hangar-ready.png",
+      "sha256": "D1EEE758C76DE7CDB8FD594109CAD09ABB06A179395FCBF6F9C12A74BB6BB1B5"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "hangar-visual-confirmation.json",
+      "sha256": "F8CA9F23E122FB3011483C259E7984AD67A4EB95AFAB898E3D9E3E264725EA1E"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "live-checks.jsonl",
+      "sha256": "839495702D68E406D52262FFA19C2D06E2EE243753EA6781DE7F2EC268C7A5AC"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "pair.json",
+      "sha256": "D0CC424D1D576C52CDF79BCD39AAA93461BE21329F3A830072A217B70E505296"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "profile-manifest.json",
+      "sha256": "5F42E69CD60EE57F8BF05F093B4347D52236E9DD68432EB8D10D2B6AAB1B94BC"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "guest/lab-commands.jsonl",
+      "sha256": "BE030E3C5AA42DBE93050254883C27C09DED1CE6764C26C0C3628FA792FA2D15"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "guest/local-transport.log",
+      "sha256": "55D0664689E6662B4D8309F0AEA6070B1E0C0CD2CC8440F7B30C3A5599CF6017"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "guest/shared-session-command.tsv",
+      "sha256": "F56C6E125AC18152C664434C6607C3FD8E6880BE2A55E0FF36AFA5195E9C6D73"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "guest/shared-session-status.tsv",
+      "sha256": "D32FE3C400DFCA301ECB3D10079B01A29396BCFDCF9FFBE4529083FC72586FD7"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "host/game-observation.tsv",
+      "sha256": "7CA702F46AB001ACB43160BC804069114E9F9FB0FFEC61B5570E08EBE4BCFBDC"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "host/game-transitions.tsv",
+      "sha256": "90AD0C6A4C7988EA3211676F4B491A84BE32FB07E66C7B3C2F126A298C9738A4"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "host/lab-commands.jsonl",
+      "sha256": "56953E2FE43541ED9C22E57D518ABBF43C16901B281F7AFADEDDA1D718B01CE4"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "host/local-transport.log",
+      "sha256": "CE3BFE5B4A1A6357AE72FB9A13C758DF1EB2455B9231AE1F9E35C98AF0DD6029"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "host/mission-sync-events.tsv",
+      "sha256": "C521D48674DE6FD2D7A7348E206E9B567A5317978E72372A6B30A22BC4952452"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "host/shared-session-command.tsv",
+      "sha256": "67320B20E37E1C39E0F263EA0B88FE975F3628F87029223050B7AB67BC3E0A2B"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "host/shared-session-status.tsv",
+      "sha256": "1604C6F4A903B75D7093F8FB06C3D3BA6C57B7E451F84400C40478B70E8973D8"
+    },
+    {
+      "session": "pair-20261023-063622",
+      "path": "host/widget-details.tsv",
+      "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    }
+  ]
+}

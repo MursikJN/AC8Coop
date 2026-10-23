@@ -1,0 +1,66 @@
+{
+  "format": "ac8-r31-delivery-v1",
+  "date": "2026-10-22",
+  "status": "experimental_kit_prepared_runtime_unverified",
+  "archive": "dist/ac8-steam-coop-r31-development.zip",
+  "sha256": "ad5f9de270ce3d4a2ddde69c8e406909b0b6aaf316d46b5dffd49715225383ff",
+  "archive_bytes": 10326290,
+  "files": 73,
+  "lua_syntax_checked": 39,
+  "python_lua": {
+    "run": 570,
+    "passed": 569,
+    "skipped": 1,
+    "skip_reason": "optional legacy Connection Test DLL smoke not configured"
+  },
+  "powershell": {
+    "kit": 26,
+    "policy": 21,
+    "diagnostics": 24,
+    "automatic_reports": 26,
+    "compact_storage": 34
+  },
+  "game_launched": false,
+  "original_files_written": false,
+  "steam_session_opened": false,
+  "shared_flight_verified": false,
+  "public_release": true,
+  "requires_full_lab_copy": false,
+  "supported": {
+    "build": 25201480,
+    "mission": 6,
+    "difficulty": "PILOT",
+    "guest_aircraft": "F-14D",
+    "guest_mods": false,
+    "guest_loadout": "stock"
+  },
+  "runtime_open": [
+    "compact launch and shared archive reads in the actual game",
+    "generic world managers/resources and stock BeginPlay",
+    "independent movement and camera",
+    "two-peer invite/loading/cinema route",
+    "actual object retirement and gameplay events"
+  ],
+  "kit_update": "compact-1",
+  "owner_world_readiness": 1,
+  "native_dll_sha256": "1f01615fbd5efbb4973fd4e382d5defc3952a6ea417167ec38cf26a29082ad29",
+  "native_world_readiness_checks": 51,
+  "powershell_previous_unchanged_checks": [
+    "policy",
+    "diagnostics",
+    "automatic_reports"
+  ],
+  "evidence": "evidence/r31-compact-20261022/",
+  "release_url": "https://github.com/MursikJN/AC8Coop/releases/tag/r31-compact-1",
+  "release_tag": "r31-compact-1",
+  "source_commit": "712bc8e4ab692a883e8e4dd6ec97ad576daa26e4",
+  "publication_evidence": "evidence/r31-compact-publication-20261022/",
+  "lab_storage_policy": 2,
+  "lab_storage_default": "compact",
+  "shared_archives_read_locked": true,
+  "real_copy_bytes": 4931037992,
+  "real_shared_bytes": 145648837787,
+  "real_archive_count": 26,
+  "compact_lab_prepared": true,
+  "host_guest_validate_only": true
+}

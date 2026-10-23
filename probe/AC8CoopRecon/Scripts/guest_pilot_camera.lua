@@ -7,18 +7,22 @@ function M.new(view,api)
  api=api or{static=StaticFindObject,loop=LoopInGameThreadAfterFrames,cancel=CancelDelayedAction}
  local s={active=false,updates=0}
  function s.stop(reason)
-  s.active=false;s.reason=reason
+  s.active=false;s.reason=reason;s.cleanup_requested=false
   if s.loop then api.cancel(s.loop);s.loop=nil end
   if valid(s.pc)then
-   if same(s.pc:GetViewTarget(),s.camera)and valid(s.world)and same(s.pc:GetWorld(),s.world)then
-    local target=same(s.pc.Pawn,s.pawn)and s.original_target or s.pc.Pawn
-    if valid(target)then s.pc:SetViewTargetWithBlend(target,0,0,0,false)end
+   if same(s.pc:GetViewTarget(),s.camera)then
+    local target=same(s.pc:GetWorld(),s.world)and same(s.pc.Pawn,s.pawn)and s.original_target or s.pc.Pawn
+    assert(valid(target)and not same(target,s.camera),'Host camera restore target unavailable')
+    s.pc:SetViewTargetWithBlend(target,0,0,0,false)
+    assert(same(s.pc:GetViewTarget(),target),'Host camera restore unconfirmed')
    end
    -- Controller flags also need restoration if the controller survives travel.
    if s.original_auto~=nil and s.pc.bAutoManageActiveCameraTarget==false then s.pc.bAutoManageActiveCameraTarget=s.original_auto end
    if s.original_full_tick~=nil and s.pc.bShouldPerformFullTickWhenPaused==true then s.pc.bShouldPerformFullTickWhenPaused=s.original_full_tick end
   end
   if valid(s.camera)then s.camera:SetActorHiddenInGame(true);s.camera:K2_DestroyActor()end
+  -- This is only a teardown request. Native slot/serial tracking proves retirement.
+  s.cleanup_requested=true
   s.camera=nil
  end
  function s.update()

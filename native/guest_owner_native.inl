@@ -7,19 +7,28 @@
 #include "owner_spawn_receipt.h"
 #include "owner_retirement.h"
 #include "owner_world_readiness.h"
+#include "owner_sound_readiness.h"
+#include "owner_camera_receipt.h"
+#include "owner_root_lease.h"
+#include "owner_cleanup.h"
 namespace owner_native {
 using pilot_engine::Id;using pilot_engine::read;using pilot_engine::bytes;
 using pilot_engine::same;using pilot_engine::identity;
 struct Backend {
  Id world,pc,pawn,klass,cdo,gi,metadata,system,actor_manager,camera_actor;
- Id actor,network,parts;std::vector<Id>children;
+ Id actor,network,parts;std::vector<Id>children,tick_components;
+ bool ticks_detached=false;
+ ac8owner::RootLease<Id>class_root,cdo_root;
+ using RootQuery=bool(__fastcall*)(uintptr_t);using RootWrite=void(__fastcall*)(uintptr_t);
+ RootQuery is_root=nullptr;RootWrite set_root_fn=nullptr,clear_root_fn=nullptr;
+ const char*dependency_field="none";const char*dependency_failure="none";
  plane_flight::Ledger ledger;
  plane_initial_state::Snapshot initial_state;plane_flight_state::Report model_report;
  ac8owner::InitialSeed seed;
  uint64_t token=0,key=0x434f4f5000000001ULL,local_sequence=0;
  uint32_t revision=0;uint64_t generation=0;
  uint8_t hidden_mask=0;
- uintptr_t sound_manager=0,sound_registry=0;
+ ac8owner::SoundObjects<Id>sound_objects;bool sound_objects_bound=false;
  ac8owner::WorldObjects<Id>world_objects;bool world_objects_bound=false;
  ac8pilot::Context binding{};bool configured=false,closing=false,seeded=false,cleanup_complete=false,endplay_graph_verified=false;
  const char*detail="owner_native_not_configured";
@@ -30,14 +39,70 @@ struct Backend {
  bool fail(const char*why){detail=why;event(why);return false;}
  void event(const char*what){
   FILE*f=nullptr;if(!_wfopen_s(&f,(pilot_engine::directory+L"\\guest-owner-native.jsonl").c_str(),L"ab")&&f){
-   fprintf(f,"{\"tick\":%llu,\"generation\":%llu,\"revision\":%u,\"event\":\"%s\",\"actor\":\"0x%llx\",\"cleanup\":%s}\n",GetTickCount64(),generation,revision,what,static_cast<unsigned long long>(actor.p),closing?"true":"false");fclose(f);
+   fprintf(f,"{\"tick\":%llu,\"generation\":%llu,\"revision\":%u,\"event\":\"%s\",\"actor\":\"0x%llx\",\"cleanup\":%s,\"dependency_field\":\"%s\",\"dependency_failure\":\"%s\"}\n",GetTickCount64(),generation,revision,what,static_cast<unsigned long long>(actor.p),closing?"true":"false",dependency_field,dependency_failure);fclose(f);
   }
  }
  bool fingerprint(uintptr_t rva,const char*hex){return pilot_engine::fingerprint(rva,hex);}
  bool game_thread()const{return GetCurrentThreadId()==pilot_engine::thread;}
  bool same_id(const Id&i)const{return same(i);}
+ bool slot(int32_t i,uintptr_t&at){return pilot_engine::slot(i,at);}
+ bool same_cdo_id(const Id&i)const{return pilot_engine::same_cdo(i);}
+ bool template_valid()const{return ac8owner::template_identity(*this,klass,cdo,image()+0xcc01cc8);}
+ bool live(const Id&i)const{return i.p==cdo.p?pilot_engine::same_cdo(i):same(i);}
+ bool rooted(const Id&i)const{return is_root&&is_root(i.p);}
+ void set_root(const Id&i){set_root_fn(i.p);}
+ void clear_root(const Id&i){clear_root_fn(i.p);}
+ bool root_api(){
+  auto module=GetModuleHandleW(L"UE4SS.dll");if(!module)return false;
+  auto get=[&](const char*name,const char*hex){auto fn=GetProcAddress(module,name);unsigned char a[16]{},b[16]{};
+   for(unsigned i=0;i<16;++i){unsigned v=0;if(sscanf_s(hex+i*2,"%2x",&v)!=1)return FARPROC{};b[i]=uint8_t(v);}
+   return fn&&bytes(reinterpret_cast<uintptr_t>(fn),a,16)&&!memcmp(a,b,16)?fn:FARPROC{};};
+  is_root=reinterpret_cast<RootQuery>(get("?IsRootSet@UObject@Unreal@RC@@QEAA_NXZ","4883ec28e867acffff8bc8e8f0350500"));
+  set_root_fn=reinterpret_cast<RootWrite>(get("?SetRootSet@UObject@Unreal@RC@@QEAAXXZ","4883ec28e8a782ffff8bc8e8300c0500"));
+  clear_root_fn=reinterpret_cast<RootWrite>(get("?ClearRootSet@UObject@Unreal@RC@@QEAAXXZ","4883ec28e8372600008bc8e8c0af0500"));
+  return is_root&&set_root_fn&&clear_root_fn;
+ }
+ bool retain_template(uintptr_t cl,uintptr_t cd){
+  if(!game_thread()||closing||ledger.attempted||!fingerprint(0x1aae560,"40574883ec203b1588271b0c7d1e0fb7")||!root_api())return fail("owner_template_root_api_guard");
+  Id k,d;if(!identity(cl,k,true)||!pilot_engine::cdo_identity(cd,d,true))return fail("owner_template_root_identity");
+  if((class_root.captured&&(class_root.id.p!=k.p||class_root.id.index!=k.index||class_root.id.serial!=k.serial))||
+     (cdo_root.captured&&(cdo_root.id.p!=d.p||cdo_root.id.index!=d.index||cdo_root.id.serial!=d.serial)))return fail("owner_template_root_retarget_refused");
+  klass=k;cdo=d;if(!template_valid())return fail("owner_template_root_binding");
+  if(!class_root.acquire(*this,klass)||!cdo_root.acquire(*this,cdo))return fail("owner_template_root_readback");
+  event("owner_template_retained");return true;
+ }
+ bool release_template(){
+  if(!game_thread())return false;
+  // Both leases are attempted even if one fails; failed identity never unroots
+  // an unrelated object. Unconfirmed release keeps cleanup incomplete.
+  const bool d=cdo_root.release(*this),k=class_root.release(*this);
+  if(!d||!k){ledger.reason="owner_template_release_unconfirmed";return false;}return true;
+ }
+ bool dependency(uintptr_t parent,uintptr_t offset,Id&out,const char*field,const char*error){
+  uintptr_t p=0;dependency_field=field;
+  if(!read(parent+offset,p)){dependency_failure="pointer_read";return fail(error);}
+  Id next;if(!identity(p,next,true)){dependency_failure=pilot_engine::identity_error;return fail(error);}
+  if(out.p&&(out.p!=next.p||out.index!=next.index||out.serial!=next.serial)){dependency_failure="identity_replaced";return fail(error);}out=next;
+  dependency_failure="none";return true;
+ }
+ bool camera_identity(uintptr_t p,Id&out){return identity(p,out,true);}
+ bool track_camera(uintptr_t p){
+  if(closing||ledger.attempted||!fingerprint(0x1aae560,"40574883ec203b1588271b0c7d1e0fb7"))return fail("owner_camera_receipt_guard");
+  if(!ac8owner::track_camera(*this,camera_actor,p))return fail("owner_camera_receipt_identity");
+  return true;
+ }
  const char* world_objects_reason()const{return world_objects_bound?ac8owner::world_objects_error(*this,world_objects):"owner_world_objects_not_bound";}
  bool require_world_objects(){const auto why=world_objects_reason();return !why||fail(why);}
+ const char* sound_objects_reason()const{return sound_objects_bound?ac8owner::sound_objects_error(*this,sound_objects):"owner_sound_objects_not_bound";}
+ bool require_sound_objects(){const auto why=sound_objects_reason();return !why||fail(why);}
+ bool bind_sound_objects(){
+  sound_objects_bound=false;sound_objects={};sound_objects.gi=gi;uintptr_t p=0;
+  if(!read(gi.p+0x908,p)||!identity(p,sound_objects.manager,true))return fail("owner_sound_manager_missing");
+  if(!read(p+0x1a8,sound_objects.registry)||!read(p+0x210,sound_objects.settings)||!ac8owner::world_pointer(sound_objects.settings))return fail("owner_sound_settings_missing");
+  if(!read(sound_objects.settings+0x140,sound_objects.names))return fail("owner_sound_names_missing");
+  sound_objects_bound=true;if(!require_sound_objects())return false;
+  event("owner_sound_objects_ready");return true;
+ }
  bool bind_world_objects(const std::map<std::string,std::string>&r){
   world_objects_bound=false;world_objects={};world_objects.world=world;world_objects.manager=actor_manager;
   auto expected=[&](const char*key,Id&out){uint64_t p=0;auto i=r.find(key);return i!=r.end()&&pilot_engine::number(i->second,p)&&identity(p,out,true);};
@@ -55,7 +120,7 @@ struct Backend {
  bool context()const {
   uintptr_t p=0;uint8_t active=1,type=0,construction=0,teardown=0;
   return !world_objects_reason()&&GetCurrentThreadId()==pilot_engine::thread&&same(world)&&same(pc)&&same(pawn)&&same(gi)&&same(metadata)&&same(system)&&same(actor_manager)&&
-   same(klass)&&same(cdo)&&read(pc.p+0x2d0,p)&&p==pawn.p&&read(world.p+0x1d8,p)&&p==gi.p&&
+   template_valid()&&class_root.captured&&cdo_root.captured&&rooted(klass)&&rooted(cdo)&&read(pc.p+0x2d0,p)&&p==pawn.p&&read(world.p+0x1d8,p)&&p==gi.p&&
    read(gi.p+0x878,p)&&p==metadata.p&&read(gi.p+0x910,p)&&p==system.p&&read(system.p+0x1fa,active)&&!active&&
    read(world.p+0x13a,type)&&type==1&&read(world.p+0x13c,construction)&&!(construction&2)&&read(world.p+0x13d,teardown)&&!(teardown&0x20);
  }
@@ -86,15 +151,30 @@ struct Backend {
   if(configured||ledger.attempted||ctx.host)return fail("owner_request_already_consumed_or_not_guest");
   if(!fingerprint(0x1aae560,"40574883ec203b1588271b0c7d1e0fb7"))return fail("owner_identity_mint_fingerprint");
   generation=gen;revision=rev;binding=ctx;token=gen;
-  auto get=[&](const char*name,Id&out){uint64_t v=0;auto it=r.find(name);return it!=r.end()&&pilot_engine::number(it->second,v)&&identity(v,out,true);};
-  if(!get("world",world)||!get("controller",pc)||!get("default_pawn",pawn)||!get("owner_class",klass)||!get("owner_cdo",cdo)||!get("actor_manager",actor_manager)||!get("camera",camera_actor))return fail("owner_request_identity_invalid");
+  auto get=[&](const char*name,Id&out,const char*why,bool is_cdo=false){uint64_t v=0;auto it=r.find(name);
+   Id next;dependency_field=name;
+   if(it==r.end()||!pilot_engine::number(it->second,v)){dependency_failure="request_pointer";return fail(why);}
+   if(!(is_cdo?pilot_engine::cdo_identity(v,next,true):identity(v,next,true))){dependency_failure=pilot_engine::identity_error;return fail(why);}
+   if(out.p&&(out.p!=next.p||out.index!=next.index||out.serial!=next.serial)){dependency_failure="identity_replaced";return fail(why);}out=next;dependency_failure="none";return true;};
+  if(!get("world",world,"owner_request_world_identity_invalid")||
+     !get("controller",pc,"owner_request_controller_identity_invalid")||
+     !get("default_pawn",pawn,"owner_request_default_pawn_identity_invalid")||
+     !get("owner_class",klass,"owner_request_owner_class_identity_invalid")||
+     !get("owner_cdo",cdo,"owner_request_owner_cdo_identity_invalid",true)||
+     !get("actor_manager",actor_manager,"owner_request_actor_manager_identity_invalid"))return false;
+  if(!template_valid())return fail("owner_request_class_cdo_binding_invalid");
+  if(!retain_template(klass.p,cdo.p))return false;
+  uint64_t camera_pointer=0;auto camera_row=r.find("camera");
+  if(camera_row==r.end()||!pilot_engine::number(camera_row->second,camera_pointer)||!track_camera(camera_pointer))return fail("owner_request_camera_identity_invalid");
   uint64_t property=0;int32_t offset=0;uint8_t bits[4]{};
   auto prop=r.find("hidden_property");if(prop==r.end()||!pilot_engine::number(prop->second,property)||!read(property+0x44,offset)||offset!=0x58||!bytes(property+0x70,bits,sizeof bits)||bits[0]!=1||bits[1]!=0||!bits[3]||(bits[3]&(bits[3]-1)))return fail("owner_hidden_property_layout_changed");hidden_mask=bits[3];
-  uintptr_t p=0,vt=0;if(!read(world.p+0x1d8,p)||!identity(p,gi)||!read(gi.p+0x878,p)||!identity(p,metadata)||!read(gi.p+0x910,p)||!identity(p,system)||
-   !read(klass.p+0x110,p)||p!=cdo.p||!read(cdo.p+0x10,p)||p!=klass.p||!read(cdo.p,vt)||vt!=image()+0xcc01cc8)return fail("owner_guest_world_metadata_or_registry_invalid");
+  if(!dependency(world.p,0x1d8,gi,"game_instance","owner_game_instance_identity_invalid")||
+     !dependency(gi.p,0x878,metadata,"metadata","owner_metadata_identity_invalid")||
+     !dependency(gi.p,0x910,system,"system","owner_system_identity_invalid"))return false;
+  if(!template_valid())return fail("owner_template_changed_after_dependencies");
   if(!bind_world_objects(r))return false;
   if(!absent())return fail("owner_guest_world_registry_invalid");
-  if(!read(gi.p+0x908,sound_manager)||!read(sound_manager+0x1a8,sound_registry)||sound_registry<0x10000)return fail("owner_beginplay_sound_manager_missing");
+  if(!bind_sound_objects())return false;
   // The table lookup is checked BEFORE allocating a plane. No guessed class
   // lookup ABI: class/asset/PlaneTypeID are checked by the Lua caller as well.
   if(!fingerprint(0x73610b0,"40534881ec30020000488b0540bb8c06"))return fail("owner_table_getter_fingerprint");
@@ -119,7 +199,10 @@ struct Backend {
    {0x4d32580,"4883ec38f64218010f57c9f30f1005fd"},{0x4d326e0,"488bc448895808488970104889781855"},
    {0x4d318a0,"40534881ec80000000f30f100d777957"},{0x3fdebc0,"4881ec78010000488b89a00100004885"},
    {0x41df200,"f6413a027426488bc10f1f8000000000"},{0x42dfa90,"48895c2408574883ec20f6413a020fb6"},
-   {0x7d2c180,"8891d3000000c3cccccccccccccccccc"}};
+   {0x7d2c180,"8891d3000000c3cccccccccccccccccc"},
+   {0x3fc34c0,"f64132027426488bc10f1f8000000000"},
+   {0x4b9f9f0,"48895c24084889742410574883ec2048"},
+   {0x3fc30f0,"40555641564157488d6c24c14881ecc8"}};
   for(auto a:anchors)if(!fingerprint(a.first,a.second))return fail("owner_native_entry_fingerprint");
   ledger.lifetime_ms=0;configured=true;detail="owner_world_preflight_wait_initial_state";event(detail);return true;
  }
@@ -132,7 +215,12 @@ struct Backend {
    !scalar("angle"+std::to_string(i),seed.degrees[i])||!scalar("forward"+std::to_string(i),d))return fail("owner_seed_invalid");seed.forward[i]=float(d);}
   seed.speed=host.poses[1].speed;return true;
  }
- plane_flight::Seen resolve(const plane_flight::Identity&i){Id id{i.pointer,i.index,i.serial};if(same(id))return plane_flight::Seen::safe;return pilot_engine::retired(id)?plane_flight::Seen::retired:plane_flight::Seen::unknown;}
+ plane_flight::Seen resolve(const plane_flight::Identity&i){Id id{i.pointer,i.index,i.serial};
+  return ac8owner::cleanup_identity(*this,id,ledger.destroy_accepted&&i.pointer==actor.p&&i.index==actor.index&&i.serial==actor.serial);
+ }
+ bool tick_guard(){return own()&&fingerprint(0x3fc34c0,"f64132027426488bc10f1f8000000000")&&fingerprint(0x4b9f9f0,"48895c24084889742410574883ec2048");}
+ void native_disable_tick(){using Set=void(__fastcall*)(uintptr_t,bool);reinterpret_cast<Set>(image()+0x3fc34c0)(actor.p,false);}
+ bool tick_disabled(){uint8_t tick_state=1;return same(actor)&&read(actor.p+0x33,tick_state)&&tick_state==0;}
  bool acquire(uintptr_t p,plane_flight::Identity&out,int kind){Id id;uintptr_t vt=0,outer=0;
   if(!identity(p,id,true)||!read(p,vt))return false;
   if(kind==0){actor=id;if(!own())return false;}
@@ -142,12 +230,12 @@ struct Backend {
  bool initial_barrier(uintptr_t p){if(p!=actor.p||!own())return false;
   uint8_t start=0,allow=0,hidden=0;if(!read(p+0x32,start)||!read(p+0x5a,allow)||!read(p+0x58,hidden)||!hidden_mask)return false;
   *reinterpret_cast<uint8_t*>(p+0x58)=uint8_t(hidden|hidden_mask);
-  *reinterpret_cast<uint8_t*>(p+0x3f4)=0;*reinterpret_cast<uint8_t*>(p+0x32)=uint8_t(start&~4u);*reinterpret_cast<uint8_t*>(p+0x33)=0;
-  *reinterpret_cast<uint8_t*>(p+0x5a)=uint8_t(allow&~1u);*reinterpret_cast<uint8_t*>(p+0x2a0)=0;*reinterpret_cast<uint8_t*>(p+0x2a1)=0;return barrier();
+  *reinterpret_cast<uint8_t*>(p+0x3f4)=0;*reinterpret_cast<uint8_t*>(p+0x32)=uint8_t(start&~4u);
+  *reinterpret_cast<uint8_t*>(p+0x5a)=uint8_t(allow&~1u);*reinterpret_cast<uint8_t*>(p+0x2a0)=0;*reinterpret_cast<uint8_t*>(p+0x2a1)=0;return ac8owner::disable_actor_tick(*this)&&barrier();
  }
- void close_actor_barrier(){if(own()){uint8_t hidden=0;if(read(actor.p+0x58,hidden))*reinterpret_cast<uint8_t*>(actor.p+0x58)=uint8_t(hidden|hidden_mask);*reinterpret_cast<uint8_t*>(actor.p+0x3f4)=0;*reinterpret_cast<uint8_t*>(actor.p+0x33)=0;}}
+ void close_actor_barrier(){if(own()){uint8_t hidden=0;if(read(actor.p+0x58,hidden))*reinterpret_cast<uint8_t*>(actor.p+0x58)=uint8_t(hidden|hidden_mask);*reinterpret_cast<uint8_t*>(actor.p+0x3f4)=0;if(!ac8owner::disable_actor_tick(*this))fail("owner_tick_disable_unconfirmed");}}
  uintptr_t spawn(plane_flight::Ledger&receipt){
-  if(!require_world_objects())return 0;
+  if(!require_world_objects()||!require_sound_objects())return 0;
   alignas(16) double transform[12]={0,0,0,1,seed.position[0],seed.position[1],seed.position[2],0,1,1,1,0};
   alignas(16) uint8_t params[0x80]{};params[0x30]=1;params[0x31]=1;params[0x32]=4;uint32_t flags=8;memcpy(params+0x34,&flags,4);
   using Callback=ac8owner::SpawnReceipt<Backend,plane_flight::Ledger>;
@@ -194,7 +282,7 @@ struct Backend {
   if(!ac8owner::seed_self(initial_state,seed))return fail("owner_initial_pose_invalid");
   return plane_initial_state::stage_self(*this,initial_state,caches(),r)||fail(r.error);
  }
- bool ready_to_finish(){return require_world_objects()&&barrier()&&absent();}
+ bool ready_to_finish(){return require_world_objects()&&require_sound_objects()&&barrier()&&absent();}
  void finish(){alignas(16)double transform[12]={0,0,0,1,seed.position[0],seed.position[1],seed.position[2],0,1,1,1,0};
   using Finish=void(__fastcall*)(uintptr_t,const void*,bool,void*,uint8_t);reinterpret_cast<Finish>(image()+0x3fdc360)(actor.p,transform,false,nullptr,1);
  }
@@ -208,6 +296,7 @@ struct Backend {
    uintptr_t p=0,owner=0,vt=0,setter=0,getter=0;Id id;
    if(!owner_native::read(data+uintptr_t(i)*16,p)||!identity(p,id,true)||!owner_native::read(p+0x90,owner)||owner!=actor.p||!owner_native::read(p,vt)||!owner_native::read(vt+0x3d8,setter)||!owner_native::read(vt+0x3e8,getter)||setter<image()||getter<image())return false;
    auto kind=plane_component_ticks::classify({setter-image(),getter-image()});if(kind==plane_component_ticks::Kind::unknown)return false;
+   if(disable){bool found=false;for(const auto&old:tick_components)if(old.p==id.p){if(old.index!=id.index||old.serial!=id.serial)return false;found=true;}if(!found)tick_components.push_back(id);}
    if(disable){using Set=void(__fastcall*)(uintptr_t,bool);reinterpret_cast<Set>(setter)(p,false);if(kind==plane_component_ticks::Kind::live)reinterpret_cast<Set>(image()+0x41df200)(p,false);}
    uint8_t tick=1,custom=1,flags=0;uintptr_t registration=0;
    if(!same(id)||!owner_native::read(p+0x3b,tick)||tick)return false;
@@ -229,7 +318,7 @@ struct Backend {
  bool consume(uintptr_t n,uintptr_t m){if(n!=network.p||(m!=actor.p+0x2268&&m!=actor.p+0x3c60)||!guard(token,actor.p,actor.p,network.p))return false;using Fn=void(__fastcall*)(uintptr_t,uintptr_t);reinterpret_cast<Fn>(image()+0x74d8c00)(n,m);return true;}
  bool input(uintptr_t m,uintptr_t p){auto c=caches();if(p!=c.data[4]+8||!guard(token,actor.p,actor.p,network.p))return false;using Fn=void(__fastcall*)(uintptr_t,uintptr_t);reinterpret_cast<Fn>(image()+0x4d32580)(m,p);return true;}
  bool prepare(const ac8sortie::Key&k){
-  if(!require_world_objects())return false;
+  if(!require_world_objects()||!require_sound_objects())return false;
   if(!configured||closing||k.generation!=generation||k.revision!=revision||!absent())return fail("owner_prepare_context_changed");
   if(!ledger.prepare(*this)){if(!require_world_objects())return false;return fail(ledger.reason);}
   auto child=[&](uintptr_t p,uintptr_t outer){Id id;uintptr_t actual=0;
@@ -248,7 +337,7 @@ struct Backend {
   if(!plane_flight_state::finalize_self(*this,initial_state,caches(),model_report))return fail(model_report.error);
   seeded=true;detail="owner_stock_f14_self_initialized_manual_steps_ready";event(detail);return valid();
  }
- bool valid(){if(!require_world_objects()||!seeded||closing||!finished_graph()||!endplay_graph_verified)return false;for(const auto&i:children)if(!same(i))return false;return true;}
+ bool valid(){if(!require_world_objects()||!require_sound_objects()||!seeded||closing||!finished_graph()||!endplay_graph_verified)return false;for(const auto&i:children)if(!same(i))return false;return true;}
  bool step(const ac8input::Frame&f,unsigned count){
   std::array<float,6>axes{};if(!count||count>6||!valid()||!ac8player::controls(f,axes))return false;
   struct Controls{std::array<float,6>axes;uint8_t flags=0,pad[7]{};} controls{axes};
@@ -287,15 +376,29 @@ struct Backend {
   uint64_t actual=0;if(network.p&&(!same(network)||!owner_native::read(network.p+0x28,actual)||actual!=key))return false;
   if(!finished)return true;if(!endplay_graph_verified||!same(network)||!same(parts))return false;for(const auto&i:children)if(!same(i))return false;return true;
  }
- bool destroy(uintptr_t p){using Destroy=bool(__fastcall*)(uintptr_t,bool);return reinterpret_cast<Destroy>(image()+0x3fe0160)(p,false);}
+ bool tick_unregistered(uintptr_t tick){uintptr_t internal=0;uint8_t flags=1;return read(tick+0x20,internal)&&(!internal||(read(internal,flags)&&!(flags&1)));}
+ bool detach_ticks(){
+  if(!barrier()||!cleanup_guard(ledger.finish_entered)||!fingerprint(0x3fc30f0,"40555641564157488d6c24c14881ecc8"))return fail("owner_tick_unregister_guard");
+  if(ledger.finished_ready&&!disable_components())return fail("owner_component_disable_unconfirmed");
+  using Register=void(__fastcall*)(uintptr_t,bool,bool);
+  event("owner_tick_unregister_enter");reinterpret_cast<Register>(image()+0x3fc30f0)(actor.p,false,true);event("owner_tick_unregister_return");
+  uint8_t flags=0;if(!same(actor)||!read(actor.p+0x5c,flags)||(flags&8)||!tick_unregistered(actor.p+0x28))return fail("owner_actor_tick_unregister_unconfirmed");
+  for(const auto&i:tick_components)if(!same(i)||!read(i.p+0x8b,flags)||(flags&0x40)||!tick_unregistered(i.p+0x30))return fail("owner_component_tick_unregister_unconfirmed");
+  ticks_detached=true;event("owner_ticks_detached");return true;
+ }
+ bool destroy(uintptr_t p){if(p!=actor.p||!detach_ticks())return false;using Destroy=bool(__fastcall*)(uintptr_t,bool);return reinterpret_cast<Destroy>(image()+0x3fe0160)(p,false);}
+ bool gc_safe()const{return ac8owner::collection_safe(ledger,closing,ticks_detached);}
  bool release(){
   closing=true;seeded=false;
-  if(!ledger.attempted){cleanup_complete=!configured||pilot_engine::retired(camera_actor);return cleanup_complete;}
+  if(!ledger.attempted){const bool released=release_template();cleanup_complete=released&&(!camera_actor.p||pilot_engine::retired(camera_actor));ledger.status=cleanup_complete?"retired":"cleanup";if(released)ledger.reason=cleanup_complete?"no_plane_camera_retired":"no_plane_waiting_camera_retirement";return cleanup_complete;}
   ledger.cleanup(*this);
   if(!ledger.plane_retired)return false;
   for(const auto&i:children)if(!pilot_engine::retired(i))return false;
+  for(const auto&i:tick_components)if(!pilot_engine::retired(i))return false;
+  if(!ac8owner::retirement_complete(ledger,true,true))return false;
   // Camera belongs to the Lua adapter; never destroy it behind its back.
   if(!pilot_engine::retired(camera_actor))return false;
+  if(!release_template())return false;
   cleanup_complete=ac8owner::retirement_complete(ledger,true,true);return cleanup_complete;
  }
 };

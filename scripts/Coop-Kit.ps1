@@ -21,7 +21,7 @@ function Test-CoopKit {
  param([string]$Root)
  $rootPath=[IO.Path]::GetFullPath($Root).TrimEnd([char[]]@('\','/'));Assert-CoopPlainPath $rootPath
  $m=Get-Content -LiteralPath (Join-Path $rootPath 'lobby-manifest.json') -Raw|ConvertFrom-Json
- if($m.revision -ne 'r31-development' -or $m.protocol -ne 8 -or $m.pilot_protocol -ne 3 -or !$m.owner_native -or !$m.isolated_lab_required -or !$m.automatic_reports -or $m.owner_world_readiness -ne 1 -or $m.kit_update -ne 'cinema-2' -or $m.cinema_metadata -ne 1 -or $m.native_shutdown -ne 1 -or $m.menu_lifetime -ne 1 -or $m.engine_call_trace -ne 1 -or $m.adapter_bootstrap -ne 1 -or $m.lab_storage_policy -ne 3){throw 'R31 manifest policy mismatch (cinema-2 required)'}
+ if($m.revision -ne 'r31-development' -or $m.protocol -ne 8 -or $m.pilot_protocol -ne 3 -or !$m.owner_native -or !$m.isolated_lab_required -or !$m.automatic_reports -or $m.owner_world_readiness -ne 1 -or $m.kit_update -notin @('cinema-2','local-stage1') -or $m.cinema_metadata -ne 1 -or $m.native_shutdown -ne 1 -or $m.menu_lifetime -ne 1 -or $m.engine_call_trace -ne 1 -or $m.adapter_bootstrap -ne 1 -or $m.lab_storage_policy -ne 3){throw 'R31 manifest policy mismatch (cinema-2 or local-stage1 required)'}
  $seen=@{};foreach($f in $m.files){
   if(!$f.path -or [IO.Path]::IsPathRooted($f.path) -or $f.path -match '(^|[\\/])\.\.([\\/]|$)' -or $f.path.Contains(':')){throw 'Invalid manifest path'}
   $path=[IO.Path]::GetFullPath((Join-Path $rootPath $f.path));if(!$path.StartsWith($rootPath+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase) -or $seen.ContainsKey($f.path)){throw 'Duplicate or outside manifest path'}
@@ -30,6 +30,15 @@ function Test-CoopKit {
  }
  foreach($f in @('Start-Host.cmd','Start-Guest.cmd','Prepare-Lab.cmd','Validate-Kit.cmd','Start-SteamLobby.ps1','Coop-Kit.ps1','Coop-LabStorage.ps1','Prepare-CoopLab.ps1','Auto-Reports.ps1','Session-Diagnostics.ps1','Collect-CoopLogs.ps1','runtime/ac8_steam_coop_r31.dll','runtime/Mods/AC8CoopRecon/Scripts/main.lua','runtime/Mods/AC8CoopRecon/Scripts/guest_owner_preparation.lua','runtime/Mods/AC8CoopRecon/Scripts/owner_local_lab.lua','Owner-Lab-Peer.exe')){if(!$seen.ContainsKey($f)){throw ('Required manifest entry missing: '+$f)}}
  $exports=@(Get-CoopPeExports (Join-Path $rootPath $m.native_file))
+ if($m.kit_update -eq 'local-stage1'){
+  if($m.local_model_stage -ne 1 -or $m.owner_sound_readiness -ne 1){throw 'Local stage 1 policy mismatch'}
+  if($m.local_model_patch -eq 'cleanup-1' -and ($m.owner_tick_cleanup -ne 1 -or $m.owner_cleanup_gc_gate -ne 1)){throw 'Local tick teardown/GC gate support missing'}
+  foreach($f in @('Start-LocalModelTest.cmd','LOCAL-MODEL-TEST-RU.md')){if(!$seen.ContainsKey($f)){throw ('Local test entry missing: '+$f)}}
+  foreach($e in @('luaopen_ac8_pilot_preflight','luaopen_ac8_pilot_clock')){if($e -notin $exports){throw ('Local test export missing: '+$e)}}
+  if($m.local_model_patch -in @('start-1','cdo-1','lifetime-1','cleanup-1') -and ($m.owner_camera_receipt -ne 1 -or 'luaopen_ac8_pilot_track_camera' -notin $exports)){throw 'Local camera retirement receipt support missing'}
+  if($m.local_model_patch -in @('cdo-1','lifetime-1','cleanup-1') -and ($m.owner_template_identity -ne 1 -or $m.helper_preparation_timeout_ms -ne 60000)){throw 'Local template identity/loading window policy missing'}
+  if($m.local_model_patch -in @('lifetime-1','cleanup-1') -and ($m.owner_template_retention -ne 1 -or $m.owner_dependency_identity -ne 1 -or 'luaopen_ac8_pilot_retain_template' -notin $exports)){throw 'Local template retention/dependency identity support missing'}
+ }
  foreach($f in @('Repair-Lab.cmd','Repair-CompactLab.ps1','runtime/Mods/AC8CoopRecon/Scripts/lobby_menu_lifetime.lua','runtime/Mods/AC8CoopRecon/Scripts/engine_call_trace.lua')){if(!$seen.ContainsKey($f)){throw ('Required manifest entry missing: '+$f)}}
  foreach($e in @('luaopen_ac8_shutdown_begin','luaopen_ac8_shutdown_poll','luaopen_ac8_pilot_prepare','luaopen_ac8_pilot_start','luaopen_ac8_pilot_tick','luaopen_ac8_pilot_stop','luaopen_ac8_pilot_loaded','luaopen_ac8_pilot_capture_input','luaopen_ac8_lobby24_start','luaopen_ac8_invites25_open')){if($e -notin $exports){throw ('Native export missing: '+$e)}}
  foreach($entry in @(@('runtime/ac8_menu_route_r13.dll','luaopen_ac8_menu_route'),@('runtime/ac8_mission_pause_r26.dll','luaopen_ac8_mission_pause'))){if($entry[0] -notin $seen.Keys -or $entry[1] -notin @(Get-CoopPeExports (Join-Path $rootPath $entry[0]))){throw ('Required adapter export missing: '+$entry[0])}}

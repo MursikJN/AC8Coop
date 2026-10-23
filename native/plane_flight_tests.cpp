@@ -6,7 +6,7 @@ using namespace plane_flight;
 struct Mock {
  Ledger* l=nullptr; Seen plane=Seen::safe,net=Seen::safe,parts=Seen::safe;
  bool identify=true,barrier=true,configure_ok=true,preseed_ok=true,ready=true,components=true,graph=true,seed_ok=true,motion_ok=true,cleanup_ok=true,pending_flag=false;
- bool receipt=true,duplicate=false,mismatch=false,unknown_net=false;unsigned closes=0,quarantine_passes=0,finish_calls=0,spawn_calls=0,destroy_calls=0,seed_calls=0;
+ bool receipt=true,duplicate=false,mismatch=false,unknown_net=false,accept_destroy=true;unsigned closes=0,quarantine_passes=0,finish_calls=0,spawn_calls=0,destroy_calls=0,seed_calls=0;
  uint64_t clock=100;
  bool acquire(uintptr_t p,Identity& i,int){i={p,1,2};return identify;}
  Seen resolve(const Identity& i){return i.pointer==22?net:i.pointer==33?parts:plane;}
@@ -16,7 +16,7 @@ struct Mock {
  void event(const char*){}
  bool pending(){return pending_flag;}
  bool cleanup_guard(bool){return cleanup_ok;}
- bool destroy(uintptr_t){++destroy_calls;return true;}
+ bool destroy(uintptr_t){++destroy_calls;return accept_destroy;}
  uintptr_t spawn(Ledger& x){l=&x;++spawn_calls;if(receipt)x.receipt(*this,11);if(duplicate)x.receipt(*this,11);return mismatch?44:11;}
  bool configure(){
   l->network_entered=true;if(unknown_net){l->unknown_network=true;return false;}
@@ -56,7 +56,10 @@ int main(){unsigned n=0;
  {Ledger l;Mock b;b.mismatch=true;l.run(b);b.plane=Seen::retired;l.cleanup(b);check(state(l,"quarantine"),"different spawn return stays unknown");++n;}
  {Ledger l;Mock b;b.receipt=false;l.run(b);check(state(l,"quarantine")&&!b.destroy_calls,"no receipt no destroy");++n;}
  {Ledger l;Mock b;b.graph=false;l.run(b);b.pending_flag=true;l.cleanup(b);check(state(l,"quarantine"),"quarantine sticky during pending");++n;}
- {Ledger l;Mock b;l.run(b);for(int i=0;i<5;++i)l.cleanup(b);check(b.destroy_calls==3,"bounded destroy retries");++n;}
+ {Ledger l;Mock b;b.accept_destroy=false;l.run(b);for(int i=0;i<5;++i)l.cleanup(b);check(b.destroy_calls==3,"bounded refused destroy retries");++n;}
+ {Ledger l;Mock b;l.run(b);l.cleanup(b);auto closes=b.closes;for(int i=0;i<5;++i)l.cleanup(b);check(b.destroy_calls==1&&b.closes==closes&&!l.plane_retired,"accepted destroy is never repeated");++n;}
+ {Ledger l;Mock b;l.run(b);l.cleanup(b);b.plane=Seen::pending;l.cleanup(b);check(state(l,"cleanup_pending")&&!l.quarantined&&!l.plane_retired&&b.destroy_calls==1,"garbage flag is pending not unknown or retired");++n;}
+ {Ledger l;Mock b;l.run(b);b.plane=Seen::pending;l.cleanup(b);check(state(l,"quarantine")&&!b.destroy_calls,"unowned pending transition quarantined");++n;}
  {Ledger l;Mock b;l.run(b);b.pending_flag=true;l.cleanup(b);check(!b.destroy_calls&&state(l,"cleanup_pending"),"pending engine destroy not repeated");++n;}
  {Ledger l;Mock b;l.lifetime_ms=0;l.run(b);b.clock+=3600000;l.tick(b);check(l.running&&l.ticks==1&&b.destroy_calls==0,"continuous survives one hour");++n;}
  {Ledger l;Mock b;l.lifetime_ms=0;l.run(b);b.clock+=3600000;b.motion_ok=false;l.tick(b);check(!l.running&&b.destroy_calls==1,"continuous failure still cleans up");++n;}

@@ -3,9 +3,29 @@
 #include "owner_initial_seed.h"
 #include "owner_spawn_receipt.h"
 #include "owner_retirement.h"
+#include "owner_camera_receipt.h"
+struct CameraId{uintptr_t p=0;int serial=0;};
+struct CameraBackend{
+ bool thread=true,live=true;int serial=1;unsigned captures=0;
+ bool game_thread()const{return thread;}
+ bool same_id(const CameraId&i)const{return live&&i.serial==serial;}
+ bool camera_identity(uintptr_t p,CameraId&i){++captures;if(!live)return false;i={p,serial};return true;}
+};
 struct ReceiptBackend{unsigned calls=0;uintptr_t actor=0;};
 struct ReceiptLedger{void receipt(ReceiptBackend&b,uintptr_t p){++b.calls;b.actor=p;}};
 int main(){unsigned checks=0;auto check=[&](bool ok){++checks;if(!ok){std::printf("FAIL owner native contract %u\n",checks);std::abort();}};
+ {CameraBackend b;CameraId id;
+  check(!ac8owner::track_camera(b,id,0)&&!id.p);
+  b.thread=false;check(!ac8owner::track_camera(b,id,100)&&!id.p);b.thread=true;
+  b.live=false;check(!ac8owner::track_camera(b,id,100)&&!id.p);b.live=true;
+  check(ac8owner::track_camera(b,id,100)&&id.p==100&&id.serial==1);
+  const auto captures=b.captures;check(ac8owner::track_camera(b,id,100)&&b.captures==captures);
+  check(!ac8owner::track_camera(b,id,200)&&id.p==100);
+  ++b.serial;check(!ac8owner::track_camera(b,id,100)&&id.serial==1);
+  check(ac8owner::needs_owner_cleanup(true,true)); // start refused before guest role assigned
+  check(ac8owner::needs_owner_cleanup(false,false));
+  check(!ac8owner::needs_owner_cleanup(true,false));
+ }
  {plane_flight::Ledger l;l.attempted=true;check(!ac8owner::retirement_complete(l,true,true));
   l.plane_retired=true;check(ac8owner::retirement_complete(l,true,true));
   l.raw_network=22;check(!ac8owner::retirement_complete(l,true,true));l.network_retired=true;check(ac8owner::retirement_complete(l,true,true));

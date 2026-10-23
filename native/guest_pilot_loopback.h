@@ -35,7 +35,8 @@ class Loopback{
   f.sender=host_?1:2;f.session=f.echo=token_;f.sequence=tx_+1;if(!valid(f))return false;
   out_=encode(f);++tx_;sent_=0;pending_=true;return true;
  }
- template<class Consume>bool poll(Consume consume){
+ template<class Consume>bool poll(Consume consume,uint64_t receive_timeout_ms=15000){
+  if(receive_timeout_ms<15000||receive_timeout_ms>60000)return fail("timeout_configuration");
   if(listener_!=INVALID_SOCKET&&socket_==INVALID_SOCKET){sockaddr_in peer{};int n=sizeof peer;auto s=accept(listener_,reinterpret_cast<sockaddr*>(&peer),&n);
    if(s!=INVALID_SOCKET){if(peer.sin_addr.s_addr!=htonl(INADDR_LOOPBACK)){closesocket(s);return fail("nonlocal");}socket_=s;if(!nonblock(s))return fail("peer_nonblocking");connected=true;last_rx_=GetTickCount64();}
    else if(WSAGetLastError()!=WSAEWOULDBLOCK)return fail("accept");
@@ -50,7 +51,7 @@ class Loopback{
    if(!n)return fail("peer_closed");if(n<0){if(WSAGetLastError()==WSAEWOULDBLOCK)break;return fail("receive");}have_+=size_t(n);
    if(have_==packet_size){Frame f;if(!decode(in_.data(),packet_size,f)||!matches(f,context())||f.sequence<=rx_)return fail("invalid_frame");rx_=f.sequence;have_=0;last_rx_=GetTickCount64();consume(f,last_rx_);}
   }
-  if(GetTickCount64()-last_rx_>15000)return fail("timeout");return true;
+  if(GetTickCount64()-last_rx_>receive_timeout_ms)return fail("timeout");return true;
  }
 };
 }

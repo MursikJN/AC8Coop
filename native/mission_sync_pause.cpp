@@ -15,7 +15,13 @@
 #include "adapter_bootstrap_contract.h"
 namespace {
 uintptr_t base=0,manager=0;DWORD thread=0;std::wstring output;
-std::array<unsigned char,40> saved{};int32_t serial_saved=0;ac8pause::Lease lease;
+std::array<unsigned char,40> saved{};int32_t serial_saved=0;
+#ifdef AC8_DISCONNECT_PAUSE
+using ActiveLease=ac8pause::DisconnectLease;
+#else
+using ActiveLease=ac8pause::Lease;
+#endif
+ActiveLease lease;
 const char*bootstrap_reason="bootstrap_not_checked";
 bool bytes(uintptr_t p,void*out,size_t n){if(p<0x10000||p+n>=0x800000000000ULL||!n||n>4096)return false;__try{memcpy(out,reinterpret_cast<void*>(p),n);return true;}__except(EXCEPTION_EXECUTE_HANDLER){return false;}}
 template<class T>bool read(uintptr_t p,T&v){return bytes(p,&v,sizeof v);}
@@ -37,6 +43,9 @@ bool setup(){
  auto n=GetEnvironmentVariableW(L"AC8_COOP_RECON_OUTPUT",path,32768);if(!n||n>=32768)return false;output=path;
  bootstrap_reason="bootstrap_environment";
  if(GetEnvironmentVariableW(L"AC8_MISSION_SYNC",marker,32)!=8||wcscmp(marker,L"25201480"))return false;
+#ifdef AC8_DISCONNECT_PAUSE
+ if(GetEnvironmentVariableW(L"AC8_LIFECYCLE_STOP",marker,32)!=8||wcscmp(marker,L"25201480"))return false;
+#endif
  bootstrap_reason="bootstrap_process";
  if(!GetModuleFileNameW(nullptr,exe,32768))return false;auto last=wcsrchr(exe,L'\\');if(!last||_wcsicmp(last+1,L"AceCombat8.exe"))return false;
  bootstrap_reason="bootstrap_thread";
@@ -44,6 +53,10 @@ bool setup(){
  base=reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));unsigned char code[16]{};
  bootstrap_reason="bootstrap_fingerprint";
  if(!bytes(base+0x79163f0,code,16)||!ac8route::fingerprint(code,ac8adapter::pause_update_fingerprint))return false;
+#ifdef AC8_DISCONNECT_PAUSE
+ if(!bytes(base+0x7916407,code,16)||!ac8route::fingerprint(code,ac8adapter::pause_reason_shift_fingerprint))return false;
+ if(!bytes(base+0x7916417,code,16)||!ac8route::fingerprint(code,ac8adapter::pause_override_branch_fingerprint))return false;
+#endif
  bootstrap_reason="bootstrap_module";HMODULE self=nullptr;
  if(!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_PIN,reinterpret_cast<LPCWSTR>(&setup),&self))return false;
  bootstrap_reason="bootstrap_ready";return true;
@@ -70,13 +83,13 @@ void dispatch(){
  if(ok&&manager){ok=manager==address&&serial==serial_saved&&!memcmp(head.data()+12,saved.data()+12,28);reason="identity_changed";}
  if(ok){
   if(op=="acquire"){
-   ok=override_count==0&&lease.acquire(flags);reason=ok?"held":"existing_pause_or_override";
+   ok=(ActiveLease::bit==32||override_count==0)&&lease.acquire(flags);reason=ok?"held":"existing_pause_or_override";
    if(ok){manager=static_cast<uintptr_t>(address);saved=head;serial_saved=serial;ok=apply(manager,flags);}
   }else if(op=="release"){if(lease.held){lease.release(flags);ok=apply(static_cast<uintptr_t>(address),flags);}reason="released";}
   else if(op=="poll")reason="observed";
   else{ok=false;reason="operation";}
   read(address+0x28,flags);read(address+0x2c,applied);read(address+0x30,paused);
-  if(ok&&lease.held)ok=(flags&8)&&(applied&8)&&paused==1;
+  if(ok&&lease.held)ok=(flags&ActiveLease::bit)&&(applied&ActiveLease::bit)&&paused==1;
  }
  status(ok,reason,stamp,address,flags,applied,paused,override_count);
 }
